@@ -7,7 +7,7 @@
  * Description:
  *   Bank stress test.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -89,7 +89,7 @@ void perror(const char *s);
 #define DEFAULT_WRITE_ALL               0
 #define DEFAULT_READ_THREADS            0
 #define DEFAULT_WRITE_THREADS           0
-#define DEFAULT_DISJOINT                0
+#define DEFAULT_LOCALITY                0
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -229,7 +229,7 @@ typedef struct thread_data {
   int read_threads;
   int write_all;
   int write_threads;
-  int disjoint;
+  float locality;
   int nb_threads;
   char padding[64];
 } thread_data_t;
@@ -237,38 +237,43 @@ typedef struct thread_data {
 static void *test(void *data)
 {
   int src, dst, nb;
-  int rand_max, rand_min;
+  int rand_max, rand_min, l_rand_min, l_rand_max;
   thread_data_t *d = (thread_data_t *)data;
   unsigned short seed[3];
+  int ret;
 
   /* Initialize seed (use rand48 as rand is poor) */
   seed[0] = (unsigned short)rand_r(&d->seed);
   seed[1] = (unsigned short)rand_r(&d->seed);
   seed[2] = (unsigned short)rand_r(&d->seed);
 
-  /* Prepare for disjoint access */
-  if (d->disjoint) {
-    rand_max = d->bank->size / d->nb_threads;
-    rand_min = rand_max * d->id;
-    if (rand_max <= 2) {
-      fprintf(stderr, "can't have disjoint account accesses");
+  /* Prepare for local access */
+  if (d->locality > 0 && d->locality <= 1) {
+    l_rand_max = d->bank->size / d->nb_threads;
+    l_rand_min = l_rand_max * d->id;
+    if (l_rand_max <= 2) {
+      fprintf(stderr, "can't have local account accesses");
       return NULL;
     }
-  } else {
-    rand_max = d->bank->size;
-    rand_min = 0;
   }
+
+  rand_max = d->bank->size;
+  rand_min = 0;
+
 
   /* Create transaction */
   TM_INIT_THREAD;
   /* Wait on barrier */
   barrier_cross(d->barrier);
+  ret = total(d->bank, 1);
+  printf("Bank total    : %d (expected: 0)\n", ret);
 
   while (stop == 0) {
     if (d->id < d->read_threads) {
       /* Read all */
-      total(d->bank, 1);
+      ret = total(d->bank, 1);
       d->nb_read_all++;
+      if (ret!=0) printf("Bank total    : %d (expected: 0)\n", ret);
     } else if (d->id < d->read_threads + d->write_threads) {
       /* Write all */
       reset(d->bank);
@@ -277,19 +282,27 @@ static void *test(void *data)
       nb = (int)(erand48(seed) * 100);
       if (nb < d->read_all) {
         /* Read all */
-        total(d->bank, 1);
+        ret = total(d->bank, 1);
         d->nb_read_all++;
+	if (ret!=0) printf("Bank total    : %d (expected: 0)\n", ret);
       } else if (nb < d->read_all + d->write_all) {
         /* Write all */
         reset(d->bank);
         d->nb_write_all++;
       } else {
         /* Choose random accounts */
-        src = (int)(erand48(seed) * rand_max) + rand_min;
-        dst = (int)(erand48(seed) * rand_max) + rand_min;
-        if (dst == src)
-          dst = ((src + 1) % rand_max) + rand_min;
-        transfer(&d->bank->accounts[src], &d->bank->accounts[dst], 1);
+	if (d->locality > 0 && d->locality <= 1 && erand48(seed) < d->locality) {
+	  src = (int)(erand48(seed) * l_rand_max) + l_rand_min;
+	  dst = (int)(erand48(seed) * l_rand_max) + l_rand_min;
+	  if (dst == src)
+	    dst = ((src + 1) % l_rand_max) + l_rand_min;
+	} else {
+	  src = (int)(erand48(seed) * rand_max) + rand_min;
+	  dst = (int)(erand48(seed) * rand_max) + rand_min;
+	  if (dst == src)
+	    dst = ((src + 1) % rand_max) + rand_min;
+	}
+        transfer(&d->bank->accounts[src], &d->bank->accounts[dst], 42);
         d->nb_transfer++;
       }
     }
@@ -337,7 +350,7 @@ int main(int argc, char **argv)
     {"seed",                      required_argument, NULL, 's'},
     {"write-all-rate",            required_argument, NULL, 'w'},
     {"write-threads",             required_argument, NULL, 'W'},
-    {"disjoint",                  no_argument,       NULL, 'j'},
+    {"locality",                  no_argument,       NULL, 'l'},
     {NULL, 0, NULL, 0}
   };
 
@@ -368,12 +381,12 @@ int main(int argc, char **argv)
   int seed = DEFAULT_SEED;
   int write_all = DEFAULT_WRITE_ALL;
   int write_threads = DEFAULT_WRITE_THREADS;
-  int disjoint = DEFAULT_DISJOINT;
+  float locality = DEFAULT_LOCALITY;
   sigset_t block_set;
 
   while(1) {
     i = 0;
-    c = getopt_long(argc, argv, "ha:c:d:n:r:R:s:w:W:j", long_options, &i);
+    c = getopt_long(argc, argv, "ha:c:d:n:r:R:s:w:W:l:", long_options, &i);
 
     if(c == -1)
       break;
@@ -382,77 +395,77 @@ int main(int argc, char **argv)
       c = long_options[i].val;
 
     switch(c) {
-     case 0:
-       /* Flag is automatically set */
-       break;
-     case 'h':
-       printf("bank -- STM stress test\n"
-              "\n"
-              "Usage:\n"
-              "  bank [options...]\n"
-              "\n"
-              "Options:\n"
-              "  -h, --help\n"
-              "        Print this message\n"
-              "  -a, --accounts <int>\n"
-              "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
+    case 0:
+      /* Flag is automatically set */
+      break;
+    case 'h':
+      printf("bank -- STM stress test\n"
+	     "\n"
+	     "Usage:\n"
+	     "  bank [options...]\n"
+	     "\n"
+	     "Options:\n"
+	     "  -h, --help\n"
+	     "        Print this message\n"
+	     "  -a, --accounts <int>\n"
+	     "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
 #ifndef TM_COMPILER
-              "  -c, --contention-manager <string>\n"
-              "        Contention manager for resolving conflicts (default=suicide)\n"
+	     "  -c, --contention-manager <string>\n"
+	     "        Contention manager for resolving conflicts (default=suicide)\n"
 #endif /* ! TM_COMPILER */
-              "  -d, --duration <int>\n"
-              "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-              "  -n, --num-threads <int>\n"
-              "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
-              "  -r, --read-all-rate <int>\n"
-              "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
-              "  -R, --read-threads <int>\n"
-              "        Number of threads issuing only read-all transactions (default=" XSTR(DEFAULT_READ_THREADS) ")\n"
-              "  -s, --seed <int>\n"
-              "        RNG seed (0=time-based, default=" XSTR(DEFAULT_SEED) ")\n"
-              "  -w, --write-all-rate <int>\n"
-              "        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
-              "  -W, --write-threads <int>\n"
-              "        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
-         );
-       exit(0);
-     case 'a':
-       nb_accounts = atoi(optarg);
-       break;
+	     "  -d, --duration <int>\n"
+	     "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+	     "  -n, --num-threads <int>\n"
+	     "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
+	     "  -r, --read-all-rate <int>\n"
+	     "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
+	     "  -R, --read-threads <int>\n"
+	     "        Number of threads issuing only read-all transactions (default=" XSTR(DEFAULT_READ_THREADS) ")\n"
+	     "  -s, --seed <int>\n"
+	     "        RNG seed (0=time-based, default=" XSTR(DEFAULT_SEED) ")\n"
+	     "  -w, --write-all-rate <int>\n"
+	     "        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
+	     "  -W, --write-threads <int>\n"
+	     "        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
+	     );
+      exit(0);
+    case 'a':
+      nb_accounts = atoi(optarg);
+      break;
 #ifndef TM_COMPILER
-     case 'c':
-       cm = optarg;
-       break;
+    case 'c':
+      cm = optarg;
+      break;
 #endif /* ! TM_COMPILER */
-     case 'd':
-       duration = atoi(optarg);
-       break;
-     case 'n':
-       nb_threads = atoi(optarg);
-       break;
-     case 'r':
-       read_all = atoi(optarg);
-       break;
-     case 'R':
-       read_threads = atoi(optarg);
-       break;
-     case 's':
-       seed = atoi(optarg);
-       break;
-     case 'w':
-       write_all = atoi(optarg);
-       break;
-     case 'W':
-       write_threads = atoi(optarg);
-       break;
-     case 'j':
-       disjoint = 1;
-       break;
-     case '?':
-       printf("Use -h or --help for help\n");
-       exit(0);
-     default:
-       exit(1);
+    case 'd':
+      duration = atoi(optarg);
+      break;
+    case 'n':
+      nb_threads = atoi(optarg);
+      break;
+    case 'r':
+      read_all = atoi(optarg);
+      break;
+    case 'R':
+      read_threads = atoi(optarg);
+      break;
+    case 's':
+      seed = atoi(optarg);
+      break;
+    case 'w':
+      write_all = atoi(optarg);
+      break;
+    case 'W':
+      write_threads = atoi(optarg);
+      break;
+    case 'l':
+      locality = atof(optarg);
+      break;
+    case '?':
+      printf("Use -h or --help for help\n");
+      exit(0);
+    default:
+      exit(1);
     }
   }
 
@@ -531,7 +544,7 @@ int main(int argc, char **argv)
     data[i].read_threads = read_threads;
     data[i].write_all = write_all;
     data[i].write_threads = write_threads;
-    data[i].disjoint = disjoint;
+    data[i].locality = locality;
     data[i].nb_threads = nb_threads;
     data[i].nb_transfer = 0;
     data[i].nb_read_all = 0;

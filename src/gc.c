@@ -7,7 +7,7 @@
  * Description:
  *   Epoch-based garbage collector.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -77,7 +77,7 @@ typedef struct gc_block {               /* Block of allocated memory */
 
 typedef struct gc_region {              /* A list of allocated memory blocks */
   struct gc_block *blocks;              /* Memory blocks */
-  gc_word_t ts;                         /* Deallocation timestamp */
+  gc_word_t ts;                         /* Allocation timestamp */
   struct gc_region *next;               /* Next region */
 } gc_region_t;
 
@@ -85,6 +85,7 @@ typedef struct gc_thread {              /* Descriptor of an active thread */
   union {                               /* For padding... */
     struct {
       gc_word_t used;                   /* Is this entry used? */
+      pthread_t thread;                 /* Thread descriptor */
       gc_word_t ts;                     /* Start timestamp */
       gc_region_t *head;                /* First memory region(s) assigned to thread */
       gc_region_t *tail;                /* Last memory region(s) assigned to thread */
@@ -127,23 +128,16 @@ static inline gc_word_t gc_compute_min(gc_word_t now)
   PRINT_DEBUG("==> gc_compute_min(%d)\n", gc_get_idx());
 
   min = now;
-  for (i = 0; i < MAX_GC_THREADS; ) {
+  for (i = 0; i < MAX_GC_THREADS; i++) {
     used = (gc_word_t)ATOMIC_LOAD(&gc_threads.slots[i].used);
-    if (used == GC_BUSY) {
-      /* Used entry */
-      ts = (gc_word_t)ATOMIC_LOAD(&gc_threads.slots[i].ts);
-      if (ts == EPOCH_MAX) {
-        /* Wait until thread has set a safe lower bound */
-        continue;
-      }
-      if (ts < min)
-        min = ts;
-    } else if (used == GC_NULL) {
-      /* No more threads */
+    if (used == GC_NULL)
       break;
-    }
-    /* Move to next entry only if entry is not used or it has a safe lower bound */
-    i++;
+    if (used != GC_BUSY)
+      continue;
+    /* Used entry */
+    ts = (gc_word_t)ATOMIC_LOAD(&gc_threads.slots[i].ts);
+    if (ts < min)
+      min = ts;
   }
 
   PRINT_DEBUG("==> gc_compute_min(%d,m=%lu)\n", gc_get_idx(), (unsigned long)min);
@@ -160,9 +154,9 @@ static inline void gc_clean_blocks(gc_block_t *mb)
 
   while (mb != NULL) {
     PRINT_DEBUG("==> free(%d,a=%p)\n", gc_get_idx(), mb->addr);
-    xfree(mb->addr);
+    free(mb->addr);
     next_mb = mb->next;
-    xfree(mb);
+    free(mb);
     mb = next_mb;
   }
 }
@@ -177,7 +171,7 @@ static inline void gc_clean_regions(gc_region_t *mr)
   while (mr != NULL) {
     gc_clean_blocks(mr->blocks);
     next_mr = mr->next;
-    xfree(mr);
+    free(mr);
     mr = next_mr;
   }
 }
@@ -199,7 +193,7 @@ void gc_cleanup_thread(int idx, gc_word_t min)
   while (min > gc_threads.slots[idx].head->ts) {
     gc_clean_blocks(gc_threads.slots[idx].head->blocks);
     mr = gc_threads.slots[idx].head->next;
-    xfree(gc_threads.slots[idx].head);
+    free(gc_threads.slots[idx].head);
     gc_threads.slots[idx].head = mr;
     if(mr == NULL) {
       /* All memory regions deleted */
@@ -223,7 +217,10 @@ void gc_init(gc_word_t (*epoch)(void))
   PRINT_DEBUG("==> gc_init()\n");
 
   gc_current_epoch = epoch;
-  gc_threads.slots = (gc_thread_t *)xmalloc(MAX_GC_THREADS * sizeof(gc_thread_t));
+  if ((gc_threads.slots = (gc_thread_t *)malloc(MAX_GC_THREADS * sizeof(gc_thread_t))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
   for (i = 0; i < MAX_GC_THREADS; i++) {
     gc_threads.slots[i].used = GC_NULL;
     gc_threads.slots[i].ts = EPOCH_MAX;
@@ -253,7 +250,7 @@ void gc_exit(void)
   for (i = 0; i < MAX_GC_THREADS; i++)
     gc_clean_regions(gc_threads.slots[i].head);
 
-  xfree((void *)gc_threads.slots);
+  free((void *)gc_threads.slots);
 }
 
 /*
@@ -278,8 +275,8 @@ void gc_init_thread(void)
     if (used != GC_BUSY) {
       if (ATOMIC_CAS_FULL(&gc_threads.slots[i].used, used, GC_BUSY) != 0) {
         idx = i;
-        /* Set safe lower bound */
-        ATOMIC_STORE(&gc_threads.slots[idx].ts, gc_current_epoch());
+        /* Sets lower bound to EPOCH_MAX (thread will need to set correct timestamp before first transaction) */
+        ATOMIC_STORE(&gc_threads.slots[idx].ts, EPOCH_MAX);
         break;
       }
       /* CAS failed: another thread must have acquired slot */
@@ -342,10 +339,12 @@ void gc_free(void *addr, gc_word_t epoch)
 
   PRINT_DEBUG("==> gc_free(%d,%lu)\n", idx, (unsigned long)epoch);
 
-  /* Function must be called with non-decreasing epoch numbers for any given thread! */
-  if (gc_threads.slots[idx].head == NULL || gc_threads.slots[idx].tail->ts < epoch) {
+  if (gc_threads.slots[idx].head == NULL || gc_threads.slots[idx].head->ts < epoch) {
     /* Allocate a new region */
-    mr = (gc_region_t *)xmalloc(sizeof(gc_region_t));
+    if ((mr = (gc_region_t *)malloc(sizeof(gc_region_t))) == NULL) {
+      perror("malloc");
+      exit(1);
+    }
     mr->ts = epoch;
     mr->blocks = NULL;
     mr->next = NULL;
@@ -357,12 +356,14 @@ void gc_free(void *addr, gc_word_t epoch)
     }
   } else {
     /* Add to current region */
-    assert(gc_threads.slots[idx].tail->ts == epoch);
-    mr = gc_threads.slots[idx].tail;
+    mr = gc_threads.slots[idx].head;
   }
 
   /* Allocate block */
-  mb = (gc_block_t *)xmalloc(sizeof(gc_block_t));
+  if ((mb = (gc_block_t *)malloc(sizeof(gc_block_t))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
   mb->addr = addr;
   mb->next = mr->blocks;
   mr->blocks = mb;

@@ -29,13 +29,13 @@ endif
 LDFLAGS += -L$(LIBDIR) -l$(TM)
 
 # Only on linux / TODO make source compatible with non-pthread OS
-LDFLAGS += -lpthread
+LDFLAGS += -lpthread -lnuma
 
 # Solaris default memory allocator is quite slow, better use mtmalloc
 # LDFLAGS += -lmtmalloc
 
 # Disable additionnal checks from glibc (__longjmp_chk/__printf_chk)
-CPPFLAGS += -U_FORTIFY_SOURCE
+# CPPFLAGS += -U_FORTIFY_SOURCE
 # CPPFLAGS += -D_FORTIFY_SOURCE=0
 # Enable multi-thread support in glibc
 CPPFLAGS += -D_REENTRANT
@@ -65,14 +65,11 @@ endif
 endif
 
 ########################################################################
-# libatomic_ops path
-# LIBAO_HOME must be set to the path of libatomic_ops
-# (use the embedded light libatomic_ops if LIBAO_HOME is not defined)
+# libatomic_ops default path
+# (use the embedded light libatomic_ops if not found)
 ########################################################################
-ifndef LIBAO_HOME
+ifneq (,$(wildcard /usr/include/atomic_ops))
   LIBAO_HOME = $(SRCDIR)/atomic_ops
   LIBAO_INC = $(LIBAO_HOME)
-else
-  LIBAO_INC = $(LIBAO_HOME)/include
+  CPPFLAGS += -I$(LIBAO_INC)
 endif
-CPPFLAGS += -I$(LIBAO_INC)

@@ -7,7 +7,7 @@
  * Description:
  *   Module to test callbacks.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -86,8 +86,5 @@ static void mod_print_on_abort(void *arg)
  */
 void mod_print_init(void)
 {
-  if (!stm_register(mod_print_on_thread_init, mod_print_on_thread_exit, mod_print_on_start, mod_print_on_precommit, mod_print_on_commit, mod_print_on_abort, NULL)) {
-    fprintf(stderr, "Cannot register callbacks\n");
-    exit(1);
-  }
+  stm_register(mod_print_on_thread_init, mod_print_on_thread_exit, mod_print_on_start, mod_print_on_precommit, mod_print_on_commit, mod_print_on_abort, NULL);
 }

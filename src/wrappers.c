@@ -7,7 +7,7 @@
  * Description:
  *   STM wrapper functions for different data types.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,9 +31,15 @@
 
 #define ALLOW_MISALIGNED_ACCESSES
 
-#define TM_LOAD(addr)                stm_load(addr)
-#define TM_STORE(addr, val)          stm_store(addr, val)
-#define TM_STORE2(addr, val, mask)   stm_store2(addr, val, mask)
+#ifdef HYBRID_ASF
+# define TM_LOAD(addr)                tm_load(addr)
+# define TM_STORE(addr, val)          tm_store(addr, val)
+# define TM_STORE2(addr, val, mask)   tm_store2(addr, val, mask)
+#else /* ! HYBRID_ASF */
+# define TM_LOAD(addr)                int_stm_load(tx, addr)
+# define TM_STORE(addr, val)          int_stm_store(tx, addr, val)
+# define TM_STORE2(addr, val, mask)   int_stm_store2(tx, addr, val, mask)
+#endif /* ! HYBRID_ASF */
 
 typedef union convert_64 {
   uint64_t u64;
@@ -87,6 +93,7 @@ static void sanity_checks(void)
 static INLINE
 uint8_t int_stm_load_u8(volatile uint8_t *addr)
 {
+  TX_GET;
   if (sizeof(stm_word_t) == 4) {
     convert_32_t val;
     val.u32 = (uint32_t)TM_LOAD((volatile stm_word_t *)((uintptr_t)addr & ~(uintptr_t)0x03));
@@ -101,6 +108,7 @@ uint8_t int_stm_load_u8(volatile uint8_t *addr)
 static INLINE
 uint16_t int_stm_load_u16(volatile uint16_t *addr)
 {
+  TX_GET;
   if (unlikely(((uintptr_t)addr & 0x01) != 0)) {
     uint16_t val;
     stm_load_bytes((volatile uint8_t *)addr, (uint8_t *)&val, sizeof(uint16_t));
@@ -119,6 +127,7 @@ uint16_t int_stm_load_u16(volatile uint16_t *addr)
 static INLINE
 uint32_t int_stm_load_u32(volatile uint32_t *addr)
 {
+  TX_GET;
   if (unlikely(((uintptr_t)addr & 0x03) != 0)) {
     uint32_t val;
     stm_load_bytes((volatile uint8_t *)addr, (uint8_t *)&val, sizeof(uint32_t));
@@ -135,6 +144,7 @@ uint32_t int_stm_load_u32(volatile uint32_t *addr)
 static INLINE
 uint64_t int_stm_load_u64(volatile uint64_t *addr)
 {
+  TX_GET;
   if (unlikely(((uintptr_t)addr & 0x07) != 0)) {
     uint64_t val;
     stm_load_bytes((volatile uint8_t *)addr, (uint8_t *)&val, sizeof(uint64_t));
@@ -247,6 +257,7 @@ _CALLCONV double stm_load_double(volatile double *addr)
 
 _CALLCONV void *stm_load_ptr(volatile void **addr)
 {
+  TX_GET;
   union { stm_word_t w; void *v; } convert;
   convert.w = TM_LOAD((stm_word_t *)addr);
   return convert.v;
@@ -254,6 +265,7 @@ _CALLCONV void *stm_load_ptr(volatile void **addr)
 
 _CALLCONV void stm_load_bytes(volatile uint8_t *addr, uint8_t *buf, size_t size)
 {
+  TX_GET;
   convert_t val;
   unsigned int i;
   stm_word_t *a;
@@ -297,6 +309,7 @@ _CALLCONV void stm_load_bytes(volatile uint8_t *addr, uint8_t *buf, size_t size)
 static INLINE
 void int_stm_store_u8(volatile uint8_t *addr, uint8_t value)
 {
+  TX_GET;
   if (sizeof(stm_word_t) == 4) {
     convert_32_t val, mask;
     val.u8[(uintptr_t)addr & 0x03] = value;
@@ -315,6 +328,7 @@ void int_stm_store_u8(volatile uint8_t *addr, uint8_t value)
 static INLINE
 void int_stm_store_u16(volatile uint16_t *addr, uint16_t value)
 {
+  TX_GET;
   if (unlikely(((uintptr_t)addr & 0x01) != 0)) {
     stm_store_bytes((volatile uint8_t *)addr, (uint8_t *)&value, sizeof(uint16_t));
   } else if (sizeof(stm_word_t) == 4) {
@@ -335,6 +349,7 @@ void int_stm_store_u16(volatile uint16_t *addr, uint16_t value)
 static INLINE
 void int_stm_store_u32(volatile uint32_t *addr, uint32_t value)
 {
+  TX_GET;
   if (unlikely(((uintptr_t)addr & 0x03) != 0)) {
     stm_store_bytes((volatile uint8_t *)addr, (uint8_t *)&value, sizeof(uint32_t));
   } else if (sizeof(stm_word_t) == 4) {
@@ -351,6 +366,7 @@ void int_stm_store_u32(volatile uint32_t *addr, uint32_t value)
 static INLINE
 void int_stm_store_u64(volatile uint64_t *addr, uint64_t value)
 {
+  TX_GET;
   if (unlikely(((uintptr_t)addr & 0x07) != 0)) {
     stm_store_bytes((volatile uint8_t *)addr, (uint8_t *)&value, sizeof(uint64_t));
   } else if (sizeof(stm_word_t) == 4) {
@@ -461,6 +477,7 @@ _CALLCONV void stm_store_double(volatile double *addr, double value)
 
 _CALLCONV void stm_store_ptr(volatile void **addr, void *value)
 {
+  TX_GET;
   union { stm_word_t w; void *v; } convert;
   convert.v = value;
   TM_STORE((stm_word_t *)addr, convert.w);
@@ -468,6 +485,7 @@ _CALLCONV void stm_store_ptr(volatile void **addr, void *value)
 
 _CALLCONV void stm_store_bytes(volatile uint8_t *addr, uint8_t *buf, size_t size)
 {
+  TX_GET;
   convert_t val, mask;
   unsigned int i;
   stm_word_t *a;
@@ -511,6 +529,7 @@ _CALLCONV void stm_store_bytes(volatile uint8_t *addr, uint8_t *buf, size_t size
 
 _CALLCONV void stm_set_bytes(volatile uint8_t *addr, uint8_t byte, size_t count)
 {
+  TX_GET;
   convert_t val, mask;
   unsigned int i;
   stm_word_t *a;

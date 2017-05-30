@@ -13,7 +13,6 @@ include $(ROOT)/abi/Makefile.common
 ## GCC
 ##############################################################################
 CPPFLAGS += -DTM_GCC -I.
-INCLUDES += $(wildcard ../../src/*.h)
 
 # NOTES
 #   lib.map enables to export only some functions
@@ -22,10 +21,10 @@ gcc: 	libitm.so libitm.a
 arch.o: arch.S
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEF_ABI) -c -o $@ $<
 
-%.do: 	../%.c $(INCLUDES)
+%.do: 	../%.c 
 	$(CC) -fPIC $(CPPFLAGS) $(CFLAGS) $(DEF_ABI) -c -o $@ $<
 
-%.o: 	../%.c $(INCLUDES)
+%.o: 	../%.c 
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEF_ABI) -c -o $@ $<
 
 %.s: 	../%.c 
@@ -50,6 +49,6 @@ TESTLDFLAGS  += -Wl,-rpath=$(shell pwd)
 TESTLDFLAGS  += -L$(ROOT)/abi/gcc 
 TESTLDFLAGS  += -static -litm
 
-clean: 	intset-clean
+clean: 	intset-clean intsetasf-clean
 	rm -f *.o *.do libitm.a libitm.so
 

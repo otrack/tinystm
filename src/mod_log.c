@@ -7,7 +7,7 @@
  * Description:
  *   Module for logging memory accesses.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,7 +31,6 @@
 #include "mod_log.h"
 
 #include "stm.h"
-#include "utils.h"
 
 #ifndef LW_SET_SIZE
 # define LW_SET_SIZE                    1024
@@ -117,7 +116,10 @@ static inline mod_log_w_entry_t *get_entry(void)
   if (ws->nb_entries == ws->size) {
     /* Extend read set */
     ws->size = (ws->size < LW_SET_SIZE ? LW_SET_SIZE : ws->size * 2);
-    ws->entries = (mod_log_w_entry_t *)xrealloc(ws->entries, ws->size * sizeof(mod_log_w_entry_t));
+    if ((ws->entries = (mod_log_w_entry_t *)realloc(ws->entries, ws->size * sizeof(mod_log_w_entry_t))) == NULL) {
+      perror("realloc");
+      exit(1);
+    }
   }
 
   return &ws->entries[ws->nb_entries++];
@@ -277,7 +279,10 @@ void stm_log_bytes(uint8_t *addr, size_t size)
 
   w->type = TYPE_BYTES;
   w->data.b.a = addr;
-  w->data.b.v = (uint8_t *)xmalloc(size);
+  if ((w->data.b.v = (uint8_t *)malloc(size)) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
   w->data.b.s = size;
   memcpy(w->data.b.v, addr, size);
 
@@ -292,7 +297,10 @@ static void mod_log_on_thread_init(void *arg)
 {
   mod_log_w_set_t *ws;
 
-  ws = (mod_log_w_set_t *)xmalloc(sizeof(mod_log_w_set_t));
+  if ((ws = (mod_log_w_set_t *)malloc(sizeof(mod_log_w_set_t))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
   ws->entries = NULL;
   ws->nb_entries = ws->size = ws->allocated = 0;
 
@@ -309,8 +317,8 @@ static void mod_log_on_thread_exit(void *arg)
   ws = (mod_log_w_set_t *)stm_get_specific(mod_log_key);
   assert(ws != NULL);
 
-  xfree(ws->entries);
-  xfree(ws);
+  free(ws->entries);
+  free(ws);
 }
 
 /*
@@ -330,7 +338,7 @@ static void mod_log_on_commit(void *arg)
     do {
       assert(w < &ws->entries[ws->nb_entries]);
       if (w->type == TYPE_BYTES) {
-        xfree(w->data.b.v);
+        free(w->data.b.v);
         ws->allocated--;
       }
       w++;
@@ -406,7 +414,7 @@ static void mod_log_on_abort(void *arg)
          break;
        case TYPE_BYTES:
          memcpy(w->data.b.a, w->data.b.v, w->data.b.s);
-         xfree(w->data.b.v);
+         free(w->data.b.v);
          ws->allocated--;
          break;
        default:
@@ -429,10 +437,7 @@ void mod_log_init(void)
   if (mod_log_initialized)
     return;
 
-  if (!stm_register(mod_log_on_thread_init, mod_log_on_thread_exit, NULL, NULL, mod_log_on_commit, mod_log_on_abort, NULL)) {
-    fprintf(stderr, "Cannot register callbacks\n");
-    exit(1);
-  }
+  stm_register(mod_log_on_thread_init, mod_log_on_thread_exit, NULL, NULL, mod_log_on_commit, mod_log_on_abort, NULL);
   mod_log_key = stm_create_specific();
   if (mod_log_key < 0) {
     fprintf(stderr, "Cannot create specific key\n");

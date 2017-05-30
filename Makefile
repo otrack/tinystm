@@ -39,10 +39,24 @@ include Makefile.common
 # Refer to [PPoPP-08] for more details.
 ########################################################################
 
-DEFINES += -DDESIGN=WRITE_BACK_ETL
+# DEFINES += -DDESIGN=WRITE_BACK_ETL
 # DEFINES += -DDESIGN=WRITE_BACK_CTL
 # DEFINES += -DDESIGN=WRITE_THROUGH
 # DEFINES += -DDESIGN=MODULAR
+DEFINES += -DDESIGN=NUMA
+
+
+########################################################################
+# Choose the clock design: global, numa, thread
+########################################################################
+
+ifndef CLOCK
+  CLOCK += GLOBAL_CLOCK
+  #CLOCK += NUMA_CLOCK
+  #CLOCK += THREAD_CLOCK
+endif
+DEFINES += -D${CLOCK}
+
 
 ########################################################################
 # Several contention management strategies are available:
@@ -85,8 +99,8 @@ DEFINES += -DCM=CM_SUICIDE
 # compiler).
 ########################################################################
 
-DEFINES += -DIRREVOCABLE_ENABLED
-# DEFINES += -UIRREVOCABLE_ENABLED
+# DEFINES += -DIRREVOCABLE_ENABLED
+DEFINES += -UIRREVOCABLE_ENABLED
 
 ########################################################################
 # Maintain detailed internal statistics.  Statistics are stored in
@@ -187,6 +201,20 @@ DEFINES += -UDEBUG2
 # DEFINES += -DSIGNAL_HANDLER
 DEFINES += -USIGNAL_HANDLER
 
+########################################################################
+# Enable ASF Hybrid mode
+########################################################################
+
+ifdef HYBRID_ASF
+  ifneq ($(HYBRID_ASF), 0)
+    DEFINES += -DHYBRID_ASF -DASF_STACK -fomit-frame-pointer
+  else
+    DEFINES += -UHYBRID_ASF
+  endif
+else
+  DEFINES += -UHYBRID_ASF
+endif
+
 # TODO Enable the construction of 32bit lib on 64bit environment 
 
 ########################################################################
@@ -256,7 +284,8 @@ D := $(D:WRITE_BACK_ETL=0)
 D := $(D:WRITE_BACK_CTL=1)
 D := $(D:WRITE_THROUGH=2)
 D := $(D:MODULAR=3)
-D += -DWRITE_BACK_ETL=0 -DWRITE_BACK_CTL=1 -DWRITE_THROUGH=2 -DMODULAR=3
+D := $(D:NUMA=4)
+D += -DWRITE_BACK_ETL=0 -DWRITE_BACK_CTL=1 -DWRITE_THROUGH=2 -DMODULAR=3 -DNUMA=4
 D := $(D:CM_SUICIDE=0)
 D := $(D:CM_DELAY=1)
 D := $(D:CM_BACKOFF=2)
@@ -283,7 +312,7 @@ all:	$(TMLIB)
 
 # Additional dependencies
 $(SRCDIR)/stm.o:	$(INCDIR)/stm.h
-$(SRCDIR)/stm.o:	$(SRCDIR)/stm_internal.h $(SRCDIR)/stm_wt.h $(SRCDIR)/stm_wbetl.h $(SRCDIR)/stm_wbctl.h $(SRCDIR)/tls.h $(SRCDIR)/utils.h $(SRCDIR)/atomic.h
+$(SRCDIR)/stm.o:	$(SRCDIR)/stm_internal.h $(SRCDIR)/stm_wt.h $(SRCDIR)/stm_wbetl.h $(SRCDIR)/stm_wbctl.h $(SRCDIR)/stm_numa.h $(SRCDIR)/tls.h $(SRCDIR)/utils.h $(SRCDIR)/atomic.h
 
 %.s:	%.c Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -DCOMPILE_FLAGS="$(CPPFLAGS) $(CFLAGS)" -fverbose-asm -S -o $@ $<
@@ -296,6 +325,9 @@ $(TMLIB):	$(SRCDIR)/$(TM).o $(SRCDIR)/wrappers.o $(GC) $(MODULES)
 
 test:	$(TMLIB)
 	$(MAKE) -C test
+
+test-asf:	$(TMLIB)
+	$(MAKE) -C test-asf
 
 abi:
 	$(MAKE) -C abi
@@ -316,4 +348,5 @@ clean:
 	rm -f $(TMLIB) $(SRCDIR)/*.o
 	$(MAKE) -C abi clean
 	TARGET=clean $(MAKE) -C test
+	TARGET=clean $(MAKE) -C test-asf
 

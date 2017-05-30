@@ -7,7 +7,7 @@
  * Description:
  *   STM internal functions.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -93,8 +93,10 @@ stm_wt_extend(stm_tx_t *tx)
 
   /* Get current time */
   now = GET_CLOCK;
-  /* No need to check clock overflow here. The clock can exceed up to MAX_THREADS and it will be reset when the quiescence is reached. */
-
+  if (now >= VERSION_MAX) {
+    /* Clock overflow */
+    return 0;
+  }
   /* Try to validate read set */
   if (stm_wt_validate(tx)) {
     /* It works: we can extend until now */

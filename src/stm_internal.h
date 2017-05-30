@@ -7,7 +7,7 @@
  * Description:
  *   STM internal functions.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,8 +28,9 @@
 
 #include <pthread.h>
 #include <string.h>
-#include <stm.h>
+#include <numa.h>
 #include "tls.h"
+#include <stm.h>
 #include "utils.h"
 #include "atomic.h"
 #include "gc.h"
@@ -43,6 +44,7 @@
 #define WRITE_BACK_CTL                  1
 #define WRITE_THROUGH                   2
 #define MODULAR                         3
+#define NUMA                            4
 
 #ifndef DESIGN
 # define DESIGN                         WRITE_BACK_ETL
@@ -77,6 +79,10 @@
 #if defined(EPOCH_GC) && defined(SIGNAL_HANDLER)
 # error "SIGNAL_HANDLER can only be used without EPOCH_GC"
 #endif /* defined(EPOCH_GC) && defined(SIGNAL_HANDLER) */
+
+#if defined(HYBRID_ASF) && CM != CM_SUICIDE
+# error "HYBRID_ASF can only be used with SUICIDE contention manager"
+#endif /* defined(HYBRID_ASF) && CM != CM_SUICIDE */
 
 #define TX_GET                          stm_tx_t *tx = tls_get_tx()
 
@@ -241,11 +247,10 @@ enum {                                  /* Transaction status */
  * CLOCK
  * ################################################################### */
 
-/* At least twice a cache line (not required if properly aligned and padded) */
-#define CLOCK                           (_tinystm.gclock[(CACHELINE_SIZE * 2) / sizeof(stm_word_t)])
-
-#define GET_CLOCK                       (ATOMIC_LOAD_ACQ(&CLOCK))
-#define FETCH_INC_CLOCK                 (ATOMIC_FETCH_INC_FULL(&CLOCK))
+#define GET_CLOCK                       (ATOMIC_LOAD_ACQ(tx->numa_clock))
+#define SET_CLOCK(u)                    (tx->numa_clock=0)
+#define FETCH_INC_CLOCK                 (ATOMIC_FETCH_INC_FULL(tx->numa_clock))
+#define CAS_CLOCK(u,v)                  (ATOMIC_CAS_FULL(tx->numa_clock, u, v))
 
 /* ################################################################### *
  * CALLBACKS
@@ -316,13 +321,17 @@ typedef struct stm_tx {                 /* Transaction descriptor */
   JMP_BUF env;                          /* Environment for setjmp/longjmp */
   stm_tx_attr_t attr;                   /* Transaction attributes (user-specified) */
   volatile stm_word_t status;           /* Transaction status */
-  stm_word_t start;                     /* Start timestamp */
-  stm_word_t end;                       /* End timestamp (validity range) */
+  stm_word_t clock;                     /* */
   r_set_t r_set;                        /* Read set */
   w_set_t w_set;                        /* Write set */
+  stm_word_t *numa_clock;               /* Pointer to the numa aware clock */
+  unsigned int thread_id;
 #ifdef IRREVOCABLE_ENABLED
   unsigned int irrevocable:4;           /* Is this execution irrevocable? */
 #endif /* IRREVOCABLE_ENABLED */
+#ifdef HYBRID_ASF
+  unsigned int software:1;              /* Is the transaction mode pure software? */
+#endif /* HYBRID_ASF */
   unsigned int nesting;                 /* Nesting level */
 #if CM == CM_MODULAR
   stm_word_t timestamp;                 /* Timestamp (not changed upon restart) */
@@ -342,9 +351,9 @@ typedef struct stm_tx {                 /* Transaction descriptor */
 #if CM == CM_MODULAR
   int visible_reads;                    /* Should we use visible reads? */
 #endif /* CM == CM_MODULAR */
-#if CM == CM_MODULAR || defined(TM_STATISTICS)
+#if CM == CM_MODULAR || defined(TM_STATISTICS) || defined(HYBRID_ASF)
   unsigned int stat_retries;            /* Number of consecutive aborts (retries) */
-#endif /* CM == CM_MODULAR || defined(TM_STATISTICS) */
+#endif /* CM == CM_MODULAR || defined(TM_STATISTICS) || defined(HYBRID_ASF) */
 #ifdef TM_STATISTICS
   unsigned int stat_commits;            /* Total number of commits (cumulative) */
   unsigned int stat_aborts;             /* Total number of aborts (cumulative) */
@@ -379,6 +388,7 @@ typedef struct {
   unsigned int nb_abort_cb;
   cb_entry_t abort_cb[MAX_CB];          /* Abort callbacks */
   unsigned int initialized;             /* Has the library been initialized? */
+  stm_word_t * numa_clocks[8];          /* Assuming 8 numa node max */
 #ifdef IRREVOCABLE_ENABLED
   volatile stm_word_t irrevocable;      /* Irrevocability status */
 #endif /* IRREVOCABLE_ENABLED */
@@ -481,7 +491,7 @@ stm_quiesce_enter_thread(stm_tx_t *tx)
   /* Add new descriptor at head of list */
   tx->next = _tinystm.threads;
   _tinystm.threads = tx;
-  _tinystm.threads_nb++;
+  tx->thread_id = _tinystm.threads_nb++;
   pthread_mutex_unlock(&_tinystm.quiesce_mutex);
 }
 
@@ -567,6 +577,7 @@ stm_quiesce(stm_tx_t *tx, int block)
 
   PRINT_DEBUG("==> stm_quiesce(%p,%d)\n", tx, block);
 
+  /* TODO ASF doesn't support pthread_mutex_* since it may require syscall. */
   if (IS_ACTIVE(tx->status)) {
     /* Only one active transaction can quiesce at a time, others must abort */
     if (pthread_mutex_trylock(&_tinystm.quiesce_mutex) != 0)
@@ -656,10 +667,12 @@ stm_quiesce_release(stm_tx_t *tx)
 static INLINE void
 rollover_clock(void *arg)
 {
+
   PRINT_DEBUG("==> rollover_clock()\n");
 
-  /* Reset clock */
-  CLOCK = 0;
+  /* Reset clocks */
+  assert(1>2); 
+
   /* Reset timestamps */
   memset((void *)_tinystm.locks, 0, LOCK_ARRAY_SIZE * sizeof(stm_word_t));
 # ifdef EPOCH_GC
@@ -677,7 +690,7 @@ stm_has_read(stm_tx_t *tx, volatile stm_word_t *lock)
   r_entry_t *r;
   int i;
 
-  PRINT_DEBUG("==> stm_has_read(%p[%lu-%lu],%p)\n", tx, (unsigned long)tx->start, (unsigned long)tx->end, lock);
+  PRINT_DEBUG("==> stm_has_read(%p[%lu],%p)\n", tx, (unsigned long)tx->clock, lock);
 
 #if CM == CM_MODULAR
   /* TODO case of visible read is not handled */
@@ -706,7 +719,7 @@ stm_has_written(stm_tx_t *tx, volatile stm_word_t *addr)
   stm_word_t mask;
 # endif /* USE_BLOOM_FILTER */
 
-  PRINT_DEBUG("==> stm_has_written(%p[%lu-%lu],%p)\n", tx, (unsigned long)tx->start, (unsigned long)tx->end, addr);
+  PRINT_DEBUG("==> stm_has_written(%p[%lu],%p)\n", tx, (unsigned long)tx->clock, addr);
 
 # ifdef USE_BLOOM_FILTER
   mask = FILTER_BITS(addr);
@@ -730,15 +743,21 @@ stm_has_written(stm_tx_t *tx, volatile stm_word_t *addr)
 static NOINLINE void
 stm_allocate_rs_entries(stm_tx_t *tx, int extend)
 {
-  PRINT_DEBUG("==> stm_allocate_rs_entries(%p[%lu-%lu],%d)\n", tx, (unsigned long)tx->start, (unsigned long)tx->end, extend);
+  PRINT_DEBUG("==> stm_allocate_rs_entries(%p[%lu],%d)\n", tx, (unsigned long)tx->clock, extend);
 
   if (extend) {
     /* Extend read set */
     tx->r_set.size *= 2;
-    tx->r_set.entries = (r_entry_t *)xrealloc(tx->r_set.entries, tx->r_set.size * sizeof(r_entry_t));
+    if ((tx->r_set.entries = (r_entry_t *)realloc(tx->r_set.entries, tx->r_set.size * sizeof(r_entry_t))) == NULL) {
+      perror("realloc read set");
+      exit(1);
+    }
   } else {
     /* Allocate read set */
-    tx->r_set.entries = (r_entry_t *)xmalloc_aligned(tx->r_set.size * sizeof(r_entry_t));
+    if ((tx->r_set.entries = (r_entry_t *)xmalloc(tx->r_set.size * sizeof(r_entry_t))) == NULL) {
+      perror("malloc read set");
+      exit(1);
+    }
   }
 }
 
@@ -751,27 +770,23 @@ stm_allocate_ws_entries(stm_tx_t *tx, int extend)
 #if CM == CM_MODULAR || defined(CONFLICT_TRACKING)
   int i, first = (extend ? tx->w_set.size : 0);
 #endif /* CM == CM_MODULAR || defined(CONFLICT_TRACKING) */
-#ifdef EPOCH_GC
-  void *a;
-#endif /* ! EPOCH_GC */
 
-  PRINT_DEBUG("==> stm_allocate_ws_entries(%p[%lu-%lu],%d)\n", tx, (unsigned long)tx->start, (unsigned long)tx->end, extend);
+  PRINT_DEBUG("==> stm_allocate_ws_entries(%p[%lu],%d)\n", tx, (unsigned long)tx->clock, extend);
 
   if (extend) {
     /* Extend write set */
     /* Transaction must be inactive for WRITE_THROUGH or WRITE_BACK_ETL */
     tx->w_set.size *= 2;
-#ifdef EPOCH_GC
-    a = tx->w_set.entries;
-    tx->w_set.entries = (w_entry_t *)xmalloc_aligned(tx->w_set.size * sizeof(w_entry_t));
-    memcpy(tx->w_set.entries, a, tx->w_set.size / 2 * sizeof(w_entry_t));
-    gc_free(a, GET_CLOCK);
-#else /* ! EPOCH_GC */
-    tx->w_set.entries = (w_entry_t *)xrealloc(tx->w_set.entries, tx->w_set.size * sizeof(w_entry_t));
-#endif /* ! EPOCH_GC */
+    if (unlikely((tx->w_set.entries = (w_entry_t *)realloc(tx->w_set.entries, tx->w_set.size * sizeof(w_entry_t))) == NULL)) {
+      perror("realloc write set");
+      exit(1);
+    }
   } else {
     /* Allocate write set */
-    tx->w_set.entries = (w_entry_t *)xmalloc_aligned(tx->w_set.size * sizeof(w_entry_t));
+    if (unlikely((tx->w_set.entries = (w_entry_t *)xmalloc(tx->w_set.size * sizeof(w_entry_t))) == NULL)) {
+      perror("malloc write set");
+      exit(1);
+    }
   }
   /* Ensure that memory is aligned. */
   assert((((stm_word_t)tx->w_set.entries) & OWNED_MASK) == 0);
@@ -794,7 +809,9 @@ stm_allocate_ws_entries(stm_tx_t *tx, int extend)
 # include "stm_wbetl.h"
 # include "stm_wbctl.h"
 # include "stm_wt.h"
-#endif /* DESIGN == MODULAR */
+#elif DESIGN == NUMA
+# include "stm_numa.h"
+#endif /* DESIGN == NUMA */
 
 #if CM == CM_MODULAR
 /*
@@ -805,7 +822,7 @@ stm_kill(stm_tx_t *tx, stm_tx_t *other, stm_word_t status)
 {
   stm_word_t c, t;
 
-  PRINT_DEBUG("==> stm_kill(%p[%lu-%lu],%p,s=%d)\n", tx, (unsigned long)tx->start, (unsigned long)tx->end, other, status);
+  PRINT_DEBUG("==> stm_kill(%p[%lu],%p,s=%d)\n", tx, (unsigned long)tx->clock, other, status);
 
 # ifdef CONFLICT_TRACKING
   if (_tinystm.conflict_cb != NULL)
@@ -852,7 +869,7 @@ stm_drop(stm_tx_t *tx)
   stm_word_t l;
   int i;
 
-  PRINT_DEBUG("==> stm_drop(%p[%lu-%lu])\n", tx, (unsigned long)tx->start, (unsigned long)tx->end);
+  PRINT_DEBUG("==> stm_drop(%p[%lu])\n", tx, (unsigned long)tx->clock);
 
   /* Drop locks */
   i = tx->w_set.nb_entries;
@@ -870,7 +887,7 @@ stm_drop(stm_tx_t *tx)
      * transaction could reuse the same entry after having been killed
      * and restarted, and another slow transaction could steal the lock
      * using CAS without noticing the restart) */
-    gc_free(tx->w_set.entries, GET_CLOCK);
+    gc_free(tx->w_set.entries, tx->clock);
     stm_allocate_ws_entries(tx, 0);
   }
 }
@@ -902,19 +919,19 @@ int_stm_prepare(stm_tx_t *tx)
 
  start:
   /* Start timestamp */
-  tx->start = tx->end = GET_CLOCK; /* OPT: Could be delayed until first read/write */
-  if (unlikely(tx->start >= VERSION_MAX)) {
+  tx->clock = GET_CLOCK; /* OPT: Could be delayed until first read/write */
+  if (unlikely(tx->clock >= VERSION_MAX)) {
     /* Block all transactions and reset clock */
     stm_quiesce_barrier(tx, rollover_clock, NULL);
     goto start;
   }
 #if CM == CM_MODULAR
   if (tx->stat_retries == 0)
-    tx->timestamp = tx->start;
+    tx->timestamp = tx->clock;
 #endif /* CM == CM_MODULAR */
 
 #ifdef EPOCH_GC
-  gc_set_epoch(tx->start);
+  gc_set_epoch(tx->clock);
 #endif /* EPOCH_GC */
 
 #ifdef IRREVOCABLE_ENABLED
@@ -938,34 +955,9 @@ int_stm_prepare(stm_tx_t *tx)
 static NOINLINE void
 stm_rollback(stm_tx_t *tx, unsigned int reason)
 {
-#if CM == CM_BACKOFF
-  unsigned long wait;
-  volatile int j;
-#endif /* CM == CM_BACKOFF */
-#if CM == CM_MODULAR
-  stm_word_t t;
-#endif /* CM == CM_MODULAR */
-
-  PRINT_DEBUG("==> stm_rollback(%p[%lu-%lu])\n", tx, (unsigned long)tx->start, (unsigned long)tx->end);
+  PRINT_DEBUG("==> stm_rollback(%p[%lu])\n", tx, (unsigned long)tx->clock);
 
   assert(IS_ACTIVE(tx->status));
-
-#ifdef IRREVOCABLE_ENABLED
-  /* Irrevocable cannot abort */
-  assert((tx->irrevocable & 0x07) != 3);
-#endif /* IRREVOCABLE_ENABLED */
-
-#if CM == CM_MODULAR
-  /* Set status to ABORTING */
-  t = tx->status;
-  if (GET_STATUS(t) == TX_KILLED || (GET_STATUS(t) == TX_ACTIVE && ATOMIC_CAS_FULL(&tx->status, t, t + (TX_ABORTING - TX_ACTIVE)) == 0)) {
-    /* We have been killed */
-    assert(GET_STATUS(tx->status) == TX_KILLED);
-    /* Release locks */
-    stm_drop(tx);
-    goto dropped;
-  }
-#endif /* CM == CM_MODULAR */
 
 #if DESIGN == WRITE_BACK_ETL
   stm_wbetl_rollback(tx);
@@ -980,11 +972,9 @@ stm_rollback(stm_tx_t *tx, unsigned int reason)
     stm_wt_rollback(tx);
   else
     stm_wbetl_rollback(tx);
-#endif /* DESIGN == MODULAR */
-
-#if CM == CM_MODULAR
- dropped:
-#endif /* CM == CM_MODULAR */
+#elif DESIGN == NUMA
+  stm_numa_rollback(tx);
+#endif /* DESIGN == NUMA */
 
 #if CM == CM_MODULAR || defined(TM_STATISTICS)
   tx->stat_retries++;
@@ -1021,32 +1011,6 @@ stm_rollback(stm_tx_t *tx, unsigned int reason)
       _tinystm.abort_cb[cb].f(_tinystm.abort_cb[cb].arg);
   }
 
-#if CM == CM_BACKOFF
-  /* Simple RNG (good enough for backoff) */
-  tx->seed ^= (tx->seed << 17);
-  tx->seed ^= (tx->seed >> 13);
-  tx->seed ^= (tx->seed << 5);
-  wait = tx->seed % tx->backoff;
-  for (j = 0; j < wait; j++) {
-    /* Do nothing */
-  }
-  if (tx->backoff < MAX_BACKOFF)
-    tx->backoff <<= 1;
-#endif /* CM == CM_BACKOFF */
-
-#if CM == CM_DELAY || CM == CM_MODULAR
-  /* Wait until contented lock is free */
-  if (tx->c_lock != NULL) {
-    /* Busy waiting (yielding is expensive) */
-    while (LOCK_GET_OWNED(ATOMIC_LOAD(tx->c_lock))) {
-# ifdef WAIT_YIELD
-      sched_yield();
-# endif /* WAIT_YIELD */
-    }
-    tx->c_lock = NULL;
-  }
-#endif /* CM == CM_DELAY || CM == CM_MODULAR */
-
   /* Don't prepare a new transaction if no retry. */
   if (tx->attr.no_retry || (reason & STM_ABORT_NO_RETRY) == STM_ABORT_NO_RETRY) {
     tx->nesting = 0;
@@ -1077,8 +1041,8 @@ stm_write(stm_tx_t *tx, volatile stm_word_t *addr, stm_word_t value, stm_word_t 
 {
   w_entry_t *w;
 
-  PRINT_DEBUG2("==> stm_write(t=%p[%lu-%lu],a=%p,d=%p-%lu,m=0x%lx)\n",
-               tx, (unsigned long)tx->start, (unsigned long)tx->end, addr, (void *)value, (unsigned long)value, (unsigned long)mask);
+  PRINT_DEBUG2("==> stm_write(t=%p[%lu],a=%p,d=%p-%lu,m=0x%lx)\n",
+               tx, (unsigned long)tx->clock, addr, (void *)value, (unsigned long)value, (unsigned long)mask);
 
 #if CM == CM_MODULAR
   if (GET_STATUS(tx->status) == TX_KILLED) {
@@ -1107,7 +1071,9 @@ stm_write(stm_tx_t *tx, volatile stm_word_t *addr, stm_word_t value, stm_word_t 
     w = stm_wt_write(tx, addr, value, mask);
   else
     w = stm_wbetl_write(tx, addr, value, mask);
-#endif /* DESIGN == WRITE_THROUGH */
+#elif DESIGN == NUMA
+  w = stm_numa_write(tx, addr, value, mask);
+#endif /* DESIGN == NUMA */
 
   return w;
 }
@@ -1122,7 +1088,9 @@ int_stm_RaR(stm_tx_t *tx, volatile stm_word_t *addr)
   value = stm_wbctl_RaR(tx, addr);
 #elif DESIGN == WRITE_THROUGH
   value = stm_wt_RaR(tx, addr);
-#endif /* DESIGN == WRITE_THROUGH */
+#elif DESIGN == NUMA
+  value = stm_numa_RaR(tx, addr);
+#endif /* DESIGN == NUMA */
   return value;
 }
 
@@ -1136,7 +1104,9 @@ int_stm_RaW(stm_tx_t *tx, volatile stm_word_t *addr)
   value = stm_wbctl_RaW(tx, addr);
 #elif DESIGN == WRITE_THROUGH
   value = stm_wt_RaW(tx, addr);
-#endif /* DESIGN == WRITE_THROUGH */
+#elif DESIGN == WRITE_NUMA
+  value = stm_numa_RaW(tx, addr);
+#endif /* DESIGN == NUMA */
   return value;
 }
 
@@ -1150,7 +1120,9 @@ int_stm_RfW(stm_tx_t *tx, volatile stm_word_t *addr)
   value = stm_wbctl_RfW(tx, addr);
 #elif DESIGN == WRITE_THROUGH
   value = stm_wt_RfW(tx, addr);
-#endif /* DESIGN == WRITE_THROUGH */
+#elif DESIGN == NUMA
+  value = stm_numa_RfW(tx, addr);
+#endif /* DESIGN == NUMA */
   return value;
 }
 
@@ -1163,7 +1135,9 @@ int_stm_WaR(stm_tx_t *tx, volatile stm_word_t *addr, stm_word_t value, stm_word_
   stm_wbctl_WaR(tx, addr, value, mask);
 #elif DESIGN == WRITE_THROUGH
   stm_wt_WaR(tx, addr, value, mask);
-#endif /* DESIGN == WRITE_THROUGH */
+#elif DESIGN == NUMA
+  stm_numa_WaR(tx, addr, value, mask);
+#endif /* DESIGN == NUMA */
 }
 
 static INLINE void
@@ -1175,13 +1149,19 @@ int_stm_WaW(stm_tx_t *tx, volatile stm_word_t *addr, stm_word_t value, stm_word_
   stm_wbctl_WaW(tx, addr, value, mask);
 #elif DESIGN == WRITE_THROUGH
   stm_wt_WaW(tx, addr, value, mask);
-#endif /* DESIGN == WRITE_THROUGH */
+#elif DESIGN == NUMA
+  stm_numa_WaW(tx, addr, value, mask);
+#endif /* DESIGN == NUMA */
 }
 
 static INLINE stm_tx_t *
 int_stm_init_thread(void)
 {
   stm_tx_t *tx;
+#ifdef NUMA_CLOCK
+  struct bitmask *set;
+  unsigned int core_per_node;
+#endif /* NUMA_CLOCK */
 
   PRINT_DEBUG("==> stm_init_thread()\n");
 
@@ -1193,8 +1173,12 @@ int_stm_init_thread(void)
   gc_init_thread();
 #endif /* EPOCH_GC */
 
+  /* FIXME ensure that allocation is done into the closest memory */
   /* Allocate descriptor */
-  tx = (stm_tx_t *)xmalloc_aligned(sizeof(stm_tx_t));
+  if ((tx = (stm_tx_t *)xmalloc(sizeof(stm_tx_t))) == NULL) {
+    perror("malloc tx");
+    exit(1);
+  }
   /* Set attribute */
   tx->attr = (stm_tx_attr_t)0;
   /* Set status (no need for CAS or atomic op) */
@@ -1234,9 +1218,9 @@ int_stm_init_thread(void)
   tx->visible_reads = 0;
   tx->timestamp = 0;
 #endif /* CM == CM_MODULAR */
-#if CM == CM_MODULAR || defined(TM_STATISTICS)
+#if CM == CM_MODULAR || defined(TM_STATISTICS) || defined(HYBRID_ASF)
   tx->stat_retries = 0;
-#endif /* CM == CM_MODULAR || defined(TM_STATISTICS) */
+#endif /* CM == CM_MODULAR || defined(TM_STATISTICS) || defined(HYBRID_ASF) */
 #ifdef TM_STATISTICS
   /* Statistics */
   tx->stat_commits = 0;
@@ -1252,12 +1236,40 @@ int_stm_init_thread(void)
   tx->stat_locked_reads_failed = 0;
 # endif /* READ_LOCKED_DATA */
 #endif /* TM_STATISTICS2 */
+#ifdef HYBRID_ASF
+  tx->software = 0;
+#endif /* HYBRID_ASF */
 #ifdef IRREVOCABLE_ENABLED
   tx->irrevocable = 0;
 #endif /* IRREVOCABLE_ENABLED */
   /* Store as thread-local data */
   tls_set_tx(tx);
   stm_quiesce_enter_thread(tx);
+
+  /* Choose clock design */
+#if !defined(THREAD_CLOCK) && !defined(NUMA_CLOCK) && !defined(GLOBAL_CLOCK)
+# error "No clock design chosen"
+#endif
+#if defined(NUMA_CLOCK)
+  /* Ensure that the thread is pinned to a NUMA node to avoid overhead of access remote data */
+  set = numa_allocate_cpumask();
+  core_per_node = numa_num_configured_cpus() / numa_num_configured_nodes();
+  numa_bitmask_clearall(set);
+  numa_node_to_cpus((tx->thread_id / core_per_node) % core_per_node, set);
+  if (numa_sched_setaffinity(0, set) != 0) {
+    fprintf(stderr, "numa_sched_setaffinity failed\n");
+  }
+  /* Choose the clock related to the NUMA node */
+  tx->numa_clock = _tinystm.numa_clocks[(tx->thread_id / core_per_node) % core_per_node];
+  numa_free_cpumask(set);
+#elif defined(GLOBAL_CLOCK)
+  /* Choose the first clock of the list */
+  tx->numa_clock = _tinystm.numa_clocks[0];
+#elif defined(THREAD_CLOCK)
+  /* Allocate a thread/NUMA local clock */
+  tx->numa_clock = numa_alloc_local(64);
+  *tx->numa_clock = 0;
+#endif /* defined(THREAD_CLOCK) */
 
   /* Callbacks */
   if (likely(_tinystm.nb_init_cb != 0)) {
@@ -1276,7 +1288,7 @@ int_stm_exit_thread(stm_tx_t *tx)
   stm_word_t t;
 #endif /* EPOCH_GC */
 
-  PRINT_DEBUG("==> stm_exit_thread(%p[%lu-%lu])\n", tx, (unsigned long)tx->start, (unsigned long)tx->end);
+  PRINT_DEBUG("==> stm_exit_thread(%p[%lu])\n", tx, (unsigned long)tx->clock);
 
   /* Avoid finalizing again a thread */
   if (tx == NULL)
@@ -1351,7 +1363,7 @@ int_stm_commit(stm_tx_t *tx)
   stm_word_t t;
 #endif /* CM == CM_MODULAR */
 
-  PRINT_DEBUG("==> stm_commit(%p[%lu-%lu])\n", tx, (unsigned long)tx->start, (unsigned long)tx->end);
+  PRINT_DEBUG("==> stm_commit(%p[%lu])\n", tx, (unsigned long)tx->clock);
 
   /* Decrement nesting level */
   if (unlikely(--tx->nesting > 0))
@@ -1395,7 +1407,9 @@ int_stm_commit(stm_tx_t *tx)
     stm_wt_commit(tx);
   else
     stm_wbetl_commit(tx);
-#endif /* DESIGN == MODULAR */
+#elif DESIGN == NUMA
+  stm_numa_commit(tx);
+#endif /* DESIGN == NUMA */
 
  end:
 #ifdef TM_STATISTICS
@@ -1413,6 +1427,11 @@ int_stm_commit(stm_tx_t *tx)
 #if CM == CM_MODULAR
   tx->visible_reads = 0;
 #endif /* CM == CM_MODULAR */
+
+#ifdef HYBRID_ASF
+  /* Reset to Hybrid mode */
+  tx->software = 0;
+#endif /* HYBRID_ASF */
 
 #ifdef IRREVOCABLE_ENABLED
   if (unlikely(tx->irrevocable)) {
@@ -1452,7 +1471,9 @@ int_stm_load(stm_tx_t *tx, volatile stm_word_t *addr)
     return stm_wt_read(tx, addr);
   else
     return stm_wbetl_read(tx, addr);
-#endif /* DESIGN == MODULAR */
+#elif DESIGN == NUMA
+  return stm_numa_read(tx, addr);
+#endif /* DESIGN == NUMA */
 }
 
 static INLINE void
@@ -1490,13 +1511,6 @@ int_stm_irrevocable(stm_tx_t *tx)
 #else /* ! IRREVOCABLE_ENABLED */
   return 0;
 #endif /* ! IRREVOCABLE_ENABLED */
-}
-
-static INLINE int
-int_stm_killed(stm_tx_t *tx)
-{
-  assert (tx != NULL);
-  return (GET_STATUS(tx->status) == TX_KILLED);
 }
 
 static INLINE sigjmp_buf *
@@ -1602,17 +1616,19 @@ int_stm_get_stats(stm_tx_t *tx, const char *name, void *val)
 }
 
 static INLINE void
-int_stm_set_specific(stm_tx_t *tx, int key, void *data)
+int_stm_set_specific(int key, void *data)
 {
+  TX_GET;
   assert (tx != NULL && key >= 0 && key < _tinystm.nb_specific);
-  ATOMIC_STORE(&tx->data[key], data);
+  tx->data[key] = data;
 }
 
 static INLINE void *
-int_stm_get_specific(stm_tx_t *tx, int key)
+int_stm_get_specific(int key)
 {
+  TX_GET;
   assert (tx != NULL && key >= 0 && key < _tinystm.nb_specific);
-  return (void *)ATOMIC_LOAD(&tx->data[key]);
+  return tx->data[key];
 }
 
 #endif /* _STM_INTERNAL_H_ */

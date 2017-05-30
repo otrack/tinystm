@@ -7,7 +7,7 @@
  * Description:
  *   Module for user callback and for dynamic memory management.
  *
- * Copyright (c) 2007-2014.
+ * Copyright (c) 2007-2012.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -77,6 +77,10 @@ mod_cb_add_on_abort(mod_cb_info_t *icb, void (*f)(void *arg), void *arg)
   if (unlikely(icb->abort_nb >= icb->abort_size)) {
     icb->abort_size *= 2;
     icb->abort = xrealloc(icb->abort, sizeof(mod_cb_entry_t) * icb->abort_size);
+    if (icb->abort == NULL) {
+      perror("realloc error");
+      exit(1);
+    }
   }
   icb->abort[icb->abort_nb].f = f;
   icb->abort[icb->abort_nb].arg = arg;
@@ -89,6 +93,10 @@ mod_cb_add_on_commit(mod_cb_info_t *icb, void (*f)(void *arg), void *arg)
   if (unlikely(icb->commit_nb >= icb->commit_size)) {
     icb->commit_size *= 2;
     icb->commit = xrealloc(icb->commit, sizeof(mod_cb_entry_t) * icb->commit_size);
+    if (icb->commit == NULL) {
+      perror("realloc error");
+      exit(1);
+    }
   }
   icb->commit[icb->commit_nb].f = f;
   icb->commit[icb->commit_nb].arg = arg;
@@ -148,7 +156,10 @@ int_stm_malloc(struct stm_tx *tx, size_t size)
     size = (size + 7) & ~(size_t)0x07;
   }
 
-  addr = xmalloc(size);
+  if (unlikely((addr = malloc(size)) == NULL)) {
+    perror("malloc");
+    exit(1);
+  }
 
   mod_cb_add_on_abort(icb, free, addr);
 
@@ -187,7 +198,10 @@ void *int_stm_calloc(struct stm_tx *tx, size_t nm, size_t size)
     size = (size + 7) & ~(size_t)0x07;
   }
 
-  addr = xcalloc(nm, size);
+  if ((addr = calloc(nm, size)) == NULL) {
+    perror("calloc");
+    exit(1);
+  }
 
   mod_cb_add_on_abort(icb, free, addr);
 
@@ -217,7 +231,7 @@ epoch_free(void *addr)
     stm_word_t t = stm_get_clock();
     gc_free(addr, t);
   } else {
-    xfree(addr);
+    free(addr);
   }
 }
 #endif /* EPOCH_GC */
@@ -331,13 +345,21 @@ static void mod_cb_on_thread_init(void *arg)
 {
   mod_cb_info_t *icb;
 
-  icb = (mod_cb_info_t *)xmalloc(sizeof(mod_cb_info_t));
+  if ((icb = (mod_cb_info_t *)xmalloc(sizeof(mod_cb_info_t))) == NULL)
+    goto err_malloc;
   icb->commit_nb = icb->abort_nb = 0;
   icb->commit_size = icb->abort_size = DEFAULT_CB_SIZE;
   icb->commit = xmalloc(sizeof(mod_cb_entry_t) * icb->commit_size);
   icb->abort = xmalloc(sizeof(mod_cb_entry_t) * icb->abort_size);
+  if (unlikely(icb->commit == NULL || icb->abort == NULL))
+    goto err_malloc;
 
   stm_set_specific(mod_cb.key, icb);
+
+  return;
+ err_malloc:
+   perror("malloc");
+   exit(1);
 }
 
 /*
@@ -358,19 +380,18 @@ static void mod_cb_on_thread_exit(void *arg)
 static INLINE void
 mod_cb_mem_init(void)
 {
-  /* Module is already initialized? */
   if (mod_cb.key >= 0)
-    return;
+    goto already_init;
 
-  if (!stm_register(mod_cb_on_thread_init, mod_cb_on_thread_exit, NULL, NULL, mod_cb_on_commit, mod_cb_on_abort, NULL)) {
-    fprintf(stderr, "Cannot register callbacks\n");
-    exit(1);
-  }
+  stm_register(mod_cb_on_thread_init, mod_cb_on_thread_exit, NULL, NULL, mod_cb_on_commit, mod_cb_on_abort, NULL);
   mod_cb.key = stm_create_specific();
-  if (mod_cb.key < 0) {
+  if (unlikely(mod_cb.key < 0)) {
     fprintf(stderr, "Cannot create specific key\n");
     exit(1);
   }
+
+ already_init:
+  return;
 }
 
 /*
