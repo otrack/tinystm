@@ -266,7 +266,7 @@ static void *test(void *data)
   /* Wait on barrier */
   barrier_cross(d->barrier);
   ret = total(d->bank, 1);
-  printf("Bank total    : %d (expected: 0)\n", ret);
+  if (ret!=0) printf("Bank total    : %d (expected: 0)\n", ret);
 
   while (stop == 0) {
     if (d->id < d->read_threads) {
