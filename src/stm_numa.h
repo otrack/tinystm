@@ -414,7 +414,10 @@ stm_numa_commit(stm_tx_t *tx)
   unsigned int i;
 
   PRINT_DEBUG("==> stm_numa_commit(%p[%lu])\n", tx, (unsigned long)tx->clock);
-
+  
+#if defined(GLOBAL_CLOCK)
+  t = tx -> clock;
+#else
   /* Try to validate */
   t = stm_numa_extend(tx, tx->clock);
   if (t == VERSION_MAX) {
@@ -422,7 +425,8 @@ stm_numa_commit(stm_tx_t *tx)
     stm_rollback(tx, STM_ABORT_VALIDATE);
     return 0;
   }
-
+#endif
+  
   /* A read-only transaction can commit now */
   if (unlikely(tx->w_set.nb_entries == 0))
     return 1;
