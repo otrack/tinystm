@@ -423,28 +423,32 @@ stm_numa_commit(stm_tx_t *tx)
     return 0;
   }
 
+  /* A read-only transaction can commit now */
+  if (unlikely(tx->w_set.nb_entries == 0))
+    return 1;
+  
   /* Advance the timestamp by 1 */
   /* Set the numa clock to this value if below */
-  
-  t++;
+
   clock = GET_CLOCK;
   if (t > clock) {
 #if defined(GLOBAL_CLOCK)
     assert(0);
 #endif
-    while (t > clock && CAS_CLOCK(clock, t) == 0) {
+    while (t > clock && CAS_CLOCK(clock, t)) {
       clock = GET_CLOCK;
     }
   }
+  t = FETCH_INC_CLOCK + 1;
 
   /* Install new versions, drop locks and set new timestamp */
   w = tx->w_set.entries;
   for (i = tx->w_set.nb_entries; i > 0; i--, w++) {
+    assert(t > w->version);
     if (w->mask != 0)
       ATOMIC_STORE(w->addr, w->value);
     /* Only drop lock for last covered address in write set */
     if (w->next == NULL) {
-      assert(t > w->version);
       ATOMIC_STORE_REL(w->lock, LOCK_SET_TIMESTAMP(t));
     }
   }

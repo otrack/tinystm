@@ -248,7 +248,7 @@ enum {                                  /* Transaction status */
  * ################################################################### */
 
 #define GET_CLOCK                       (ATOMIC_LOAD_ACQ(tx->numa_clock))
-#define SET_CLOCK(u)                    (tx->numa_clock=0)
+#define SET_CLOCK(u)                    (tx->numa_clock=u)
 #define FETCH_INC_CLOCK                 (ATOMIC_FETCH_INC_FULL(tx->numa_clock))
 #define CAS_CLOCK(u,v)                  (ATOMIC_CAS_FULL(tx->numa_clock, u, v))
 
@@ -1389,9 +1389,11 @@ int_stm_commit(stm_tx_t *tx)
   }
 #endif /* CM == CM_MODULAR */
 
+#if (DESIGN != NUMA)
   /* A read-only transaction can commit immediately */
   if (unlikely(tx->w_set.nb_entries == 0))
     goto end;
+#endif
 
   /* Update transaction */
 #if DESIGN == WRITE_BACK_ETL
