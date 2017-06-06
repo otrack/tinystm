@@ -251,7 +251,7 @@ static void *test(void *data)
   if (d->locality > 0 && d->locality <= 1) {
     l_rand_max = d->bank->size / d->nb_threads;
     l_rand_min = l_rand_max * d->id;
-    if (l_rand_max <= 2) {
+    if (l_rand_max < 2) {
       fprintf(stderr, "can't have local account accesses");
       return NULL;
     }
@@ -265,8 +265,6 @@ static void *test(void *data)
   TM_INIT_THREAD;
   /* Wait on barrier */
   barrier_cross(d->barrier);
-  ret = total(d->bank, 1);
-  if (ret!=0) printf("Bank total    : %d (expected: 0)\n", ret);
 
   while (stop == 0) {
     if (d->id < d->read_threads) {
@@ -294,6 +292,7 @@ static void *test(void *data)
 	if (d->locality > 0 && d->locality <= 1 && erand48(seed) < d->locality) {
 	  src = (int)(erand48(seed) * l_rand_max) + l_rand_min;
 	  dst = (int)(erand48(seed) * l_rand_max) + l_rand_min;
+	  // printf("%u %u %u\n", d->id, src, dst);
 	  if (dst == src)
 	    dst = ((src + 1) % l_rand_max) + l_rand_min;
 	} else {
@@ -476,6 +475,7 @@ int main(int argc, char **argv)
   assert(read_threads + write_threads <= nb_threads);
 
   printf("Nb accounts    : %d\n", nb_accounts);
+  printf("Locality       : %f\n", locality);
 #ifndef TM_COMPILER
   printf("CM             : %s\n", (cm == NULL ? "DEFAULT" : cm));
 #endif /* ! TM_COMPILER */
