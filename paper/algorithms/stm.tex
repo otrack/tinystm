@@ -1,0 +1,100 @@
+\begin{algorithm}[!t]
+
+  \caption{A locality-aware STM -- code at process $p$}
+  \labalg{stm}
+  \scriptsize
+
+  \begin{algorithmic}[1]
+
+    \begin{variables}
+      \VarCustom{$\clockOf{T}, \readSetOf{T}, \writeSetOf{T}$} \Comment{local to $p$} \labline{stm:var:1}
+      \VarCustom{$\clockOf{p}$} \labline{stm:var:2}
+    \end{variables}
+
+    \vspace{1em}
+    
+    \StartFunction{$\stmStart{T}$}
+    \State $\clockOf{T}.\cadv{\clockOf{p}}$ \labline{stm:start:1}
+    \State $\readSetOf{T} \assign \emptySet$ \labline{stm:start:2}
+    \State $\writeSetOf{T} \assign \emptySet$ \labline{stm:start:3}
+    \EndFunction
+
+    \vspace{1em}
+
+    \StartFunction{$\stmRead{T,x}$}
+    \If{$(d,x) \in \writeSetOf{T}$}
+      \Return $d$ \labline{stm:read:0} % FIXME
+    \EndIf
+    \State $(d,t) \assign \locationOf{x}$ \labline{stm:read:1}
+    \If{$\isLocked{x}$ \labline{stm:read:2} 
+      \\ \hspace{2.5em} $\lor~ (\exists (t',x) \in \readSetOf{T} : t \neq t')$} \labline{stm:read:3}
+      \Return $\stmAbort{t}$  \labline{stm:read:4}
+    \EndIf
+    \If{$(t > \clockOf{T} ) \land \neg~\stmExtend{T,t}$} \labline{stm:read:5}
+      \Return $\stmAbort{t}$ \labline{stm:read:6}
+    \EndIf
+    \State $\readSetOf{T}[x] \assign t$ \labline{stm:read:7}
+    \Return $d$ \labline{stm:read:8}
+    \EndFunction
+
+    \vspace{1em}
+
+    \StartFunction{$\stmWrite{T,x,d}$}
+    \If{$\neg~\lock{x}$} \labline{stm:write:1}
+      \Return $\stmAbort{T}$ \labline{stm:write:2}
+    \EndIf
+    \State $(\msgAny,t) \assign \locationOf{x}$ \labline{stm:write:3}
+    \If{$t>\clockOf{T} \land \neg~\stmExtend{T,t}$} \labline{stm:write:4}
+      \Return $\stmAbort{t}$ \labline{stm:write:5}
+    \EndIf
+    \State $\writeSetOf{T}[x] \assign d$ \labline{stm:write:6}
+    \EndFunction
+
+    \vspace{1em}
+
+    \StartFunction{$\stmTryCommit{T}$}
+    \If{$\neg~\stmExtend{T,\clockOf{T}}$} \labline{stm:try:1}
+      \Return $\stmAbort{T}$ \labline{stm:try:2}
+    \EndIf    
+    \Return $\stmCommit{T}$ \labline{stm:try:3}
+    \EndFunction
+
+    \vspace{1em}
+    \hspace{-3.6em}{\emph{// Helpers}}
+    \vspace{0.5em}
+
+    \StartFunction{$\stmExtend{T,t}$} 
+    \ForAll{$(t',x) \in \readSetOf{T}$} \labline{stm:extend:1}
+      \State $(\msgAny,t'') \assign \locationOf{x}$ \labline{stm:extend:2}
+      \If{$\isLocked{x} \lor t'' \neq t'$} \labline{stm:extend:3}
+        \Return $\false$ \labline{stm:extend:4}
+      \EndIf
+    \EndFor
+    \State $\clockOf{T}.\cadv{t}$ \labline{stm:extend:5}
+    \Return $\true$ \labline{stm:extend:6}
+    \EndFunction 
+
+    \vspace{1em}
+
+    \StartFunction{$\stmAbort{T}$}
+    \ForAll{$(\msgAny,x) \in \writeSetOf{T}$} \labline{stm:abort:1}
+      \State $\unlock{x}$ \labline{stm:abort:2}
+    \EndFor
+    \Return $\flagAbort$ \labline{stm:abort:3}
+    \EndFunction
+
+    \vspace{1em}
+
+    \StartFunction{$\stmCommit{T}$}
+    \State $\clockOf{T}.\cadv{\clockOf{T}+1}$ \labline{stm:commit:1} 
+    \State $\clockOf{p}.\cadv{\clockOf{T}}$ \labline{stm:commit:2}
+    \ForAll{$(d,x) \in \writeSetOf{T}$} \labline{stm:commit:3}
+      \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:4}
+      \State $\unlock{x}$ \labline{stm:commit:5}
+    \EndFor
+    \Return $\flagCommit$ \labline{stm:commit:6}
+    \EndFunction
+
+  \end{algorithmic}
+
+\end{algorithm}

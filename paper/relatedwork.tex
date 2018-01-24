@@ -1,0 +1,58 @@
+\section{Related Work}
+\labsection{relatedwork}
+
+Software transactional memory systems must handle a tradeoff between consistency and performance.
+It is however impractical to take into account all possible combinations of read and write conflicts, as it would lead to leargely inefficient solutions. 
+%A conflict detection, taking into account all possible combinations of read and write conflicts would just not be efficient. 
+Therefore, several mechanisms were introduced to reduce the effort of conflict detection and increase concurrency. 
+DSTM~\cite{herlihy2003software} validates all previously accessed object when a new object is about to be opened. 
+However, this approach does not scale, and its complexity is quadratic to the number of opened objects within a transaction.
+
+Several time-based STM designs use a global version clock (e.g., Dice \cite{dice}, Riegel \cite{riegel2006lazy}, \cite{14})\vs{cannot infer the 3 previous references} to avoid the effort of incrementally validating the read set at commit time. 
+TinySTM \cite{FelberFMR10} is a time-based STM that uses a lazy snapshot technique. 
+On commit the TM assigns a timestamp from the global clock to the currently written objects. 
+Any transaction constructs a snapshot of linearization points for ensuring consistency. 
+By keeping a validity interval of timestamps, it can be verified whether a validation is really necessary. 
+
+The authors of \cite{zhang2008commit} compare Transactional Locking II (TL2)~\cite{dice2006transactional}, Lazy Snapshot (LSS)\cite{riegel2006lazy} and Global Commit Counter (GCC)~\cite{spear2006conflict}. 
+All of them require a new timestamp for each update transaction (total order).
+Their approach perform unnecessary updates on the global counter thus leading to unnecessary validations. 
+The authors provide several commit alternatives to solve these issues and reducing further unnecessary validations.
+
+New challenges arise when considering multicore architectures and cache coherency strategies for NUMA architectures. 
+Clock contention~\cite{6121290} is one of the major issues. 
+In a multi-core system with several processors and separate caches, cache coherence messages are required on each update of the clock, which happens frequently. 
+Transaction throughput is therefore limited.
+
+To tackle these issues the authors of \cite{Avni:2008} introduce TL2C, which consider a distributed counter --- one per thread. 
+The clock values propagate to a \emph{dlock} table with $n-1$ lock entries of different threads. 
+During a validation phase, this cache is used, which may however lead to unnecessary aborts. 
+Another issue is that the storage of the timestamps might not scale with the number of threads.
+
+In \cite{6121290} the authors adapt TL2 to TrC-MC~\cite{chan2011trc} (transactional consistency for multicore), which groups threads into so-called \textit{zones}. 
+Zones share a clock and a clock table.\vs{add a sentence to explain why this is relevant} 
+To avoid unnecessary aborts, TrC-MC adopts a timestamp extension mechanism.
+TrC-MC compares favourably against TL2 in terms of aborted transsactions.  
+%Still the number of aborts are increased, while lower than caused by TL2C.
+
+\vs{add ProteusTM~\cite{didona2016proteustm}}
+\vs{add PODC'10 NUMA-aware TM ~\cite{Lu:2010:BAN:1835698.1835713}}
+\vs{add ~\cite{Mohamedin:2016:DNC:2851141.2851189}}
+
+\vs{Complete section with 2/3 sentences about how why NumaSTM is different }
+%%Why is distributed TM not a relevant work
+%%get some more from 612...
+%%TODO, why is ours better?
+
+% RWCounter (Lev & Moir) 
+% this solution is still global 
+
+% Maintaining Consistent Transactional States without a Global Clock, Avni & Shavit
+% space suage: O(m) per thread.
+% each transaction got a vector clock inddicating the ts at which other transactions started
+% each location got a timestamp pair (x.ts,x.owner), where x.owner is the thread that wrote x last.
+% upon reading x, T compare x.ts to  its ts and abort if x.ts[x.owner] > T.ts[x.owner]
+% no forward reading possible, thus more false abprt:
+% ``We argue that a TLC transaction will always fail if it attempts 
+% to read a location that was written by some other transaction after it started.''
+% example of spurious abort: w_p(x).c_p.r_q(x).w_q(y).c_p.r_{q'}(y).a_{q'}.r_{q'}(x).a_{q'}
