@@ -1,0 +1,15 @@
+% STM Operations
+%
+\newmathit@one{lock}
+\newmathit@one{unlock}
+\newmathit@one{isLocked}
+\newmathit@one{tickSet}
+
+\newcommand{\locationOf}[1]{\ensuremath{\mathit{loc}(#1)}}
+\newcommand{\clockOf}[1]{\ensuremath{\mathit{clock}(#1)}}
+\newcommand{\clockCompatibleOf}[1]{\ensuremath{\mathit{compat}(#1)}}
+
+\newcommand{\cread}{\ensuremath{\mathit{read}()}}
+\newcommand{\cadv}[1]{\ensuremath{\mathit{adv}(#1)}}
+
+\newcommand{\stmPrec}[1]{\ensuremath{\xrightarrow{#1}}}

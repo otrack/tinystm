@@ -1,0 +1,58 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{times}
+\usepackage{format}
+\usepackage{macros}
+\usepackage{macros_stm}
+\usepackage{paper}
+\usepackage{url}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\begin{document}
+
+\newboolean{showcomments}
+\setboolean{showcomments}{true}
+\ifthenelse{\boolean{showcomments}}
+{ \newcommand{\mynote}[3]{
+   \fbox{\bfseries\sffamily\scriptsize#1}
+   {\small$\blacktriangleright$\textsf{\emph{\color{#3}{#2}}}$\blacktriangleleft$}}}
+{ \newcommand{\mynote}[3]{}}
+% One command per author:
+\newcommand{\pf}[1]{\mynote{Pierre}{#1}{red}}
+\newcommand{\hm}[1]{\mynote{Patrick}{#1}{pink}}
+\newcommand{\vs}[1]{\mynote{Valerio}{#1}{blue}}
+
+% https://docs.google.com/spreadsheets/d/1jqpC7ehu48kJc96EYcEFRbjgV9wq8E9HbdZpwREfw7w/edit#gid=1043149494
+
+\author{(authors omitted due to double-blind review policy)}
+
+\title{A Locality-Aware Software Transactional Memory}
+
+\maketitle
+
+\begin{abstract}
+  Software transactional memory (STM) guarantees that a sequence of operations encapsulated into a transaction is atomic.
+  This simple yet powerful paradigm is a promising direction for writing concurrent applications.
+  %
+  Recent STM designs employ a time-based approach to leverage the performance advantage of invisible reads.
+  With the advent of many-core architectures and non-uniform memory architecture (NUMA),
+  this design is however hitting the synchronization wall of the cache coherency protocol.
+  %
+  In this paper, we propose a novel and flexible approach to address this limitation.
+  Our idea is to leverage the parallelism and the locality of applicative workloads to execute few global operations.
+  To that end, we introduce a new STM design that supports invisible reads, lazy snapshots 
+  and can be tailored to be either disjoint access parallel, or NUMA-aware.
+  Several empirical comparisons against a well-established STM design demonstrate that our design greatly improve perfmance\vs{check it matchs eval content}.
+\end{abstract}
+
+\input{introduction}
+\input{relatedwork}
+\input{stm}
+\input{evaluation}
+\input{conclusion}
+
+{
+  \footnotesize
+  \bibliographystyle{abbrvnat}
+  \bibliography{bib/nicolas,bib/psutra,bib/mshapiro,bib/paper}
+}  
+
+\end{document}
