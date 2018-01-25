@@ -416,6 +416,8 @@ int main(int argc, char **argv)
 	     "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
 	     "  -n, --num-threads <int>\n"
 	     "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
+	     "  -l <float>\n"
+	     "        Locality (default=" XSTR(DEFAULT_LOCALITY) ")\n"
 	     "  -r, --read-all-rate <int>\n"
 	     "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
 	     "  -R, --read-threads <int>\n"
