@@ -33,16 +33,19 @@ These two properties helps us to maintain the strict serializability of our cons
 \subsection{Tracking Time}
 \labsection{stm:time}
 
+%% define consistent clock as any mechanism from $H$ to (\tickSet,<)
+%% satisfying for any two e, e' in $H$, $\hb e' \implies \Theta(e) < \Theta(e')$.
+
 \refalg{stm} tracks time to compute how concurrent transactions interleave during an execution.
 To this end, it makes use of logical clocks.
 We model the interface of a \emph{logical clock} with two operations:
 $\cread$ that returns a value in $\naturalSet$, 
-and $\cadv{v \in \naturalSet}$) that updates the clock with value $v$.
+and $\cadv(v \in \naturalSet)$) that updates the clock with value $v$.
 The sequential specification of a logical clock guarantees a single property, that the time always flows forward:
 \begin{inparaenum}
 \item[\emph{(time monoticity)}]
-  A read operation always returns the greatest value to which the clock advanced so far, or $0$ if no such operation exists.
-  Formally, for every history $h$, $(\responseAny{\cread}{v} \in h) \implies (v = \max{(\{u : \cadv{u} \hb_h \cread \} \union \{0\})})$.
+  A read operation always returns at least the greatest value to which the clock advanced so far.
+  Formally, for every history $h$, $(\responseAny{\cread}{v} \in h) \implies (v \geq \max{(\{u : \cadv(u) \hb_h \cread \} \union \{0\})})$.
 \end{inparaenum}
 
 \refalg{stm} associates logical clocks with both processes and transactions.
@@ -58,7 +61,7 @@ To implement an (obstruction-free) linearizable clock we proceeds as follows.
 \begin{construction}
   Let $x$ be a shared register initialized to $0$.
   When $\cread$ is called, we return the value stored in $x$.
-  Upon executing $\cadv{v}$, we fetch the value stored in $x$, say $u$.
+  Upon executing $\cadv(v)$, we fetch the value stored in $x$, say $u$.
   If $v > u$ holds, we execute a compare-and-swap to replace $u$ with $v$; 
   otherwise the operation returns.
   If the compare-and-swap fails, the previous steps are retried.
@@ -248,28 +251,30 @@ Consider such a scenario and two transactions $T_i$ and $T_j$ that do not access
 If $T_i$ and $T_j$ are executed by distinct processes, then they do not contend on some low-level object in \refalg{stm}.
 It follows that \refalg{stm} is strictly disjoint-access parallel.
 
-\subsection{Conjoining the clocks}
+\subsection{Conjoining clocks}
 \labsection{stm:conjoining}
 
-THe above properties are stated for any logical clock.
+Local clocks leverage parallelism but it is expected that a global clock performs better under contended workloads.
+\refsection{evaluation} confirms this expectation in practice.
 
-On the other hand, the absence of a global reference has a cost since
-\begin{inparaenum}[\em(i)]
-\item \refalg{stm} has to access the read set when the transaction re-reads a location, and
-\item when a transaction $T$ reads a location written by a transaction $T'$  
-  unknown from the process that executes $T$, \refalg{stm} needs to call \stmExtend{}.
-  % Avni:2008 points out this last problem
-\end{inparaenum}
+To have the best of both worlds, we propose a mechanism that allows switching from one clock to another.
+This mechanism is named \emph{conjoining clocks}.
+In practice, we are interested in conjoining a global real-time clock together with a local logical clock.
 
-To mitigate this last point, while alleviating the cost of a global variable, $\clockOf{p}$ is a NUMA clock,
-local solely to the cluster of $p$.
+With more details, conjoining two clocks $c$ and $\barc$ is defined as a new clock $c \times \barc$ with:
+\begin{compactitem}
+\item $\cread \equaldef [t \assign c.\cread];~\text{\textbf{return}}~t$
+\item $\cadv(u) \equaldef [c.\cadv(u)]$
+\item $\cswitch \equaldef [\barc.\cadv(c.\cread);~d \assign c;~c \assign \barc;~\barc \assign d]$
+\end{compactitem}
+where we mark using $[ \ldots ]$ the begin and end of a transaction.
 
-define consistent clock as any mechanism from $H$ to (\tickSet,<)
-satisfying for any two e, e' in $H$, $\hb e' \implies \Theta(e) < \Theta(e')$.
+\begin{proposition}
+  If clocks $c$ and $\barc$ are consistent then $c \times \barc$ is consistent.
+\end{proposition}
 
-We (rewrite and) prove that Alg. 1 above is correct for any consistnet clock 
-Syntheticaly, Alg. 1 first compute a snapshot point at line 6.
-The, all the operations of transaction $T$ are executed, and upon encountering 
-an event that occurs potentialy after the start time of $T$, the snapshot is exenteded.
-At commit time, a commit point is defined. 
-This point is after all the events that occur in transaction $T$.
+\begin{proof}
+  
+\end{proof}
+
+ 

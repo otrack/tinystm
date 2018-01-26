@@ -53,6 +53,13 @@ TrC-MC compares favourably against TL2 in terms of aborted transsactions.
 % each location got a timestamp pair (x.ts,x.owner), where x.owner is the thread that wrote x last.
 % upon reading x, T compare x.ts to  its ts and abort if x.ts[x.owner] > T.ts[x.owner]
 % no forward reading possible, thus more false abprt:
+%
+% This algorithm is SSER but has two main disadvantages
+% 1) 
 % ``We argue that a TLC transaction will always fail if it attempts 
 % to read a location that was written by some other transaction after it started.''
 % example of spurious abort: w_p(x).c_p.r_q(x).w_q(y).c_p.r_{q'}(y).a_{q'}.r_{q'}(x).a_{q'}
+% the progress property of this STM is very weak, namely
+% if the transaction starts from a quescient state and it repeatdly executed and there is no concurrent transaction, then it commits.
+% 2) abortion due to non-causally consistent snapshot
+% our appraoch does not have this problem
