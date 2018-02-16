@@ -1,0 +1,151 @@
+\section{Extensions}
+\labsection{ext}
+
+This section present seeveral extensions for \refalg{stm}.
+First, we explain how to attain opacity, a stricter consistency model than strict serializability.
+Then, we present a mechanism to adapt clocks dynamically to the workload, in order to find dynamically a sweet point between the need for synchronization and the cost of cache coherence.
+
+\subsection{Attaining opacity}
+\labsection{ext:opacity}
+
+\paragraph{(Global clock.)}
+When processes use a global clock, \refalg{stm} is idenrtical to the original code of TinySTM.
+This means that each transaction, even if it aborts, observes a strictly consistent snapshot.
+Such a property, together with \reftheo{ss}, leads to the fact that \refalg{stm} is opaque.
+Before proving this claim, we first recall the notion of consisstent snapshot.
+
+A transaction $T_i$ \emph{depends on} a transaction $T_j$ when $T_i$ reads a version written by $T_j$, or such a relation holds transitively.
+Thus, a transaction observes a \emph{consistent snapshot} \cite{Chan:1985} when it never misses the effects of some transaction it depends on.
+In other words, transaction $T_i$ in a history $h$ observes a consistent snapshot when
+\begin{inparaenum}[\em(i)]
+\item $T_i$ reads version $x_j$,
+\item $T_k$ writes version $x_k$, and 
+\item $T_i$ depends on $T_{k}$,
+\end{inparaenum}
+then version $x_k$ is followed by version $x_j$.
+Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \implies (x_k \ll_{h,x} x_j)$, where $\ll_{h,x}$ is the version order defined by history $h$.
+
+\begin{proposition}
+  \labprop{ext:1}
+  If $\clockOf{p}$ is global for every process $p$, then for every transaction $T$, $\readSetOf{T}$ is always a strictly consistent snapshot.
+\end{proposition}
+
+\begin{proof}
+  (By contradiction.)
+  
+  Let us consider a history $h$ produced by \refalg{stm} during which some transaction $T$
+  \begin{inparaenum}[\em(i)]
+  \item reads version $x_j$ of register $x$,
+  \item depends on some transaction $T_k$ that writes version $x_k$, and
+  \item $x_j$ is followed by version $x_k$ in the version order $\ll_{h,x}$.
+  \end{inparaenum}
+
+  As $T_i$ depends on $T_k$, $T_i$ reads some version $y_l$ of a register $y$, with $T_l$ depending on $T_k$.
+  Thus, at the time, $T$ reads $y_l$, register $x$ is at least in version $x_k$.
+  It followed that $T$ must read register $x$ before it read register $y$.
+  We have two cases to consider here.
+  First, assume that the clock of $T$ is higher than the version of $y_l$.
+  In such a case, as the time is global, $T$ must have read from a transaction that committed after $T_k$.
+  Because $y_l$ is the first item then.
+  Otherwose, $T$ must execute an extend operation and fails reading version $x_j$.  
+\end{proof}
+
+Let us observe that as each read when it returns ensure that the snapshot read so far is consistent, when the clock is global the algorithm does not call \stmExtend{} at \refline{stm:try:1}.
+
+\paragraph{(Accurate tracking of causality.)}
+Consider history $h_1$ described in \reffigure{} below.
+In this history, transaction $T_a=[r(x);r(z);r(y)]$ reads $x_0$ and $y_1$.
+Since transaction $T_1$ writes both register $x$ and $y$, transaction $T_a$ observe a fractured read \cite{}, and thus fails to construct a consistent snapshot.
+
+\input{figures/not-opaque}
+
+When clocks are local, history $h_1$ is admissible \refalg{stm}
+This comes from the fact that when $T_a$ reads register $z$, the clock of $z$ has been increased to a value higher than the clock associated with $y_1$.
+Hence, when $T_a$ access $y$, it does not extend and check the content of $x$.
+
+One solution to this problem consists in calling $\stmExtend{}$ everytime a new item is read (similarly to \cite{}).
+However as underlined in \refsection{}, this leads to a time complexity of $O(r^2)$, where $r$ is the amount of reads in the transaction.
+To reduce this complexity, we propose instead to check items for which the read timestamp is smaller than the new timestamp encountered.
+In details, we introduce the following modifications to \refalg{stm}.
+\begin{compactitem}
+\item $\stmExtend{}$ is always calls at \refline{stm:read:5}, \refline{stm:write:4} and \refline{stm:try:1};
+\item the computation at \reflines{stm:extend:2}{stm:extend:4} in $\stmExtend{}$ is executed only when $t' \leq t$ holds.
+\end{compactitem}
+We refer to this variation as \refalg{stm}' and proves below that it attains opacity.
+
+\begin{theorem}
+  \labprop{ext:2}
+  \refalg{stm}' is opaque.
+\end{theorem}
+
+\begin{proof}
+
+  Clearly \refalg{stm}' attains strict serializability by immediate reduction to the original algorithm.
+  To show that a transaction always sees a consistent snapshot we proceed by contradiction, as in \refprop{ext:1}.
+  %
+  Let us assume that some transaction $T_a \in h$ does not observe a consistent snapshot.
+  This means that transaction $T_a$
+  \begin{inparaenum}
+  \item reads a version $x_j$ of some register $x$,
+  \item depends on some transaction $T_k$ which writes version $x_k$ in $h$, and
+  \item $x_j$ is followed by version $x_k$ in the version order $\ll_{h,x}$.
+  \end{inparaenum}
+  We observe that $r_a(x_j)$ precedes $w_k(x_k)$ in $h$, otherwise $T_a$ must abort before reading $x$, or reads instead version $x_k$.
+  Applying \refprop{} to transction $T_a \depends T_k$, there exist a write $w_k(z_k)$ and a read $r_a(y_l)$ such that
+  \begin{inparaenum}
+  \item $w_k(z_k) \hb_h r_a(y_l)$, and
+  \item $\clockOf{y_l} \geq \clockOf{T_k}$.
+  \end{inparaenum}  
+  If $r_a(y_l) <_h r_a(x_j)$ holds, then $T_a$ aborts before return $x_j$ as transaction $T_k$ still holds the lock on register $x$.
+  In the converse case, as $\clockOf{x_j} < \clockOf{x_k}$ holds, transaction $T_a$ aborts before returning $y_l$ when executing $\stmExtend{}$.  
+    
+\end{proof}
+
+From a practical point of view, we now argue that the above algorithm avoids most of the time a complexity in $O(r^2)$.
+To this end, let us conider some transaction $T$ reading two versions $x_i$ and $y_j$ of objects $x$ and $y$.
+In the common case, it is expected that there is no concurrent transactions to $T$.
+Thus,
+\begin{inparaenum}
+\item if $x$ and $y$ are bound due to some state invariant, $x_i$ and $y_j$ have the same clocks; and
+\item if $x_i$ was updated causally before $y_j$, it suffices that $T$ reads $y_j$ before its causal dependency $x_i$.
+\end{inparaenum}
+Item (ii) is generally true in the case of a referential integrity linking $y$ to $x$ (i.e., $y$ stores a reference to $x$).
+
+\subsection{Conjoining clocks}
+\labsection{stm:conjoining}
+
+Local clocks leverage parallelism but it is expected that a global clock performs better under contended workloads.
+\refsection{evaluation} confirms this expectation in practice.
+
+To have the best of both worlds, we propose a mechanism that allows switching from one clock to another.
+This mechanism is named \emph{conjoining clocks}.
+In practice, we are interested in conjoining a global real-time clock together with a local logical clock.
+
+With more details, conjoining two clocks $c$ and $\barc$ is defined as a new clock $c \times \barc$ with:
+\begin{compactitem}
+\item $\cread \equaldef [t \assign c.\cread];~\text{\textbf{return}}~t$
+\item $\cadv(u) \equaldef [c.\cadv(u)]$
+\item $\cswitch \equaldef [\barc.\cadv(c.\cread);~d \assign c;~c \assign \barc;~\barc \assign d]$
+\end{compactitem}
+where we mark using $[ \ldots ]$ the begin and end of a transaction.
+
+\begin{proposition}
+  If $c$ and $\barc$ two clocks, then $c \times \barc$ is a clock.
+\end{proposition}
+
+\begin{proof}  
+  Let us consider that $\cadv(u) \hb_h \cread()$ occurs in some history $h$.
+  Name $l$ the strictly serializable history equivalent to $h$.
+  %
+  First, assume that no operation $\cswitch$ occurs between the read and update events.
+  It follows that $c.\cadv(u)$ happens before the read operation returns $c.\cread()$.
+  Since $c$ is a clock $c.\cread() \geq u$ holds.
+  %
+  Otherwise, let us consider that a $\cswitch$ operation occurs in $l$.
+  Note $c$ the clock before the switch and $c'$ after.
+  Clearly, $c < c'$.
+  
+\end{proof}
+
+In practice, we conjoin clocks with the help of a global lock.
+

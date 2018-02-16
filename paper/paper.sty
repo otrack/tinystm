@@ -17,3 +17,6 @@
 \newcommand{\barc}{\ensuremath{\overline{c}}}
 
 \newcommand{\stmPrec}[1]{\ensuremath{\xrightarrow{#1}}}
+
+\let\inparaenumorig=\inparaenum
+\renewenvironment{inparaenum}{\begin{inparaenumorig}[\em(i)]}{\end{inparaenumorig}}

@@ -23,18 +23,18 @@
 
     \StartFunction{$\stmRead{T,x}$}
     \If{$(d,x) \in \writeSetOf{T}$}
-      \Return $d$ \labline{stm:read:0} % FIXME
+      \Return $d$ \labline{stm:read:1}
     \EndIf
-    \State $(d,t) \assign \locationOf{x}$ \labline{stm:read:1}
-    \If{$\isLocked{x}$ \labline{stm:read:2} 
-      \\ \hspace{2.5em} $\lor~ (\exists (t',x) \in \readSetOf{T} : t \neq t')$} \labline{stm:read:3}
-      \Return $\stmAbort{t}$  \labline{stm:read:4}
+    \State $(d,t) \assign \locationOf{x}$ \labline{stm:read:2}
+    \If{$\isLocked{x}$ \labline{stm:read:3} 
+      \\ \hspace{2.5em} $\lor~ (\exists (t',x) \in \readSetOf{T} : t \neq t')$} \labline{stm:read:4}
+      \Return $\stmAbort{t}$  \labline{stm:read:5}
     \EndIf
-    \If{$(t > \clockOf{T} ) \land \neg~\stmExtend{T,t}$} \labline{stm:read:5}
-      \Return $\stmAbort{t}$ \labline{stm:read:6}
+    \If{$(t > \clockOf{T} ) \land \neg~\stmExtend{T,t}$} \labline{stm:read:6}
+      \Return $\stmAbort{t}$ \labline{stm:read:7}
     \EndIf
-    \State $\readSetOf{T}[x] \assign t$ \labline{stm:read:7}
-    \Return $d$ \labline{stm:read:8}
+    \State $\readSetOf{T}[x] \assign t$ \labline{stm:read:8}
+    \Return $d$ \labline{stm:read:9}
     \EndFunction
 
     \vspace{1em}
