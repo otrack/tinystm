@@ -63,3 +63,16 @@ TrC-MC compares favourably against TL2 in terms of aborted transsactions.
 % if the transaction starts from a quescient state and it repeatdly executed and there is no concurrent transaction, then it commits.
 % 2) abortion due to non-causally consistent snapshot
 % our appraoch does not have this problem
+
+
+%% With multiple CPUs, each with its own clock, its impossible to guarantee that the crystals
+%% don’t differ after some amount of time even when initially set accurately. In practice, all clocks
+%% counters will run at slightly different rates. This clock skew brings several problems that can occur
+%% and several solutions as well, some more appropriate than others in certain contexts.
+%% The Time Stamp Counter was once an excellent high-resolution, low-overhead way for a program to get CPU timing information. With the advent of multi-core/hyper-threaded CPUs, systems with multiple CPUs, and hibernating operating systems, the TSC cannot be relied upon to provide accurate results — unless great care is taken to correct the possible flaws: rate of tick and whether all cores (processors) have identical values in their time-keeping registers. There is no promise that the timestamp counters of multiple CPUs on a single motherboard will be synchronize
+%% Relying on the TSC also reduces portability, as other processors may not have a similar feature
+
+%% Thanks for all the inputs: Here's the conclusion for this discussion: The TSCs are synchronized at the initialization using a RESET that happens across the cores and processors in a multi processor/multi core system. And after that every Core is on their own. The TSCs are kept invariant with a Phase Locked Loop that would normalize the frequency variations and thus the clock variations within a given Core and that is how the TSC remain in sync across cores and processors.
+
+%% https://stackoverflow.com/questions/10921210/cpu-tsc-fetch-operation-especially-in-multicore-multi-processor-environment
+%% https://github.com/dterei/tsc

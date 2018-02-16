@@ -51,8 +51,8 @@ DEFINES += -DDESIGN=NUMA
 ########################################################################
 
 ifndef CLOCK
-  CLOCK += GLOBAL_CLOCK
-  #CLOCK += NUMA_CLOCK
+  #CLOCK += GLOBAL_CLOCK
+  CLOCK += NUMA_CLOCK
   #CLOCK += THREAD_CLOCK
 endif
 DEFINES += -D${CLOCK}

@@ -4,31 +4,31 @@
 In this section, we depict a locality-aware software transactional memory.
 The pseudo-code of our construction is presented in \refalg{stm}.
 This algorithm follows the general design of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
-In what follows, we first give an overview of our algorithm, then we present it internals and justify our design choices.
+
+In what follows, we give an overview of the algorithm, present its internals then justify some design choices.
 A correctness proofs follows.
-We close this section with a mechanism to conjoin clocks,
-in order to find dynamically a sweet point between the need for synchronization and the cost of cache coherence.
+
+\subsection{Model}
+\labsection{stm:model}
+
 
 \subsection{Overview}
 \labsection{stm:overview}
 
-A STM allows a processes to manipulate a set of registers with help of transactions.
-\refalg{stm} depicts the pseudo-code of our STM construction.
-Each line in this algorithm is atomic.
-Functions \stmStartFunction, \stmReadFunction, \stmWriteFunction and \stmTryCommitFunction define the interface.
-The three other functions (\stmExtendFunction, \stmCommitFunction and \stmAbortFunction) are helpers.
+Software transactional memory (STM) is a recent paradigm to manipulate a memory space accessed concurrently by different processes.
+With STM, a process manipulate the shared registers with the help of transactions.
+When A process begins a new transactions, it calls function \stmStartFunction.
+Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operations to access the registers according to some internal logic.
+At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction.
 
+\refalg{stm} depicts the pseudo-code of our implementation of the STM interface at some process $p$.
 Our design follows a deferred update schema that consists in two steps.
-First, a transaction executes optimistically, buffering its updates.
-Then at commit time, the transaction is certified and if it commits, the updates are applied to the shared memory.
+A transaction first executes optimistically, buffering its updates.
+Then at commit time the transaction is certified and, provided it commits, its updates are applied to the shared memory.
 
-Similarly to LSA, our algorithm constructs a consistent snapshot on the fly during the execution of a transaction,
-by extending lazily the validity range of the snapshot.
-This serves two purposes.
-First, ensuring that a transaction always sees a consistent state of the data. 
-Second, to verify that there is no overlap between the snapshot's validity range
-and the commit time of a transaction that conflicts with it.
-These two properties helps us to maintain the strict serializability of our construction.
+During the execution of a transaction, process $p$ checks that the registers accessed so far did not change.
+Similarly to LSA, this check is lazily executed.
+\refalg{stm} executes it only when a register appears to have been recently updated, or when transaction terminates.
 
 \subsection{Tracking Time}
 \labsection{stm:time}
@@ -39,8 +39,8 @@ These two properties helps us to maintain the strict serializability of our cons
 \refalg{stm} tracks time to compute how concurrent transactions interleave during an execution.
 To this end, it makes use of logical clocks.
 We model the interface of a \emph{logical clock} with two operations:
-$\cread$ that returns a value in $\naturalSet$, 
-and $\cadv(v \in \naturalSet)$) that updates the clock with value $v$.
+$\cread$ returns a value in $\naturalSet$, and
+$\cadv(v \in \naturalSet)$) that updates the clock with value $v$.
 The sequential specification of a logical clock guarantees a single property, that the time always flows forward:
 \begin{inparaenum}
 \item[\emph{(time monoticity)}]
@@ -69,17 +69,14 @@ To implement an (obstruction-free) linearizable clock we proceeds as follows.
 
 \input{algorithms/stm.tex}
 
-\subsection{Internals}
+\subsection{Details}
 \labsection{stm:detail}
 
-Transactions that execute \refalg{stm} manipulate registers.
 Each register $x$ has a \emph{location} in the shared memory, denoted $\locationOf{x}$.
-This location contains a pair $(t,d)$, where $t \in \naturalSet$ is a \emph{timestamp}, 
-and $d$ is the actual content of $x$ as seen by transactions.
+This location stores a pair $(t,d)$, where $t \in \naturalSet$ is a \emph{timestamp}, and $d$ is the actual content of $x$ as seen by transactions.
 We name a pair $(t,d)$ a \emph{version} of register $x$.
 Since the location of register $x$ is unique, a single version of register $x$ may exist at a time in the memory.
-As usual, we asume some transaction $\transInit$ that intializes 
-for every register $x$ the location $\locationOf{x}$ to $(0,\bot)$.
+As usual, we asume some transaction $\transInit$ that intializes for every register $x$ the location $\locationOf{x}$ to $(0,\bot)$.
 
 \refalg{stm} associates each register with a lock.
 To manipulate the lock-related functions of register $x$, 
@@ -88,28 +85,28 @@ a process $p$ employs appropriately the functions $\lock{x}$, $\isLocked{x}$ and
 For every transaction $T$ submitted to the system, \refalg{stm} maintains three local data structures:
 \begin{inparaenum}[]
 \item $\clockOf{T}$ is the logical clock of transaction $T$,
-\item $\readSetOf{T}$ is a map that contains the read set, and 
-\item $\writeSetOf{T}$ is another map that stores the write set.
+\item $\readSetOf{T}$ is a map that contains its \emph{read set}, and 
+\item $\writeSetOf{T}$ is another map that stores the \emph{write set} of $T$.
 \end{inparaenum}
-\refalg{stm} updates incrementally $\readSetOf{T}$ and $\writeSetOf{T}$ on the course of the execution, checking with the help of $\clockOf{T}$ that the transaction is consistent.
-With more details, the execution of transaction $T$ proceeds as follows.
+\refalg{stm} updates incrementally $\readSetOf{T}$ and $\writeSetOf{T}$ over the course of the execution.
+The read set serves to check that the snpashot of the transaction is consistent, while the write set buffers updates.
+In details, the execution of a transaction $T$ proceeds as follows.
 
 \begin{itemize}
 \item[-] %
-  When $T$ starts its execution, \refalg{stm} initializes
-  $\clockOf{T}$ to the value of $\clockOf{p}$, then both $\readSetOf{T}$ and $\writeSetOf{T}$ to $\emptySet$ (\reflines{stm:start:1}{stm:start:3}).
+  When $T$ starts its execution, \refalg{stm} initializes $\clockOf{T}$ to the value of $\clockOf{p}$, then both $\readSetOf{T}$ and $\writeSetOf{T}$ to $\emptySet$ (\reflines{stm:start:1}{stm:start:3}).
 \item[-] %
   Upon a read request to access a register $x$, if $x$ was previously written, its value is returned (\refline{stm:read:0}).
   Otherwise, \refalg{stm} fetches atomically the version $(d,t)$, as seen in location $\locationOf{x}$.
   Then, the algorithm checks that 
   \begin{inparaenum}[\em(i)]
   \item no lock is held on $x$, and 
-  \item in case $x$ was previously accessed $x$, that $T$ retrieves the same version.
+  \item in case $x$ was previously accessed, that $T$ observes the same version.
   \end{inparaenum}
   If one of these two conditions fails, \refalg{stm} aborts transaction $T$ (\refline{stm:read:4}).
   The algorithm then checks that the timestamp $t$ associated to the content $d$ is smaller than the clock of $T$.
   In case this does not hold (\refline{stm:read:5}), \refalg{stm} tries extending the snapshot of $T$ by calling function $\stmExtend{}$.
-  This function returns $\true$ when the registers previously read by $T$ are still valid.
+  This function returns $\true$ when the versions previously read by $T$ are still valid.
   In which case, $\clockOf{T}$ is updated to the value $t$.
   If \refalg{stm} succeeds in extending (if needed) the snapshot of $T$, $d$ is returned and the read set of $T$ updated accordingly;
   otherwise transaction $T$ is aborted (\refline{stm:read:6}).
@@ -117,9 +114,9 @@ With more details, the execution of transaction $T$ proceeds as follows.
   Upon executing a write request on behalf of $T$ to some register $x$, 
   \refalg{stm} takes the lock associated with $x$ (\refline{stm:write:1}),
   and in case of success, it buffers the update value $d$ in $\writeSetOf{T}$ (\refline{stm:write:6}).
-  The timestamp of $x$ at the time \refalg{stm} takes the lock serves two purposes.
-  First, \refalg{stm} checks that it is lower than the current clock of $T$, and if not $T$ is extended (\refline{stm:write:4}).
-  Second, it is saved in \writeSetOf{T} to ensure that at commit time the timestamp of the version of $x$ written by $T$ is greater.
+  The timestamp $t$ of $x$ at the time \refalg{stm} takes the lock serves two purposes.
+  First, \refalg{stm} checks that $t$ is lower than the current clock of $T$, and if not $T$ is extended (\refline{stm:write:4}).
+  Second, it is saved in \writeSetOf{T} to ensure that at commit time the timestamp of the version of $x$ written by $T$ is greater than $t$.
 \item[-] %
   When $T$ requests to commit, \refalg{stm} certifies the read set 
   by calling function $\stmExtend{}$ with the clock of $T$ (\refline{stm:try:1}).
@@ -133,8 +130,7 @@ With more details, the execution of transaction $T$ proceeds as follows.
 
 \refalg{stm} replaces the global clock usually employed in STM architectures with a locality-aware clock.
 When \clockOf{p} is local to each process, \refalg{stm} ensures strict disjoint access parallelism (DAP) \cite{Attiya2015}.
-Loosely speaking, this means that if transaction $T$ and $T'$ access concurrently 
-some low-level object at the implementation side, then the two transactions must contend on some high-level object at the interface.
+More formally, this means that two transaction $T$ and $T'$ access concurrently a low-level object at the implementation side only if the two transactions actually contend on some high-level object at the interface (here registers).
 Provided the workload is parallel, DAP ensures the scalability of \refalg{stm}.
 We assess empirically this claim in \refsection{evaluation}.
 
@@ -146,20 +142,20 @@ Upon a call to $\clockOf{p}$, the algortihm returns the clock defined for the so
 \subsection{Guarantees}
 \labsection{stm:guarantees}
 
-In this section, we prove the three guarantees \refalg{stm} provides.
-We first show that our STM design is weakly progressive and strictly serializable.
-Then, when $\clockOf{p}$ is local, we also prove that \refalg{stm} is strictly disjoint-parallel.
+In this section, we prove the different properties \refalg{stm} provides.
+First, we show that our STM design is weakly progressive and strictly serializable.
+Then, we prove that, when $\clockOf{p}$ is local, \refalg{stm} is strictly disjoint-parallel.
 
 \paragraph{(Weak-progress)}
 A transaction executes under \emph{weak progressiveness} \cite{Guerraoui:2009}, or equivalently it is \emph{weakly progressive}, when it aborts only if it encounters a conflicting transaction.
 By extension, an STM is weakly progressive when it only produces histories during which transactions are weakly-progressive.
 We prove that this property holds for \refalg{stm}.
 As a starter, we notice that if a transaction $T$ observes an item $x$ locked, or that the timestamp associated with $x$ has changed, then a transaction is concurrent and conflicting with $T$.
-This happens in function $\stmExtend{}$ , at \reflinestwo{stm:read:2}{stm:read:3} and at \refline{stm:write:1}.
+This happens in function $\stmExtend{}$, at \reflinestwo{stm:read:2}{stm:read:3} and at \refline{stm:write:1}.
 Now, if transaction $T$ aborts this occurs either at \refline{stm:read:4}, \ref{line:alg:stm:read:6}, \ref{line:alg:stm:write:2}, \ref{line:alg:stm:write:5}, or \ref{line:alg:stm:try:2}.
-Observe that in such a case, then one of above two conditions should hold.
+Observe that in such a case, then one of above two situations hold.
 Hence, $T$ aborts only in case it observes a conflict with a concurrent transaction.
-This means that the $T$ is under weak progressiveness.
+This means that transaction $T$ is executing under weak progressiveness.
 
 \paragraph{(Strict serializability)}
 Consider some run \run of \refalg{stm}, and let $\hat{h}$ be the history induced by \run.
@@ -241,6 +237,7 @@ According to \refline{stm:commit:4}, if $T_i$ writes to $x$ then the timestamp a
 The above proposition leads immediately to the following theorem.
 
 \begin{theorem}
+  \labtheo{ss}
   History $h$ is strictly serializable.
 \end{theorem}
 
@@ -251,30 +248,3 @@ Consider such a scenario and two transactions $T_i$ and $T_j$ that do not access
 If $T_i$ and $T_j$ are executed by distinct processes, then they do not contend on some low-level object in \refalg{stm}.
 It follows that \refalg{stm} is strictly disjoint-access parallel.
 
-\subsection{Conjoining clocks}
-\labsection{stm:conjoining}
-
-Local clocks leverage parallelism but it is expected that a global clock performs better under contended workloads.
-\refsection{evaluation} confirms this expectation in practice.
-
-To have the best of both worlds, we propose a mechanism that allows switching from one clock to another.
-This mechanism is named \emph{conjoining clocks}.
-In practice, we are interested in conjoining a global real-time clock together with a local logical clock.
-
-With more details, conjoining two clocks $c$ and $\barc$ is defined as a new clock $c \times \barc$ with:
-\begin{compactitem}
-\item $\cread \equaldef [t \assign c.\cread];~\text{\textbf{return}}~t$
-\item $\cadv(u) \equaldef [c.\cadv(u)]$
-\item $\cswitch \equaldef [\barc.\cadv(c.\cread);~d \assign c;~c \assign \barc;~\barc \assign d]$
-\end{compactitem}
-where we mark using $[ \ldots ]$ the begin and end of a transaction.
-
-\begin{proposition}
-  If clocks $c$ and $\barc$ are consistent then $c \times \barc$ is consistent.
-\end{proposition}
-
-\begin{proof}
-  
-\end{proof}
-
- 

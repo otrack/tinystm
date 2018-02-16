@@ -8,13 +8,13 @@
 
     \begin{variables}
       \VarCustom{$\clockOf{T}, \readSetOf{T}, \writeSetOf{T}$} \Comment{local to $p$} \labline{stm:var:1}
-      \VarCustom{$\clockOf{p}$} \labline{stm:var:2}
+      \VarCustom{$\clockOf{p}$} \Comment{shared} \labline{stm:var:2}
     \end{variables}
 
     \vspace{1em}
     
     \StartFunction{$\stmStart{T}$}
-    \State $\clockOf{T}.\cadv{\clockOf{p}}$ \labline{stm:start:1}
+    \State $\clockOf{T}.\cadv(\clockOf{p})$ \labline{stm:start:1}
     \State $\readSetOf{T} \assign \emptySet$ \labline{stm:start:2}
     \State $\writeSetOf{T} \assign \emptySet$ \labline{stm:start:3}
     \EndFunction
@@ -70,7 +70,7 @@
         \Return $\false$ \labline{stm:extend:4}
       \EndIf
     \EndFor
-    \State $\clockOf{T}.\cadv{t}$ \labline{stm:extend:5}
+    \State $\clockOf{T}.\cadv(t)$ \labline{stm:extend:5}
     \Return $\true$ \labline{stm:extend:6}
     \EndFunction 
 
@@ -86,8 +86,8 @@
     \vspace{1em}
 
     \StartFunction{$\stmCommit{T}$}
-    \State $\clockOf{T}.\cadv{\clockOf{T}+1}$ \labline{stm:commit:1} 
-    \State $\clockOf{p}.\cadv{\clockOf{T}}$ \labline{stm:commit:2}
+    \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:1} 
+    \State $\clockOf{p}.\cadv(\clockOf{T})$ \labline{stm:commit:2}
     \ForAll{$(d,x) \in \writeSetOf{T}$} \labline{stm:commit:3}
       \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:4}
       \State $\unlock{x}$ \labline{stm:commit:5}
