@@ -13,7 +13,7 @@
 
     \vspace{1em}
     
-    \StartFunction{$\stmStart{T}$}
+    \StartFunction{$\stmBegin{T}$}
     \State $\clockOf{T}.\cadv(\clockOf{p})$ \labline{stm:start:1}
     \State $\readSetOf{T} \assign \emptySet$ \labline{stm:start:2}
     \State $\writeSetOf{T} \assign \emptySet$ \labline{stm:start:3}
@@ -30,7 +30,7 @@
       \\ \hspace{2.5em} $\lor~ (\exists (t',x) \in \readSetOf{T} : t \neq t')$} \labline{stm:read:4}
       \Return $\stmAbort{t}$  \labline{stm:read:5}
     \EndIf
-    \If{$(t > \clockOf{T} ) \land \neg~\stmExtend{T,t}$} \labline{stm:read:6}
+    \If{$t > \clockOf{T} \land \neg~\stmExtend{T,t}$} \labline{stm:read:6}
       \Return $\stmAbort{t}$ \labline{stm:read:7}
     \EndIf
     \State $\readSetOf{T}[x] \assign t$ \labline{stm:read:8}
@@ -47,7 +47,7 @@
     \If{$t>\clockOf{T} \land \neg~\stmExtend{T,t}$} \labline{stm:write:4}
       \Return $\stmAbort{t}$ \labline{stm:write:5}
     \EndIf
-    \State $\writeSetOf{T}[x] \assign d$ \labline{stm:write:6}
+    \State $\writeSetOf{T}[x] \assign d$ \labline{stm:write:5}
     \EndFunction
 
     \vspace{1em}
@@ -86,12 +86,14 @@
     \vspace{1em}
 
     \StartFunction{$\stmCommit{T}$}
-    \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:1} 
-    \State $\clockOf{p}.\cadv(\clockOf{T})$ \labline{stm:commit:2}
-    \ForAll{$(d,x) \in \writeSetOf{T}$} \labline{stm:commit:3}
-      \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:4}
-      \State $\unlock{x}$ \labline{stm:commit:5}
-    \EndFor
+    \If{$\writeSetOf{T} \neq \emptySet$}
+      \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:1} 
+      \State $\clockOf{p}.\cadv(\clockOf{T})$ \labline{stm:commit:2}
+      \ForAll{$(d,x) \in \writeSetOf{T}$} \labline{stm:commit:3}
+        \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:4}
+        \State $\unlock{x}$ \labline{stm:commit:5}
+      \EndFor
+    \EndIf
     \Return $\flagCommit$ \labline{stm:commit:6}
     \EndFunction
 

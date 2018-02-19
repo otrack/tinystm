@@ -8,18 +8,8 @@ This algorithm follows the general design of the lazy snapshot algorithm (LSA) o
 In what follows, we give an overview of the algorithm, present its internals then justify some design choices.
 A correctness proofs follows.
 
-\subsection{Model}
-\labsection{stm:model}
-
-
 \subsection{Overview}
 \labsection{stm:overview}
-
-Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory space.
-Each process manipulate the registers of the shared memory using transactions.
-When a process begins a new transactions, it calls function \stmStartFunction.
-Then it executes a sequence of \stmReadFunction and \stmWriteFunction operations to access registers according to some internal logic.
-At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction.
 
 \refalg{stm} depicts the pseudo-code of our implementation of the STM interface at some process $p$.
 Our design follows a deferred update schema that consists in two steps.
@@ -70,11 +60,12 @@ To implement an (obstruction-free) linearizable clock we proceeds as follows.
 \subsection{Details}
 \labsection{stm:detail}
 
-Each register $x$ has a \emph{location} in the shared memory, denoted $\locationOf{x}$.
+In \refalg{stm}, each register $x$ has a \emph{location} in the shared memory, denoted $\locationOf{x}$.
 This location stores a pair $(t,d)$, where $t \in \naturalSet$ is a \emph{timestamp}, and $d$ is the actual content of $x$ as seen by transactions.
 We name a pair $(t,d)$ a \emph{version} of the register $x$.
 Since the location of register $x$ is unique, a single version of register $x$ may exist at a time in the memory.
 As usual, we asume some transaction $\transInit$ that intializes for every register $x$ the location $\locationOf{x}$ to $(0,\bot)$.
+Furthermore, we consider that each register $x$ is atomic.
 
 \refalg{stm} associates each register with a lock.
 To manipulate the lock-related functions of register $x$, 
@@ -151,66 +142,66 @@ It follows that if $T$ aborts then it observes a conflict with a concurrent tran
 From which we deduce that it is executing under weak progressiveness.
 
 \paragraph{(Strict serializability)}
-Consider some run \run of \refalg{stm}, and let $\hat{h}$ be the history induced by \run.
+Consider some run \run of \refalg{stm}, and let $\hat{h}$ be the history indeuced by \run.
 Every function in \refalg{stm} is wait-free.
-As a consequence, we may assume without lack of generality that $\hat{h}$ is complete, i.e., every transaction executed in $\hat{h}$ terminates by either with a commit or an abort event.
-We note $h$ the sub-history of $\hat{h}$ that only contains the transactions committed in $\hat{h}$.
+As a consequence, we may consider without lack of generality that $\hat{h}$ is complete, i.e., every transaction executed in $\hat{h}$ terminates with either a commit or an abort event.
+Hereafter, $h$ denotes the sub-history of $\hat{h}$ that only contains the transactions committed in $\hat{h}$.
 
-Let $<$ denote the various relations between transactions in $h$, i.e., real-time order, read-write order, version order, and anti-dependencies.
-More formally,
+Consider some version order $\ll_h$ for $h$.
+We note $<$ the relations over the transactions in $h$ induced by $\ll_h$; namely:
 \begin{displaymath}
   \begin{array}{l}
-    T_i < T_j  \equaldef \\
+    T_i < T_{j \neq i}  \equaldef \\
     \lor~ T_i \hb_h T_j {\hspace{16.8em}\text{(1)}} \\
     \lor~ \exists x : \lor~ r_j(x_i) \in h {\hspace{13.3em}\text{(2)}} \\
-    \hspace{2.9em}\lor~ \exists T_k : w_k(x_k) \hb_h w_j(x_j) \land \lor~T_k = T_i {\hspace{2em}\text{(3)}} \\
-    \hspace{15.2em} \lor~ r_i(x_k) \in h {\hspace{0.9em}\text{(4)}}
+    \hspace{2.9em}\lor~ \exists T_k : x_k \ll_{h,x} x_j \land \lor~T_k = T_i {\hspace{5em}\text{(3)}} \\
+    \hspace{12.2em} \lor~ r_i(x_k) \in h {\hspace{3.9em}\text{(4)}}
   \end{array}
 \end{displaymath}
-We shall prove that $<$ is acyclic, leading to the fact that \refalg{stm} is strictly serializable.
-To achieve this, we track with relation $\stmPrec{x}$ the interleaving of read and write operations over each register $x$.
-In detail,
-\begin{flalign*}
-  T_i \stmPrec{x} T_j  \equaldef
-  & \lor \readSetOf{T_i}[x] \leq \writeSetOf{T_j}[x] \\
-  & \lor \writeSetOf{T_i}[x] \leq \readSetOf{T_j}[x] \\
-  & \lor \writeSetOf{T_i}[x] \leq \writeSetOf{T_j}[x] 
-\end{flalign*}
-where by abuse of notation, $\writeSetOf{T}[x]$ is the value of $\clockOf{T}$ at commit time (see \reflines{stm:commit:1}{stm:commit:4}).
+In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
 
-Below, $\clockOf{T}_f$ denotes the final value of $\clockOf{T}$ in $\rho$.
-According to \refline{stm:commit:4}, if $T_i$ writes to $x$ then the timestamp associated with $x_i$ is $\clockOf{T_i}_f$.
+For each register $x$, we consider the version order $\ll_{h,x}$ that corresponds to the order in which writes are linearized on $x$ in $\rho$.
+Below, we prove that $<$ is acyclic for this definition of $\ll$, leading to the fact that $h$ is strictly serializable \cite{adyaPHD,pap79}.
 
 \begin{proposition}
   \labprop{sser:1}
-  Consider two transactions $T_i$ and $T_j$ in $h$ such that $T_i < T_j$.
-  If the two transactions conflict over some item $x$, then relation $T_i \stmPrec{x} T_j$ holds and $T_j$ cannot commit before $T_i$.
+  Consider two transactions $T_i$ and $T_{j \neq i}$ in $h$ such that $T_i < T_j$.
+  If $T_i$ and $T_j$ transactions conflict then $T_i$ invokes $\stmCommitFunction$ before $T_j$ in $h$.
 \end{proposition}
 
-\begin{proof}  
+\begin{proof}
+  Assume that $T_i$ and $T_j$ conflict of some register $x$.
   We examine in order each of the four cases defining relation $<$.
   \begin{compactitem}
   \item[(1)]
-    Since the two transactions are conflicting, this case boils down to one of the three other cases.
+    This case is immediate.
   \item[(2)]
-    Consider that transaction $T_j$ reads the version of $x$ written by transaction $T_i$.
-    From the code at \refline{stm:read:1}, we know that $t=\clockOf{T_i}_f$ holds.
-    Then, if $t > \clockOf{T_j}$ holds, transation $T_j$ is extended with timestamp $t$ at \refline{stm:read:5}.
-    Since transaction $T_j$ commits this call succeeds, leading to $\clockOf{T_j} = t$.
-    Hence at that point in time, $\writeSetOf{T_i}[x] = \readSetOf{T_j}[x]$.
-    Because $T_j$ cannot read another version of $x$ later on (\refline{stm:extend:3}), this invariant holds forever.
+    Transaction $T_j$ reads the version of $x$ written by transaction $T_i$, that is $r_i(x_j) \in h$ holds.
+    Before committing, $T_j$ invokes \stmExtendFunction at \refline{stm:try:1}.
+    Since $T_j$ commits in $h$, it should retrieve $(x_i,\msgAny)$ from $\locationOf{x}$ when executing \refline{stm:extend:2}.
+    Hence, transacion $T_i$ has already exeecuted \emph{stm:commit:4} for register $x$.
+    It follows that $T_i$ invoke $\stmCommitFunction$ before transaction $T_j$ in history $h$.
   \item[(3)]
-    In this case, $w_i(x_i) \hb_h w_j(x_j)$ is true.
-    First, assume that no transaction writes to $x$ between $T_i$ and $T_j$.
-    Both transactions lock $x$ then unlock it at commit time.
-    Thus, according to \refline{stm:write:1}, $T_j$ observes $\locationOf{x}=(x_i,\clockOf{T_i}_f)$ at \refline{stm:write:3}.
-    As $T_j$ commits, $\clockOf{T_i} \leq \clockOf{T_j}_f$ holds after the execution of \reflines{stm:write:4}{stm:write:5}.
-    By monoticity of a logical clock and the increment at \refline{stm:commit:1}, $\clockOf{T_i}_f < \clockOf{T_j}_f$ holds.
-    Applying by induction the above reasoning, this ordering also holds if some transaction writes to $x$ between $T_i$ and $T_j$.
-    It follows that $\writeSetOf{T_i} < \writeSetOf{T_j}$ holds.
+    By definition of $\ll_{h,x}$, the write of version $x_i$ is linearized before the write of version $x_j$ in $\rho$.
+    At the time, $T_i$ executes this write, the transaction must own a lock on register $x$ (\refline{stm:commit:4}).
+    The register is then unlocked by transaction $T_i$ (\refline{stm:commit:5}).
+    As a consequence, transaction $T_i$ takes a lock on register $x$ after $T_i$ invokes operation $\stmCommitFunction$.
+    From which it follows that the claim holds.
   \item[(4)]
-    From case (1), we have $\writeSetOf{T_k}[x] = \readSetOf{T_i}[x]$.
-    Then from (3), $\writeSetOf{T_k} < \writeSetOf{T_j}$ holds.
+    Consider the time at which $T_i$ calls \stmExtendFunction at \refline{stm:try:1}.
+    Since $T_i$ commits, $T_j$ cannot hold the lock when $T_i$ executes \refline{stm:extend:2}.
+    For the sake of contradiction, then assume that $T_j$ invokes $\stmTryCommit$ before $T_i$.
+    When $T_j$ invokes $\stmTryCommit$, the transaction holds a lock on $x$.
+    This lock is released at \refline{stm:commit:5} after the write of version $x_j$ occurs.    
+    It follows that $T_i $ reads register $x$ at \refline{stm:extend:5} after the write of version $x_j$ occurs.
+    Now, from the definition of $\ll_{h,x}$ the write of version $x_k$ takes place before the write of version $x_j$ in $\rho$.
+    Since $T_i$ reads version $x_k$ in $h$, a pair $(\msgAny,x_k)$ is in $\readSetOf{T_i}$.    
+    As a consequence, when $T_i$ executes \refline{stm:extend:5} the 
+    
+    
+    
+    It follows, that the transaction has already 
+    
   \end{compactitem}
   
 \end{proof}
@@ -234,6 +225,10 @@ The above proposition leads immediately to the following theorem.
   \labtheo{ss}
   History $h$ is strictly serializable.
 \end{theorem}
+
+\begin{proof}
+  some details
+\end{proof}
 
 \paragraph{(Disjoint-access parallelism)}
 The logical clocks used in \refalg{stm} can be shared or local to each process.

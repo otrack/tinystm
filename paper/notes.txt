@@ -1,3 +1,5 @@
+global clock alg. -> check TinySTM and Transactional Memory 2nd Ed. 
+
 https://infoscience.epfl.ch/record/130152/files/popl096-kapalka.pdf
 https://books.google.fr/books?id=V6IMBwAAQBAJ&pg=PA3&lpg=PA3&dq=weak+progressiveness+stm&source=bl&ots=BPc18nglSa&sig=kQ7jBK2kuqHYwKRbkexnt_6m3Ys&hl=en&sa=X&ved=0ahUKEwiGgNLAjsjWAhUL6xoKHf9aC2AQ6AEIJzAA#v=onepage&q&f=false
 

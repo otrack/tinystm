@@ -8,6 +8,70 @@ Then, we present a mechanism to adapt clocks dynamically to the workload, in ord
 \subsection{Attaining opacity}
 \labsection{ext:opacity}
 
+\paragraph{(A condition on workload.)}
+Consider three transactions $T_a=[r(z);r(x);r(y)]$, $T_2=[w(x)]$ and $T_3=[r(x);w(y)]$.
+In addition, assume a initial state in which register $z$ holds a version $z_{100}$, while both $x$ and $y$ are in their initial state.
+In this history, $T_a$ fails to construct a consistent snapshot: it reads version $y_2$, yet do not observe $x_1$.
+
+\input{figures/not-opaque}
+
+When clocks are local, history $h_1$ is admissible \refalg{stm}
+This comes from the fact that when $T_a$ reads version $z_{100}$, the clock of $z$ has been increased to a value higher than the clock associated with $y_1$.
+Hence, when $T_a$ access $y$, it does not extend and check the content of $x$.
+
+One solution to this problem consists in calling $\stmExtend{}$ everytime a new item is read (similarly to \cite{}).
+However, as underlined in \refsection{introduction}, this raises time complexity to $O(r^2)$, where $r$ is the amount of reads in the transaction.
+Instead, we make the observation that if $z$ is not read in $T_2$ then it is not causaly-related to $y$.
+Our idea is to require that the path to $y$ solely contains causaly-related registrs.
+
+With more details,
+
+\begin{itemize}
+\item[$\mathcal{C}$]
+  When a transaction $T_i$ reads a register $x$ then, for every register $y$ read but not written before $x$, if a concurrent transaction $T_j$ writes to register $x$, $y \in \readSetOf{T_j}$ holds.
+\end{itemize}
+
+The proposition that follows proves that if condition $\mathcal{C}$ holds, \refalg{stm} produced opaque histories.
+
+\begin{theorem}
+  \labprop{ext:2}
+  \refalg{stm}' is opaque.
+\end{theorem}
+
+\begin{proof}
+
+  Clearly \refalg{stm}' attains strict serializability by immediate reduction to the original algorithm.
+  To show that a transaction always sees a consistent snapshot we proceed by contradiction, as in \refprop{ext:1}.
+  %
+  Let us assume that some transaction $T_a \in h$ does not observe a consistent snapshot.
+  This means that transaction $T_a$
+  \begin{inparaenum}
+  \item reads a version $x_j$ of some register $x$,
+  \item depends on some transaction $T_k$ which writes version $x_k$ in $h$, and
+  \item $x_j$ is followed by version $x_k$ in the version order $\ll_{h,x}$.
+  \end{inparaenum}
+  We observe that $r_a(x_j)$ precedes $w_k(x_k)$ in $h$, otherwise $T_a$ must abort before reading $x$, or reads instead version $x_k$.
+  Applying \refprop{} to transction $T_a \depends T_k$, there exist a write $w_k(z_k)$ and a read $r_a(y_l)$ such that
+  \begin{inparaenum}
+  \item $w_k(z_k) \hb_h r_a(y_l)$, and
+  \item $\clockOf{y_l} \geq \clockOf{T_k}$.
+  \end{inparaenum}  
+  If $r_a(y_l) <_h r_a(x_j)$ holds, then $T_a$ aborts before return $x_j$ as transaction $T_k$ still holds the lock on register $x$.
+  In the converse case, as $\clockOf{x_j} < \clockOf{x_k}$ holds, transaction $T_a$ aborts before returning $y_l$ when executing $\stmExtend{}$.  
+    
+\end{proof}
+
+From a practical point of view, we now argue that the above algorithm avoids most of the time a complexity in $O(r^2)$.
+To this end, let us conider some transaction $T$ reading two versions $x_i$ and $y_j$ of objects $x$ and $y$.
+In the common case, it is expected that there is no concurrent transactions to $T$.
+Thus,
+\begin{inparaenum}
+\item if $x$ and $y$ are bound due to some state invariant, $x_i$ and $y_j$ have the same clocks; and
+\item if $x_i$ was updated causally before $y_j$, it suffices that $T$ reads $y_j$ before its causal dependency $x_i$.
+\end{inparaenum}
+Item (ii) is generally true in the case of a referential integrity linking $y$ to $x$ (i.e., $y$ stores a reference to $x$).
+
+
 \paragraph{(Global clock.)}
 When processes use a global clock, \refalg{stm} is idenrtical to the original code of TinySTM.
 This means that each transaction, even if it aborts, observes a strictly consistent snapshot.
@@ -51,66 +115,6 @@ Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \i
 \end{proof}
 
 Let us observe that as each read when it returns ensure that the snapshot read so far is consistent, when the clock is global the algorithm does not call \stmExtend{} at \refline{stm:try:1}.
-
-\paragraph{(Accurate tracking of causality.)}
-Consider history $h_1$ described in \reffigure{} below.
-In this history, transaction $T_a=[r(x);r(z);r(y)]$ reads $x_0$ and $y_1$.
-Since transaction $T_1$ writes both register $x$ and $y$, transaction $T_a$ observe a fractured read \cite{}, and thus fails to construct a consistent snapshot.
-
-%% \input{figures/not-opaque}
- 
-When clocks are local, history $h_1$ is admissible \refalg{stm}
-This comes from the fact that when $T_a$ reads register $z$, the clock of $z$ has been increased to a value higher than the clock associated with $y_1$.
-Hence, when $T_a$ access $y$, it does not extend and check the content of $x$.
-
-One solution to this problem consists in calling $\stmExtend{}$ everytime a new item is read (similarly to \cite{}).
-However as underlined in \refsection{}, this leads to a time complexity of $O(r^2)$, where $r$ is the amount of reads in the transaction.
-To reduce this complexity, we propose instead to check items for which the read timestamp is smaller than the new timestamp encountered.
-In details, we introduce the following modifications to \refalg{stm}.
-\begin{compactitem}
-\item $\stmExtend{}$ is always calls at \refline{stm:read:5}, \refline{stm:write:4} and \refline{stm:try:1};
-\item the computation at \reflines{stm:extend:2}{stm:extend:4} in $\stmExtend{}$ is executed only when $t' \leq t$ holds.
-\end{compactitem}
-We refer to this variation as \refalg{stm}' and proves below that it attains opacity.
-% explain why this suffice.
-
-\begin{theorem}
-  \labprop{ext:2}
-  \refalg{stm}' is opaque.
-\end{theorem}
-
-\begin{proof}
-
-  Clearly \refalg{stm}' attains strict serializability by immediate reduction to the original algorithm.
-  To show that a transaction always sees a consistent snapshot we proceed by contradiction, as in \refprop{ext:1}.
-  %
-  Let us assume that some transaction $T_a \in h$ does not observe a consistent snapshot.
-  This means that transaction $T_a$
-  \begin{inparaenum}
-  \item reads a version $x_j$ of some register $x$,
-  \item depends on some transaction $T_k$ which writes version $x_k$ in $h$, and
-  \item $x_j$ is followed by version $x_k$ in the version order $\ll_{h,x}$.
-  \end{inparaenum}
-  We observe that $r_a(x_j)$ precedes $w_k(x_k)$ in $h$, otherwise $T_a$ must abort before reading $x$, or reads instead version $x_k$.
-  Applying \refprop{} to transction $T_a \depends T_k$, there exist a write $w_k(z_k)$ and a read $r_a(y_l)$ such that
-  \begin{inparaenum}
-  \item $w_k(z_k) \hb_h r_a(y_l)$, and
-  \item $\clockOf{y_l} \geq \clockOf{T_k}$.
-  \end{inparaenum}  
-  If $r_a(y_l) <_h r_a(x_j)$ holds, then $T_a$ aborts before return $x_j$ as transaction $T_k$ still holds the lock on register $x$.
-  In the converse case, as $\clockOf{x_j} < \clockOf{x_k}$ holds, transaction $T_a$ aborts before returning $y_l$ when executing $\stmExtend{}$.  
-    
-\end{proof}
-
-From a practical point of view, we now argue that the above algorithm avoids most of the time a complexity in $O(r^2)$.
-To this end, let us conider some transaction $T$ reading two versions $x_i$ and $y_j$ of objects $x$ and $y$.
-In the common case, it is expected that there is no concurrent transactions to $T$.
-Thus,
-\begin{inparaenum}
-\item if $x$ and $y$ are bound due to some state invariant, $x_i$ and $y_j$ have the same clocks; and
-\item if $x_i$ was updated causally before $y_j$, it suffices that $T$ reads $y_j$ before its causal dependency $x_i$.
-\end{inparaenum}
-Item (ii) is generally true in the case of a referential integrity linking $y$ to $x$ (i.e., $y$ stores a reference to $x$).
 
 \subsection{Conjoining clocks}
 \labsection{stm:conjoining}

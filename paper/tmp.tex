@@ -189,3 +189,10 @@ from which we deduce that history $h$ is opaque.
 %%   From what precedes and the fact that $\ll$ is an order, we deduce that $G_h$ is acyclic.
 
 %% \end{proof}
+
+
+    From the code at \refline{stm:read:1}, we know that $t=\clockOf{T_i}_f$ holds.
+    Then, if $t > \clockOf{T_j}$ holds, transation $T_j$ is extended with timestamp $t$ at \refline{stm:read:5}.
+    Since transaction $T_j$ commits this call succeeds, leading to $\clockOf{T_j} = t$.
+    Hence at that point in time, $\writeSetOf{T_i}[x] = \readSetOf{T_j}[x]$.
+    Because $T_j$ cannot read another version of $x$ later on (\refline{stm:extend:3}), this invariant holds forever.
