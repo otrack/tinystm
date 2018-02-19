@@ -21,10 +21,9 @@ Hence, when $T_a$ access $y$, it does not extend and check the content of $x$.
 
 One solution to this problem consists in calling $\stmExtend{}$ everytime a new item is read (similarly to \cite{}).
 However, as underlined in \refsection{introduction}, this raises time complexity to $O(r^2)$, where $r$ is the amount of reads in the transaction.
-Instead, we make the observation that if $z$ is not read in $T_2$ then it is not causaly-related to $y$.
-Our idea is to require that the path to $y$ solely contains causaly-related registrs.
-
-With more details,
+Instead, we make the observation that if $z$ is not read in $T_2$ then $y$ is reachable from $z$.
+Our idea is to require that the path to $y$ should contain the same registers.
+More precisely,
 
 \begin{itemize}
 \item[$\mathcal{C}$]

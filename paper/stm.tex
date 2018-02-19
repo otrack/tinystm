@@ -163,6 +163,27 @@ In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a re
 For each register $x$, we consider the version order $\ll_{h,x}$ that corresponds to the order in which writes are linearized on $x$ in $\rho$.
 Below, we prove that $<$ is acyclic for this definition of $\ll$, leading to the fact that $h$ is strictly serializable \cite{adyaPHD,pap79}.
 
+leaving of read and wri
+te operations over each register $x$.
+-In detail,
+-\begin{flalign*}
+-  T_i \stmPrec{x} T_j  \equaldef
+-  & \lor \readSetOf{T_i}[x] \leq \writeSetOf{T_j}[x] \\
+-  & \lor \writeSetOf{T_i}[x] \leq \readSetOf{T_j}[x] \\
+-  & \lor \writeSetOf{T_i}[x] \leq \writeSetOf{T_j}[x] 
+-\end{flalign*}
+where by abuse of notation, $\writeSetOf{T}[x]$ is the value of $\clockOf{T}$ at commit time (see \reflines{stm:commit:1}{stm:commit:4}).
+
+
+\begin{proposition}
+  \labprop{sser:1}
+  If both transactions $T_i$ and $T_{j \neq i}$ write on register $x$ in $h$ with $x_i \ll_{h,x} x_j$ holds, then $\clockOf{T}_f < \clockOf{T_j}$.
+\end{proposition}
+
+\begin{proof}
+  
+\end{proof}
+
 \begin{proposition}
   \labprop{sser:1}
   Consider two transactions $T_i$ and $T_{j \neq i}$ in $h$ such that $T_i < T_j$.
