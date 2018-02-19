@@ -1,0 +1,78 @@
+\tikzstyle{transA} = [color=blue]
+\tikzstyle{transB} = [color=red]
+\tikzstyle{transC} = [color=OliveGreen]
+
+\tikzstyle{call} = [color=black,thick]
+\tikzstyle{callA} = [color=blue,thick]
+\tikzstyle{callB} = [color=red,thick]
+\tikzstyle{callC} = [color=OliveGreen,thick]
+
+\tikzset{
+    ncbar angle/.initial=90,
+    ncbar/.style={
+        to path=(\tikztostart)
+        -- ($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)
+        -- ($(\tikztotarget)!($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztostart)$)
+        -- (\tikztotarget)
+    },
+    ncbar/.default=0.5cm,
+}
+\tikzset{square left brace/.style={ncbar=0.05cm}}
+\tikzset{square right brace/.style={ncbar=-0.05cm}}
+
+\begin{figure}[!h]
+  \centering
+  \fontsize{8}{11}\selectfont
+  \begin{tikzpicture}[scale=0.77]
+    \node at (10,.3) {$(h_2)$};
+    
+    \node at (0.2,1.8) {$p$};
+    \node at (0.2,1) {$q$};
+    
+    \path[->] (0.5,1) edge (10,1);
+    \path[->] (0.5,1.8) edge (10,1.8);
+    
+    \draw [transA] (1.2,1.6) to [square left brace ] (1.2,2);
+    \path[callA] (1.6,1.8) edge (2.4,1.8);
+    \path[callA,->] (1.6,2) edge (1.6,1.8);
+    \path[callA,->] (2.4,1.8) edge (2.4,2);
+    \node at (1.6,2.2) {$r_a(z_{10})$}; 
+    \node at (2.8,2.2) {};
+
+    \path[callA] (3,1.8) edge (3.8,1.8);
+    \path[callA,->] (3,2) edge (3,1.8);
+    \path[callA,->] (3.8,1.8) edge (3.8,2);
+    \node at (3,2.2) {$r_a(x_0)$};
+    \node at (3.8,2.2) {};
+
+    \path[callA] (8,1.8) edge (8.8,1.8);
+    \path[callA,->] (8,2) edge (8,1.8);
+    \path[callA,->] (8.8,1.8) edge (8.8,2);
+    \node at (8,2.2) {$r_a(y_2)$};
+    \node at (8.8,2.2) {};
+    \draw [transA] (9.2,1.6) to [square right brace ] (9.2,2);
+
+    \path[callB] (3.5,1) edge (4.5,1);
+    \path[callB,->] (3.5,1.2) edge (3.5,1);
+    \path[callB,->] (4.5,1) edge (4.5,1.2);
+    \node at (3.5,1.4) {$w_1(x_1)$};
+    \node at (4.5,1.4) {};
+
+    \draw [transC] (5.6,.8) to [square left brace ] (5.6,1.2);
+    \path[callC] (6,1) edge (7,1);
+    \path[callC,->] (6,1.2) edge (6,1);
+    \path[callC,->] (7,1) edge (7,1.2);
+    \node at (6,1.4) {$r_2(x_1)$};
+    \node at (7,1.4) {};
+
+    \path[callC] (8,1) edge (9,1);
+    \path[callC,->] (8,1.2) edge (8,1);
+    \path[callC,->] (9,1) edge (9,1.2);
+    \node at (8,1.4) {$w_2(y_2)$};
+    \node at (9,1.4) {};
+    \draw [transC] (9.4,.8) to [square right brace ] (9.4,1.2);
+
+    \pgfresetboundingbox
+    \clip[use as bounding box] (0,.3) rectangle (8,2.5);
+  \end{tikzpicture}
+\end{figure}
