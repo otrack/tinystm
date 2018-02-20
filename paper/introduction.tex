@@ -16,7 +16,7 @@ This property is key to ensures that the system scales with the numbers of cores
 
 % why OPA
 From a developer's point of view, the interleaving of transactions must satisfy some form of correctness.
-Strict serializability (SSER)~\cite{herlihy1990linearizability} is a consistency criteria commonly encountered in database literature.
+Strict serializability (\textsc{SSer})~\cite{herlihy1990linearizability} is a consistency criteria commonly encountered in database literature.
 This criteria ensures committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
 However, SSER does note specify the conditions for aborted transactions.
 To illustrate this point, let us consider history $h_1$ (\emph{e.g.} a group of transactions) where transaction $T_1=r(x);r(y)$ and $T_2=w(x);w(y)$ execute concurrently.
@@ -40,16 +40,15 @@ The former approach has a quadratic-time validation complexity.\vs{ref?}
 The latter approach is expensive in multi-core/multi-processors architecture, due to a synchronization wall.\vs{ref?}
 
 % our contributions
-In this paper, we address these shortcomings with a new consistency criteria, named \emph{stricter serializability} (\textsc{S+SER}).
+In this paper, we address these shortcomings with a new consistency criteria, named \emph{stricter serializability} (\sser).
 This criteria extends strict serializability by avoiding the inconsistency depicted in history $h_1$.
 We describe in detail a corresponding TM algorithm that ensures DAP, invisible reads, and permits transactions to commit as long as they do not contend with conflicting transactions.
-We further validate our design by means of a full implementation of \textsc{S+SER} and several experiments.
-Our result shows that when the workloads are strongly parallelism, \textsc{S+SER} offers close-to-optimum performance.
+We further validate our design by means of a full implementation of \sser and several experiments.
+Our result shows that when the workloads are strongly parallelism, \sser offers close-to-optimum performance.
 
 \textbf{Outline.}
-The outline of this paper is as follows.
-\refsection{criteria} introduces S+SER.
-The algorithm and a formal proof of its correctnesss are presented in ~\refsection{stm}
-\refsection{evaluation} presents our extensive evaluation against several benchmarks.
-We survey related work in \refsection{relatedwork}.
-\refsection{conclusion} closes this paper.
+This paper is organized as follows.
+\refsection{criteria} introduces \textsc{S+Ser}.
+The algorithm and a formal proof of its correctness are presented in ~\refsection{stm}.
+We present the evaluation of our prototype against several benchmarks in \refsection{evaluation}.
+We survey related work in \refsection{relatedwork}, before concluding in \refsection{conclusion}.
