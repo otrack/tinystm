@@ -69,18 +69,6 @@ Then, we present a mechanism to adapt clocks dynamically to the workload, in ord
 When processes use a global clock, \refalg{stm} is idenrtical to the original code of TinySTM.
 This means that each transaction, even if it aborts, observes a strictly consistent snapshot.
 Such a property, together with \reftheo{ss}, leads to the fact that \refalg{stm} is opaque.
-Before proving this claim, we first recall the notion of consisstent snapshot.
-
-A transaction $T_i$ \emph{depends on} a transaction $T_j$ when $T_i$ reads a version written by $T_j$, or such a relation holds transitively.
-Thus, a transaction observes a \emph{consistent snapshot} \cite{Chan:1985} when it never misses the effects of some transaction it depends on.
-In other words, transaction $T_i$ in a history $h$ observes a consistent snapshot when
-\begin{inparaenum}[\em(i)]
-\item $T_i$ reads version $x_j$,
-\item $T_k$ writes version $x_k$, and 
-\item $T_i$ depends on $T_{k}$,
-\end{inparaenum}
-then version $x_k$ is followed by version $x_j$.
-Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \implies (x_k \ll_{h,x} x_j)$, where $\ll_{h,x}$ is the version order defined by history $h$.
 
 \begin{proposition}
   \labprop{ext:1}

@@ -20,11 +20,13 @@ From a developper point of view, the interleaving of transactions must satisfy s
 Strict serializability (SSER) is a consistency criteria commonly encountered in database litterature.
 This criteria ensures committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
 Unfortunately, SSER does not say anything about transaction that abort.
-For instance, the history $h_1$ below is allowed in SSER since transaction $T_1$ abort after reading inconsistent values for $x$ and $y$.
+To illustrate this point, let us consider history $h_1$ where transaction $T_1=r(x);r(y)$ and $T_2=w(x);w(y)$ execute concurrently.
+In this history $T_1$ aborts after reading inconsistent values for $x$ and $y$, yet this history $h_1$ is allowed by SSER 
 \input{figures/not-opaque}
 Opacity (OPA) was introduced to avoid the side-effects of so-called doom transactions, i.e., transactions which eventually abort (such as $T_1$ in history $h_1$).%
 \footnote{  
   Allowing $T_1$ to return both $x_0$ and $y_2$ may have dire consequences in a non-managed environement.
+  % def. notion of managed env., that is an environment à la PL/SQL where object are sronngly typed and exception caught.
   For instance \cite{opa}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
 }
 In addition to SSER, OPA requires that aborted transactions observe a prefix of the committed transactions.
