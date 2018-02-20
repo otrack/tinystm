@@ -17,24 +17,24 @@ This property is key to ensures that the system scales with the numbers of cores
 % why OPA
 From a developer's point of view, the interleaving of transactions must satisfy some form of correctness.
 Strict serializability (\textsc{SSer})~\cite{herlihy1990linearizability} is a consistency criteria commonly encountered in database literature.
-This criteria ensures committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
-However, SSER does note specify the conditions for aborted transactions.
+This criteria ensures that committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
+However, \textsc{SSer} does note specify the conditions for aborted transactions.
 To illustrate this point, let us consider history $h_1$ (\emph{e.g.} a group of transactions) where transaction $T_1=r(x);r(y)$ and $T_2=w(x);w(y)$ execute concurrently.
 In this history, $T_1$ aborts after reading inconsistent values for $x$ and $y$.
 Yet, $h_1$ is compliant with SSER.
 \input{figures/not-opaque}
 
-Opacity (OPA) was introduced~\cite{guerraoui2008correctness} to avoid the side-effects of so-called \emph{doomed transactions}, i.e., transactions which eventually abort (such as $T_1$ in history $h_1$).%
+Opacity (\opa) was introduced~\cite{guerraoui2008correctness} to avoid the side-effects of so-called \emph{doomed transactions}, \emph{i.e.}, transactions which eventually abort (such as $T_1$ in history $h_1$).%
 \footnote{  
-  Allowing $T_1$ to return both $x_0$ and $y_2$ may have dire consequences in a non-managed environement.
+  Allowing $T_1$ to return both $x_0$ and $y_2$ may have serious consequences in a non-managed environment.
   % def. notion of managed env., that is an environment à la PL/SQL where object are sronngly typed and exception caught.
-  For instance~\cite{guerraoui2008correctness}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
+  As shown in~\cite{guerraoui2008correctness}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
 }
-In addition to SSER, OPA requires that aborted transactions observe a prefix of the committed transactions.
+In addition to \textsc{SSer}, \opa requires that aborted transactions observe a prefix of the committed transactions.
 This is the usual consistency criteria for TM.
 
 % the cost of achieving OPA
-Achieving OPA is known to be expensive, even for weak progress properties on the transactions \cite{}\vs{i don't know this ref}.
+Achieving \opa is known to be expensive, even for weak progress properties on the transactions \cite{}\vs{i don't know this ref}.
 In particular, ensuring that a transaction always sees a consistent snapshot when read are invisible require to either validate the read set after each read operation, or to rely on a global clock.
 The former approach has a quadratic-time validation complexity.\vs{ref?}
 The latter approach is expensive in multi-core/multi-processors architecture, due to a synchronization wall.\vs{ref?}
