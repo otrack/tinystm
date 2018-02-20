@@ -1,7 +1,13 @@
-\section{Model}
-\labsection{model}
+\section{A new consistency criteria}
+\labsection{criteria}
 
 In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
+Then, we formuate our notion of stricter serializability.
+
+PS. WORK IN PROGRESS.
+
+\subsection{System Model}
+\labsection{criteria:model}
 
 Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory space.
 Each process manipulates registers in the shared memory with the help of transactions.
@@ -14,8 +20,7 @@ A \emph{history} is a sequence of invocations and responses of the tranasctional
 It commonly is represented with timelines.
 For instance, in history $h_1$ below, processes $p$ and $q$ access a data store that contains two registers ($x$ and $y$).
 
-
-%% \input{fig-sample.tex}
+% \input{figures/sample.tex}
 
 A history induces a real-time order between transactions (denoted $\hb_h$).
 This order holds between two transactions $T$ and $T'$ when $T$ terminates in $h$ before $T'$ starts.
@@ -26,15 +31,28 @@ This relation together with (${\color{blue}{T_1}} <_{h_1} {\color{OliveGreen}{T_
 A version is the state of a register as produced by an update transaction.
 For instance, when $T_i$ writes to some register $x$, an operation denoted hereafter $w(x_i)$, it creates a new version $x_i$ of $x$.
 Versions allow to uniquely identify the state of a register as observed by a read operation, e.g., $r(x_i)$.
-We shall say that $T_i$ \emph{read-write depends} on $T_j$ when $r_i(x_i)$ is in $h$.
 
+We shall say that $T_i$ \emph{read-write depends} on $T_j$ when $r_i(x_i)$ is in $h$.
 Given some history $h$ and some register $x$, a \emph{version order} $\ll_{h,x}$ for $x$ in $h$ is a total order relation over the versions of $x$ in $h$.
 A version order for $h$, denoted $\ll_{h}$ is the union of all the version orders for all registers.
 For instance, in history $h_1$ above,  we may consider $x_0 \ll_{h_1} x_1$.
 
-%% Our model is taken from ..
-%% $\run$ to $h$
-%% hist. seq. of events. inv/res.
-%% def. $\hb_h$, $<_{h}$
-%% def. wlog. version
-%% def. $\depend$ 
+\subsection{Stricter serializability}
+\labsection{criteria:spser}
+
+Roughly speaking, this criteria requires that all the 
+Formally,
+Consider some version order $\ll_h$ for $h$.
+We note $<$ the relations over the transactions in $h$ induced by $\ll_h$; namely:
+\begin{displaymath}
+  \begin{array}{l}
+    T_i < T_{j \neq i}  \equaldef \\
+    \lor~ T_i \hb_h T_j {\hspace{16.8em}\text{(1)}} \\
+    \lor~ \exists x : \lor~ r_j(x_i) \in h {\hspace{13.3em}\text{(2)}} \\
+    \hspace{2.9em}\lor~ \exists T_k : x_k \ll_{h,x} x_j \land \lor~T_k = T_i {\hspace{5em}\text{(3)}} \\
+    \hspace{12.2em} \lor~ r_i(x_k) \in h {\hspace{3.9em}\text{(4)}}
+  \end{array}
+\end{displaymath}
+In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
+
+When a transaction $T_i$ reads a register $x$ then, for every register $y$ read but not written before $x$, if a concurrent transaction $T_j$ writes to register $x$, $y \in \readSetOf{T_j}$ holds.

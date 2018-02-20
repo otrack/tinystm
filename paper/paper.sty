@@ -1,5 +1,27 @@
+% STM plots
+\tikzstyle{transA} = [color=blue]
+\tikzstyle{transB} = [color=red]
+\tikzstyle{transC} = [color=OliveGreen]
+
+\tikzstyle{call} = [color=black,thick]
+\tikzstyle{callA} = [color=blue,thick]
+\tikzstyle{callB} = [color=red,thick]
+\tikzstyle{callC} = [color=OliveGreen,thick]
+
+\tikzset{
+    ncbar angle/.initial=90,
+    ncbar/.style={
+        to path=(\tikztostart)
+        -- ($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)
+        -- ($(\tikztotarget)!($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztostart)$)
+        -- (\tikztotarget)
+    },
+    ncbar/.default=0.5cm,
+}
+\tikzset{square left brace/.style={ncbar=0.05cm}}
+\tikzset{square right brace/.style={ncbar=-0.05cm}}
+
 % STM Operations
-%
 \newmathit@one{lock}
 \newmathit@one{unlock}
 \newmathit@one{isLocked}
@@ -20,3 +42,4 @@
 
 \let\inparaenumorig=\inparaenum
 \renewenvironment{inparaenum}{\begin{inparaenumorig}[\em(i)]}{\end{inparaenumorig}}
+

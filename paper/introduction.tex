@@ -1,69 +1,52 @@
 \section{Introduction}
 \labsection{introduction}
 
-The advent of chip level multiprocessing in commodity hardware has pushed applications 
-to be more and more parallel in order to leverage the increase of computational power.
-However, the art of concurrent programming is known to be a difficult task~\cite{Lee:2006:PT:1137232.1137289}, 
-and new paradigms are required to help the programmer.
-Among those paradigms, software transactional memory (STM) is widely considered as a promising direction~\cite{Dragojevic:2011:WSM:1924421.1924440}.
-The two key factors contributing to the popularity of STM are (1) simplicity in terms of developer-friendliness,
-and (2) STM is at heart a non-blocking technique\vs{not clear why this is a popularity-inducing factor. You mean that, since it is usually implemented with non-blocking techniques then it is faster/lighter then other solutions?}.
+% why TM
+The advent of chip level multiprocessing in commodity hardware has pushed applications to be more and more parallel in order to leverage the increase of computational power.
+However, the art of concurrent programming is known to be a difficult task~\cite{Lee:2006:PT:1137232.1137289}, and new paradigms are required to help the programmer.
+Among those paradigms, transactional memory (TM) is widely considered as a promising direction, in particular thanks to its simplicity~\cite{Dragojevic:2011:WSM:1924421.1924440}.
 
-The engine that orchestrates concurrent transactions run by the application, i.e., the concurrency manager, is one of the core aspects of a STM implementation. %implementation
+% the case for invisible optimistic reads and DAP
+The engine that orchestrates concurrent transactions run by the application, i.e., the concurrency manager, is one of the core aspects of a STM implementation.
 A large number of concurrency manager implementations exists, ranging from pessimistic lock-based implementations\vs{ref?} to completely optimistic ones\vs{ref?}, with~\cite{perelman2011smv} or without multi-version support\vs{ref?}.
 Because application workloads exhibit in general a high degree of parallelism\vs{is this a known fact? for which applications? a ref that assess this statement would be good imho}, these designs tend to favor optimistic concurrency control.
-In particular, a widely accepted approach consists in executing tentatively the read operations and validating them on the course of the transaction execution to enforce consistency.
+In particular, a widely accepted approach consists in executing tentatively invisible read operations and validating them on the course of the transaction execution to enforce consistency.
+Another property of interest is disjoint-access parallelism (DAP) \cite{}.
+DAP ensures that concurrent transactions operating on disjoint part of the application do not contend in the concurrency manager.
+This property is key to ensures that the system scales with the numbers of cores.
 
-One of the very first STM design\vs{which one?} validates the read set at each step of the transaction, resulting in a quadratic-time validation complexity. 
-More advanced techniques rely on time-based validation.
-In a nutshell, a time-based validation approach uses a global clock to track causality relations between transactions.
-When a transaction starts its execution, it retrieves a starting timestamp from the global clock, and re-validates its read set only if it encounters an object storing a higher timestamp.
+% why OPA
+From a developper point of view, the interleaving of transactions must satisfy some form of correctness.
+Strict serializability (SSER) is a consistency criteria commonly encountered in database litterature.
+This criteria ensures committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
+Unfortunately, SSER does not say anything about transaction that abort.
+For instance, the history $h_1$ below is allowed in SSER since transaction $T_1$ abort after reading inconsistent values for $x$ and $y$.
+\input{figures/not-opaque}
+Opacity (OPA) was introduced to avoid the side-effects of so-called doom transactions, i.e., transactions which eventually abort (such as $T_1$ in history $h_1$).%
+\footnote{  
+  Allowing $T_1$ to return both $x_0$ and $y_2$ may have dire consequences in a non-managed environement.
+  For instance \cite{opa}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
+}
+In addition to SSER, OPA requires that aborted transactions observe a prefix of the committed transactions.
+This is the usual consistency criteria for TM.
 
-In every time-based STM, the critical path of a transaction contains at least two global operations.
-Global operations are expensive in multi-core/multi-processors architecture, due to the synchronization wall.
-In particular, computer designs that exploit data locality with multiple cache levels, such as non-uniform memory architectures (NUMA), have to reduce the amount of global operations to improve application performance or take special care to address traffic congestions\cite{dashti2013traffic}.
+% the cost of achieving OPA
+Achieving OPA is known to be expensive, even for weak progess properties on the transactions \cite{}.
+In particular, ensuring that a transaction always observes a consistent snapshot when read are invisible require to either validate the read set after each read operation, or to rely on a global clock.
+The former approach results in a quadratic-time validation complexity.
+The latter approach is expensive in multi-core/multi-processors architecture, due to a synchronization wall.
 
-\vs{The following paragraph abot the bank benchmark comes very early in the paper: i'd move it later in the eval}
-To motivate this observation, \reffigure{}\vs{is this figure somewhere? can I help with it somehow?} draws a comparison between a state-of-the-art time-based STM~\cite{FelberFMR10} and an hypothetical implementation ables to leverage data locality.
-We exploit the bank benchmark~\cite{felber2010deuce}. 
-This benchmark consists in a set of account scattered in several branches of the same bank.
-The workload consists solely in money transfers between accounts located in the same branches.
-Each client operate on a distinct branch.
-Our hypothetical implemntation emulates perfect locality by running a distinct instance of the STM per client.
-\reffigure{} shows an improvement of X with 45 clients.
-This is X\% of the theoretical upper bound obtained linearily from the performance of a single client.
-%% We illustrate this last point in \reffigure{motivation} where we plot the performance of TinySTM \cite{felber2008tinystm} 
-%% for a fully parallel workload on a NUMA machine.
-%% The bottom curve depicts the results we obtained when varying the amount of threads from 1 to 48.
-%% In the top curve, we consider an optimal linearity relation between throughput and the amount of threads;
-%% this gives us an obvious upper bound on performance.
-%% To draw the middle curve, we execute concurrently several instances of TinySTM on disjoint part of the data.
-%% With 48 cores, the performance we obtained in that case are 42x better than the baseline.
-% Our contributions 
-
-A few solutions exist\vs{ref?} to relieve time-based STM implementation from the usage of a global clock.
-However, to the best of our knowledge, they either increase storage cost, execute a high number of invalidations, or ensure weak consistency criteria.
-In this paper, we address these shortcomings with a novel flexible design.
-Our design supports lazy snapshots, it can be tailored to leverage data locality (from disjoint access parallelism to NUMA-awareness), and it strives to maximize the native workload parallelism. 
-It does so while leveraging locality of computer architectures to reduce the number of cache invalidations.
-We validate our design by means of a full implementation and several experiments. 
-We show that locality-aware design is in favorable cases\vs{not sure about favorable} close to the optimum,
-and that in the other ones, its performance are similar to existing STM solutions.
-
-Locality is the affinity\vs{what is affinity?} that links a processing unit to a certain amount of data items.
-This is a core property of a workload or an hardware design.
-Inherently, when there is no locality, processing units have to synchonize to access shared data items.
-However, when locality is strong, there is no need to synchronize.
-Based on this simple idea we, propose an STM design that is able to adapt to locality.
-
-Our design comes in two variants.
-The first one requires direct user intervention to set-up locality.
-The second variant adapts dynamically to the workload and the underlying hardware design.
-We assess with several experiments the benefits of our approach, showing that it is between -X\vs{FIX} and Y\vs{FIX} times faster than efficient existing ones.
+% our contributions
+In this paper, we address these shortcomings with a new consistency criteria, named stricter serializability (S+SER).
+This criteria extends strict serializability while avoiding the inconsistency depicted in history $h_1$.
+We present a matching TM algorithm that ensures DAP, invisible reads, and permits transactions to commit as long as they do do contend with conflicting transactions.
+We then validate our design by means of a full implementation and several experiments.
+Our result shows that when the workloads is strongly parallelism, our algorithm offers performance close to the optimum.
 
 \textbf{Outline.}
-The outline of this paper is the following.
+The outline of this paper is as follows.
+\refsection{criteria} introduces S+SER.
+The algorithm and a formal proof of its correctnesss are presented in ~\refsection{stm}
+\refsection{evaluation} presents our extensive evaluation against several benchmarks.
 We survey related work in \refsection{relatedwork}.
-The algorithm behind our design and a formal proof of its correctnesss are presented in ~\refsection{stm}
-\refsection{evaluation} presents our extensive evaluation against a wide set of benchmarks.
-We conclude in \refsection{conclusion}.
+\refsection{conclusion} closes this paper.
