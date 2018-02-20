@@ -3,47 +3,48 @@
 
 % why TM
 The advent of chip level multiprocessing in commodity hardware has pushed applications to be more and more parallel in order to leverage the increase of computational power.
-However, the art of concurrent programming is known to be a difficult task~\cite{Lee:2006:PT:1137232.1137289}, and new paradigms are required to help the programmer.
+However, the art of concurrent programming is known to be a difficult task~\cite{Lee:2006:PT:1137232.1137289}, and programmers alway look for new paradigms to facilitate the programming tasks.
 Software Transactional Memory (TM) is widely considered as a promising paradigm in this direction, in particular thanks to its simplicity and programmer's friendliness~\cite{Dragojevic:2011:WSM:1924421.1924440}.
 
 % the case for invisible optimistic reads and DAP
 The engine that orchestrates concurrent transactions run by the application, i.e., the concurrency manager, is one of the core aspects of a STM implementation.
 A large number of concurrency manager implementations exists, ranging from pessimistic lock-based implementations~\cite{harris2005revocable,afek2012pessimistic} to completely optimistic ones~\cite{hassan2014optimistic}, with~\cite{perelman2011smv} or without multi-version support~\cite{attiya2012single}.
-Because application workloads exhibit in general a high degree of parallelism\vs{is this a known fact? for which applications? a ref that assess this statement would be good imho}, these designs tend to favor optimistic concurrency control.
+For application workloads that exhibit a high degree of parallelism, these designs tend to favor optimistic concurrency control.
 In particular, a widely accepted approach consists in executing tentatively invisible read operations and validating them on the course of the transaction execution to enforce consistency.
-Another property of interest is disjoint-access parallelism (DAP) \cite{}.
-DAP ensures that concurrent transactions operating on disjoint part of the application do not contend in the concurrency manager.
+Disjoint-access parallelism (DAP)~\cite{ellen2012universal} ensures that concurrent transactions operating on disjoint part of the application do not contend in the concurrency manager.
 This property is key to ensures that the system scales with the numbers of cores.
 
 % why OPA
-From a developper point of view, the interleaving of transactions must satisfy some form of correctness.
-Strict serializability (SSER) is a consistency criteria commonly encountered in database litterature.
+From a developer's point of view, the interleaving of transactions must satisfy some form of correctness.
+Strict serializability (SSER)~\cite{herlihy1990linearizability} is a consistency criteria commonly encountered in database literature.
 This criteria ensures committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
-Unfortunately, SSER does not say anything about transaction that abort.
-To illustrate this point, let us consider history $h_1$ where transaction $T_1=r(x);r(y)$ and $T_2=w(x);w(y)$ execute concurrently.
-In this history $T_1$ aborts after reading inconsistent values for $x$ and $y$, yet this history $h_1$ is allowed by SSER 
+However, SSER does note specify the conditions for aborted transactions.
+To illustrate this point, let us consider history $h_1$ (\emph{e.g.} a group of transactions) where transaction $T_1=r(x);r(y)$ and $T_2=w(x);w(y)$ execute concurrently.
+In this history, $T_1$ aborts after reading inconsistent values for $x$ and $y$.
+Yet, $h_1$ is compliant with SSER.
 \input{figures/not-opaque}
-Opacity (OPA) was introduced to avoid the side-effects of so-called doom transactions, i.e., transactions which eventually abort (such as $T_1$ in history $h_1$).%
+
+Opacity (OPA) was introduced~\cite{guerraoui2008correctness} to avoid the side-effects of so-called \emph{doomed transactions}, i.e., transactions which eventually abort (such as $T_1$ in history $h_1$).%
 \footnote{  
   Allowing $T_1$ to return both $x_0$ and $y_2$ may have dire consequences in a non-managed environement.
   % def. notion of managed env., that is an environment à la PL/SQL where object are sronngly typed and exception caught.
-  For instance \cite{opa}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
+  For instance~\cite{guerraoui2008correctness}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
 }
 In addition to SSER, OPA requires that aborted transactions observe a prefix of the committed transactions.
 This is the usual consistency criteria for TM.
 
 % the cost of achieving OPA
-Achieving OPA is known to be expensive, even for weak progess properties on the transactions \cite{}.
-In particular, ensuring that a transaction always observes a consistent snapshot when read are invisible require to either validate the read set after each read operation, or to rely on a global clock.
-The former approach results in a quadratic-time validation complexity.
-The latter approach is expensive in multi-core/multi-processors architecture, due to a synchronization wall.
+Achieving OPA is known to be expensive, even for weak progress properties on the transactions \cite{}\vs{i don't know this ref}.
+In particular, ensuring that a transaction always sees a consistent snapshot when read are invisible require to either validate the read set after each read operation, or to rely on a global clock.
+The former approach has a quadratic-time validation complexity.\vs{ref?}
+The latter approach is expensive in multi-core/multi-processors architecture, due to a synchronization wall.\vs{ref?}
 
 % our contributions
-In this paper, we address these shortcomings with a new consistency criteria, named stricter serializability (S+SER).
-This criteria extends strict serializability while avoiding the inconsistency depicted in history $h_1$.
-We present a matching TM algorithm that ensures DAP, invisible reads, and permits transactions to commit as long as they do do contend with conflicting transactions.
-We then validate our design by means of a full implementation and several experiments.
-Our result shows that when the workloads is strongly parallelism, our algorithm offers performance close to the optimum.
+In this paper, we address these shortcomings with a new consistency criteria, named \emph{stricter serializability} (\textsc{S+SER}).
+This criteria extends strict serializability by avoiding the inconsistency depicted in history $h_1$.
+We describe in detail a corresponding TM algorithm that ensures DAP, invisible reads, and permits transactions to commit as long as they do not contend with conflicting transactions.
+We further validate our design by means of a full implementation of \textsc{S+SER} and several experiments.
+Our result shows that when the workloads are strongly parallelism, \textsc{S+SER} offers close-to-optimum performance.
 
 \textbf{Outline.}
 The outline of this paper is as follows.
