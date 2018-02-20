@@ -4,11 +4,11 @@
 % why TM
 The advent of chip level multiprocessing in commodity hardware has pushed applications to be more and more parallel in order to leverage the increase of computational power.
 However, the art of concurrent programming is known to be a difficult task~\cite{Lee:2006:PT:1137232.1137289}, and new paradigms are required to help the programmer.
-Among those paradigms, transactional memory (TM) is widely considered as a promising direction, in particular thanks to its simplicity~\cite{Dragojevic:2011:WSM:1924421.1924440}.
+Software Transactional Memory (TM) is widely considered as a promising paradigm in this direction, in particular thanks to its simplicity and programmer's friendliness~\cite{Dragojevic:2011:WSM:1924421.1924440}.
 
 % the case for invisible optimistic reads and DAP
 The engine that orchestrates concurrent transactions run by the application, i.e., the concurrency manager, is one of the core aspects of a STM implementation.
-A large number of concurrency manager implementations exists, ranging from pessimistic lock-based implementations\vs{ref?} to completely optimistic ones\vs{ref?}, with~\cite{perelman2011smv} or without multi-version support\vs{ref?}.
+A large number of concurrency manager implementations exists, ranging from pessimistic lock-based implementations~\cite{harris2005revocable,afek2012pessimistic} to completely optimistic ones~\cite{hassan2014optimistic}, with~\cite{perelman2011smv} or without multi-version support~\cite{attiya2012single}.
 Because application workloads exhibit in general a high degree of parallelism\vs{is this a known fact? for which applications? a ref that assess this statement would be good imho}, these designs tend to favor optimistic concurrency control.
 In particular, a widely accepted approach consists in executing tentatively invisible read operations and validating them on the course of the transaction execution to enforce consistency.
 Another property of interest is disjoint-access parallelism (DAP) \cite{}.
