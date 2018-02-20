@@ -1,15 +1,15 @@
-\section{A new consistency criteria}
+%\section{A new consistency criteria}
+%\labsection{criteria}
+%
+%In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
+%Then, we formulate our notion of stricter serializability.
+%
+\section{System Model}
 \labsection{criteria}
 
-In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
-Then, we formulate our notion of stricter serializability.
-
-\subsection{System Model}
-\labsection{criteria:model}
-
-Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory space.
+Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory region.
 Each process manipulates registers in the shared memory with the help of transactions.
-When a process begins a new transactions, it calls function \stmBeginFunction.
+When a process begins a new transaction, it calls function \stmBeginFunction.
 Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operations on the registers according to some internal (not modeled) logic.
 At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction, in which case the transaction may either commit ($\flagCommit$), or abort ($\flagAbort$).
 
@@ -23,15 +23,15 @@ When two transactions are noto related with real-time, they are \emph{concurrent
 
 A \emph{version} is the state of a register as produced by the write of a transaction.
 When transaction $T_i$ writes to some register $x$, an operation denoted $w_i(x_i)$, it creates a new version $x_i$ of $x$.
-Versions allow to uniquely identify the state of a register as observed by a read operation, e.g., $r_3(x_1)$ in $h_2$.
-When a transaction $T_i$ reads version $x_j$, we shall say that $T_i$ \emph{read-from} transaction $T_1$.
+Versions allow to uniquely identify the state of a register as observed by a read operation, \emph{e.g.}, $r_3(x_1)$ in $h_2$.
+When a transaction $T_i$ reads version $x_j$, we say that $T_i$ \emph{read-from} transaction $T_1$.
 
 Given some history $h$ and some register $x$, a version order on $x$ for $h$ is a total order relation over the versions of $x$ in $h$.
-By extension, a version order for $h$, is the union of all the version orders for all registers (denoted $\ll_h$)
-For instance, in history $h_1$ above,  we may consider the version order $(x_1 \ll_{h_1} x_2)$.
+By extension, a version order for $h$ is the union of all the version orders for all registers (denoted $\ll_h$).
+For instance, in history $h_1$ above,  we may consider the version order $(x_1 \ll_{h_1} x_2)$\vs{do we need this sentence? something missing maybe here}.
 
 A transaction $T_i$ \emph{depends on} a transaction $T_j$, written $T_i \depends T_k$ when $T_i$ reads a version written by $T_j$, or such a relation holds transitively.
-A transaction observes a \emph{consistent snapshot} \cite{Chan:1985} when it never misses the effects of some transaction it depends on.
+A transaction observes a \emph{consistent snapshot}~\cite{chandy1985distributed} when it never misses the effects of some transaction it depends on.
 In other words, transaction $T_i$ in a history $h$ observes a consistent snapshot when
 \begin{inparaenum}
 \item $T_i$ reads version $x_j$,
@@ -45,15 +45,15 @@ Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \i
 \labsection{criteria:bindings}
 
 Contention occurs when the steps taken by two transactions interleave, that is if when the two transactions are concurrent.
-When the TM is disjoint-access parallel, transactions that do not access the same base objects (i.e., the internals of the TM).
-As a conseuqnece, in such a case contention is harmless.
+When the TM is disjoint-access parallel, transactions do not access the same base objects (i.e., the internals of the TM).
+As a consequence, in such a case contention is harmless.
 
-On the other hand, if the two transactions contend on the same object, then they may slow down each other.
-With invisible reads, read contention is free as no base objects is written.
-Conversely, if the two transactions are writing then it is possible to detect the contention and abort preventively.
-In the case where a read-write conflict occurs, a race occurs between the reading and the writing transaction.
-In a TM where read are optimistic the arbitrage is simply that the read operations take either place all before the writes, or after.
-In the later case, the transaction is bound to read the version produced by the writting transaction.
+If the two transactions contend on the same object, then they may slow down each other.
+With invisible reads (\vs{explain what an invisible read is}), read contention is free as no base objects is written.
+Conversely, if the two transactions are concurrently writing, it is possible to detect the contention and abort. % preventively.
+When a read-write conflict occurs, a \emph{race condition} occurs between the reading and the writing transaction.
+In a TM where read are optimistic, the arbitrage in case of contention is simple: all the read operations take place either before or after the writes.
+In the later case, the transaction is bound to read the version produced by the writing transaction.
 
 \begin{definition}[Binding]
   When a transaction $T_i$ reads-from a concurrent transaction $T_j$, we say that $T_i$ is bound to $T_j$ on $x$.
@@ -72,13 +72,16 @@ In which case, we will say that the binding is fair.
 As an example, consider history $h_1$.
 In this history, ...
 
+\vs{ remember to complete this somehow}
+
 \subsection{Stricter serializability}
 \labsection{criteria:spser}
-
-Stricter serializability (S+SER) is a stronger consistency criteria than strict serializability (SSER).
-As SSER, this criteria requires that committed transactions form a sequential history.
-In addiition, S+SER prohibits transactions to view inconsistencies unless one of their bindings is unfair.
+Here we introduce and describe in details \sser, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
+%is a stronger consistency criteria than strict serializability (\textsc{SSer}).
+The \sser criteria requires that committed transactions form a sequential history.
+In addition, \sser prohibits transactions to view inconsistencies unless one of their bindings is unfair.
 Below, we give a graph characterization of stricter serializability.
+\vs{Pierre, can you add a sentence of why we provide such a 'graph characterization' ? to what end is this useful?}
 
 \begin{definition}[Serialization graph]
   Consider some version order $\ll_h$ for $h$.
