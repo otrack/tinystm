@@ -1,11 +1,8 @@
-%\section{A new consistency criteria}
-%\labsection{criteria}
-%
-%In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
-%Then, we formulate our notion of stricter serializability.
-%
-\section{System Model}
+\section{A new consistency criteria}
 \labsection{criteria}
+
+In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
+Then, we formulate our notion of stricter serializability.
 
 Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory region.
 Each process manipulates registers in the shared memory with the help of transactions.
@@ -14,8 +11,13 @@ Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operation
 At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction, in which case the transaction may either commit ($\flagCommit$), or abort ($\flagAbort$).
 
 A \emph{history} is a sequence of invocations and responses of the tranasctional operations by one or more processes.
-As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the lifetime of a transaction.
+As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the transactions executed by some processes.
+In history $h_2$, process $p$, $q$ and $r$ execute respectively transactions ${\color{blue}{T_1}}=w(x)$, ${\color{red}{T_2}}=w(x)$ and ${\color{OliveGreen}{T_3}}=r(x)$.
+All the transactions but $T_4$ completes in this history.
+For simplicity, complete transactions that are not explicitely aborting in a history commit immediately after their last operations.
+
 \input{figures/sample}
+
 A history induces a real-time order between transactions (denoted $\hb_h$).
 This order holds between two transactions $T_i$ and $T_j$ when $T_i$ terminates in $h$ before $T_j$ begins.
 For instance in history $h_2$, transaction $T_2=w(x)$ precedes transaction $T_3=r(x)$.
@@ -24,7 +26,7 @@ When two transactions are noto related with real-time, they are \emph{concurrent
 A \emph{version} is the state of a register as produced by the write of a transaction.
 When transaction $T_i$ writes to some register $x$, an operation denoted $w_i(x_i)$, it creates a new version $x_i$ of $x$.
 Versions allow to uniquely identify the state of a register as observed by a read operation, \emph{e.g.}, $r_3(x_1)$ in $h_2$.
-When a transaction $T_i$ reads version $x_j$, we say that $T_i$ \emph{read-from} transaction $T_1$.
+When a transaction $T_i$ reads version $x_j$, we say that $T_i$ \emph{read-from} transaction $T_j$.
 
 Given some history $h$ and some register $x$, a version order on $x$ for $h$ is a total order relation over the versions of $x$ in $h$.
 By extension, a version order for $h$ is the union of all the version orders for all registers (denoted $\ll_h$).
@@ -44,29 +46,32 @@ Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \i
 \subsection{Contention and bindings}
 \labsection{criteria:bindings}
 
-Contention occurs when the steps taken by two transactions interleave, that is if when the two transactions are concurrent.
-When the TM is disjoint-access parallel, transactions do not access the same base objects (i.e., the internals of the TM).
-As a consequence, in such a case contention is harmless.
+Internally, a transaction memory is built using a set of \emph{base objects}, such as locsk.
+When two transactions are concurrent, their steps on these base objects are interleaving.
+If the two transactions access disjoint objects and the TM is disjoint-access parallel, no contention occurs.
+However, in the case they access the base object, they may slow down each other.
 
-If the two transactions contend on the same object, then they may slow down each other.
-With invisible reads (\vs{explain what an invisible read is}), read contention is free as no base objects is written.
+A transactional read is \emph{invisible} when it does not change the state of the base objects implementing it.
+With invisible reads, contention is basically free.
 Conversely, if the two transactions are concurrently writing, it is possible to detect the contention and abort. % preventively.
-When a read-write conflict occurs, a \emph{race condition} occurs between the reading and the writing transaction.
-In a TM where read are optimistic, the arbitrage in case of contention is simple: all the read operations take place either before or after the writes.
-In the later case, the transaction is bound to read the version produced by the writing transaction.
+When a read-write conflict occurs, a \emph{race condition} occurs between the reader and the writer.
+If the read operation takes place after the write, the reader is bound to use the version produced by the writer.
 
 \begin{definition}[Binding]
   When a transaction $T_i$ reads-from a concurrent transaction $T_j$, we say that $T_i$ is bound to $T_j$ on $x$.
 \end{definition}
 
-When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the consistency of its snapshot, $T_i$ must read the updates of $T_j$ as well as its causal dependencies that are intersecting with its read set.
-Tracking this causality is difficult for the conention manager since it requires to inspect the readset, or to rely on a global clock.
-We observe that it is simpler if the items read previously by $T_i$ are either read also by $T_j$ or by some dependency of $T_j$.
+When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the consistency of its snapshot, $T_i$ must read the updates and causal dependencies of $T_j$ that are intersecting with its read set.
+This is for instance the case of transaction $T_4$ in history $h_2$, where this transaction is bound to $T_3$ on $y$.
+As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
+
+Tracking this causality is difficult for the conention manager since it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
+We observe that it is simpler if the items read previously are either also read by the writer, or by one of its dependencies.
 In which case, we will say that the binding is fair.
 
 \begin{definition}[Fair binding]
-  Consider that a transaction $T_i$ is bound to transaction $T_j$ on a register $x$.
-  We say that this binding is \emph{fair} when, for every register $y$ read before $x$, either $y$ is read by $T_j$ or by some dependency of $T_j$.
+  Consider that a transaction $T_i$ is bound to transaction $T_j$ on some register $x$.
+  This binding is \emph{fair} when, for every register $y$ read before $x$, either $y$ is read by $T_j$ or by some of its dependencies.
 \end{definition}
 
 As an example, consider history $h_1$.
@@ -100,6 +105,9 @@ Below, we give a graph characterization of stricter serializability.
 In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
 
 \begin{definition}[Stricter serializability]
-  A history $h$ belongs to stricter serializability if its serialization graph is acyclic and if some transaction $T_i$ observes an inconsistent snapshot in $h$, then oene of its bindings is unfair.
+  A history $h$ belongs to stricter serializability if its serialization graph is acyclic and if some transaction $T_i$ observes an inconsistent snapshot in $h$, then one of its bindings is unfair.
 \end{definition}
 
+\begin{corollary}
+  If $h \in \SSER$ exhibits no unfair bindings then $h \in \OPA$.
+\end{corollary}

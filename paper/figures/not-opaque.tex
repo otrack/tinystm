@@ -4,8 +4,8 @@
   \begin{tikzpicture}[scale=0.77]
     \node at (10,.3) {$(h_1)$};
     
-    \node at (0.2,1.8) {$T_1$};
-    \node at (0.2,1) {$T_2$};
+    \node at (0.2,1.8) {$p$};
+    \node at (0.2,1) {$q$};
     
     \path[->] (0.5,1) edge (10,1);
     \path[->] (0.5,1.8) edge (10,1.8);
@@ -14,37 +14,31 @@
     \path[callA,->] (1.5,2) edge (1.5,1.8);
     \path[callA,->] (2.5,1.8) edge (2.5,2);
     \node at (1.5,2.2) {$r_1(x_0)$}; 
-    \node at (2.5,2.2) {};
 
     \path[callA] (4,1.8) edge (5,1.8);
     \path[callA,->] (4,2) edge (4,1.8);
     \path[callA,->] (5,1.8) edge (5,2);
     \node at (4,2.2) {$r_1(y_2)$};
-    \node at (5,2.2) {};
 
-    \path[callA] (7,1.8) edge (8,1.8);
+    \path[callA] (7,1.8) edge (7.5,1.8);
     \path[callA,->] (7,2) edge (7,1.8);
-    \path[callA,->] (8,1.8) edge (8,2);
+    \path[callA,->] (7.5,1.8) edge (7.5,2);
     \node at (7,2.2) {$\flagAbort$};
-    \node at (8,2.2) {};
 
     \path[callB] (2.5,1) edge (3.5,1);
     \path[callB,->] (2.5,1.2) edge (2.5,1);
     \path[callB,->] (3.5,1) edge (3.5,1.2);
     \node at (2.5,1.4) {$w_2(x_2)$};
-    \node at (3.5,1.4) {};
 
     \path[callB] (4.5,1) edge (5.5,1);
     \path[callB,->] (4.5,1.2) edge (4.5,1);
     \path[callB,->] (5.5,1) edge (5.5,1.2);
     \node at (4.5,1.4) {$w_2(y_2)$};
-    \node at (5.5,1.4) {};
 
-    \path[callB] (7,1) edge (8,1);
-    \path[callB,->] (7,1.2) edge (7,1);
-    \path[callB,->] (8,1) edge (8,1.2);
-    \node at (7,1.4) {$\flagCommit$};
-    \node at (8,1.4) {};
+    \path[callB] (6.5,1) edge (7,1);
+    \path[callB,->] (6.5,1.2) edge (6.5,1);
+    \path[callB,->] (7,1) edge (7,1.2);
+    \node at (6.5,1.4) {$\flagCommit$};
     
     \pgfresetboundingbox
     \clip[use as bounding box] (0,.7) rectangle (10,2);
