@@ -141,30 +141,39 @@ We observe that in such a case either $T$ observes an item $x$ locked, or that t
 It follows that if $T$ aborts then it observes a conflict with a concurrent transaction.
 From which we deduce that it is executing under weak progressiveness.
 
-\paragraph{(Strict serializability)}
-Consider some run \run of \refalg{stm}, and let $\hat{h}$ be the history indeuced by \run.
-Every function in \refalg{stm} is wait-free.
-As a consequence, we may consider without lack of generality that $\hat{h}$ is complete, i.e., every transaction executed in $\hat{h}$ terminates with either a commit or an abort event.
-Hereafter, $h$ denotes the sub-history of $\hat{h}$ that only contains the transactions committed in $\hat{h}$.
+\paragraph{(Stricter serializability)}
+Consider some run $\run$ of \refalg{stm}, and let $h$ be the history induced by \run.
+At the light of its pseudo-code, every function defined in \refalg{stm} is wait-free.
+As a consequence, we may consider without lack of generality that $h$ is complete, i.e., every transaction executed in $h$ terminates with either a commit or an abort event.
+In what follows,we consider the version order $\ll_h$ that corresponds to the order in which writes are linearized in $\rho$.
+Below, we first prove that $<$ is acyclic for this definition of $\ll_h$.
+Then, we prove that if a transaction does not exhibit any unfair binding then it observes a consistent snapshot.
 
-For each register $x$, we consider the version order $\ll_{h,x}$ that corresponds to the order in which writes are linearized on $x$ in $\rho$.
-Below, we prove that $<$ is acyclic for this definition of $\ll$, leading to the fact that $h$ is strictly serializable \cite{adyaPHD,pap79}.
-
-\begin{flalign*}
-  T_i \stmPrec{x} T_j  \equaldef
-  & \lor \readSetOf{T_i}[x] \leq \writeSetOf{T_j}[x] \\
-  & \lor \writeSetOf{T_i}[x] \leq \readSetOf{T_j}[x] \\
-  & \lor \writeSetOf{T_i}[x] \leq \writeSetOf{T_j}[x] 
-\end{flalign*}
-where by abuse of notation, $\writeSetOf{T}[x]$ is the value of $\clockOf{T}$ at commit time (see \reflines{stm:commit:1}{stm:commit:4}).
+For some transaction, let us note $\clockOf{T_i}_f$ the final value of $\clockOf{T}$.
 
 \begin{proposition}
   \labprop{sser:1}
-  If both transactions $T_i$ and $T_{j \neq i}$ write on register $x$ in $h$ with $x_i \ll_{h,x} x_j$ holds, then $\clockOf{T}_f < \clockOf{T_j}$.
+  Consider two transactions $T_i$ and $T_{j \neq i}$ in $h$.
+  If either $T_i \depends T_j$ or  $x_j \ll_h x_i$ holds, then $\clockOf{T_i}_f \geq \clockOf{T_i}_f$ is true.
+  In addition, if transaction $T_i$ commits then the ordering is strict, i.e., $\clockOf{T_i}_f > \clockOf{T_i}_f$.
 \end{proposition}
 
 \begin{proof}
-  
+
+  In each of the two cases, we prove that $\clockOf{T_i}_f \geq \clockOf{T_i}_f$ holds before transaction $T_i$ commits.
+  \begin{itemize}
+  \item[($T_i \depends T_j$)]
+    Let $x$ be a register such that $r_i(x_j)$ occurs in $h$.
+    Since transaction $T_i$ reads version $x_j$, transaction $T_j$ commits.
+    We observe that $T_j$ writes version $x_j$ together with $\clockOf{T_j}_f$ at $\locationOf{x}$ when it commits (\refline{stm:commit:4}).
+    As a consequence, when transaction $T_i$ returns version $x_i$ at \refline{stm:read:9}, it assigns $\clockOf{T_j}_f$ to $t$ before at \refline{stm:read:2}.
+    The condition at \refline{stm:read:6} implies that either $\clockOf{T_i} \geq t$ holds, or a call to $\stmExtend{T_i,t}$ occurs.
+    In the latter case, transactino $T_i$ executes \refline{stm:extend:5}, advancing its clock up to the value of $t$.
+  \item[($x_j \ll_h x_i$)]
+    
+  \end{itemize}
+  Since a clock is monotonic, the relation holds forever.
+  Then, if transaction $T_i$ commits, it must executes \refline{stm:commit:1}, leading to $\clockOf{T_i}_f > \clockOf{T_i}_f$.
 \end{proof}
 
 \begin{proposition}
