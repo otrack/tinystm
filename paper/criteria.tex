@@ -8,10 +8,14 @@ Then, we formulate our notion of stricter serializability.
 \labsection{criteria:model}
 
 Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory region.
-Each process manipulates registers in the shared memory with the help of transactions.
+Each process manipulates \emph{objects} in the shared memory with the help of transactions.
 When a process begins a new transaction, it calls function \stmBeginFunction.
-Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operations on the registers according to some internal (not modeled) logic.
-At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction, in which case the transaction may either commit ($\flagCommit$), or abort ($\flagAbort$).
+Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operations on the shared objects according to some internal (not modeled) logic.
+Operation \stmRead{x} takes as input an object $x$ and returns either a value in the domain of $x$, or a flag $\flagAbort$ to indicate that the transation aborts.
+A write \stmRead{x,v} changes $x$ to the value $v$ in the domain of $x$.
+This operation does not return any value and it may also abort.
+At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction.
+This calls returns either $\flagCommit$, to indicate that the transaction commits, or $\flagAbort$ if it aborts.
 
 A \emph{history} is a sequence of invocations and responses of the tranasctional operations by one or more processes.
 As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the transactions executed by some processes.
@@ -29,13 +33,13 @@ For instance in history $h_2$, transaction $T_1$ precedes transaction $T_3$.
 When two transactions are not related with real-time, they are \emph{concurrent}.
 
 
-A \emph{version} is the state of a register as produced by the write of a transaction.
-When transaction $T_i$ writes to some register $x$, an operation denoted $w_i(x_i)$, it creates a new version $x_i$ of $x$.
-Versions allow to uniquely identify the state of a register as observed by a read operation, \emph{e.g.}, $r_3(x_1)$ in $h_2$.
+A \emph{version} is the state of a shared object as produced by the write of a transaction.
+When transaction $T_i$ writes to some object $x$, an operation denoted $w_i(x_i)$, it creates a new version $x_i$ of $x$.
+Versions allow to uniquely identify the state of an object as observed by a read operation, \emph{e.g.}, $r_3(x_1)$ in $h_2$.
 When a transaction $T_i$ reads version $x_j$, we say that $T_i$ \emph{read-from} transaction $T_j$.
 
-Given some history $h$ and some register $x$, a version order on $x$ for $h$ is a total order relation over the versions of $x$ in $h$.
-By extension, a version order for $h$ is the union of all the version orders for all registers (denoted $\ll_h$).
+Given some history $h$ and some object $x$, a version order on $x$ for $h$ is a total order relation over the versions of $x$ in $h$.
+By extension, a version order for $h$ is the union of all the version orders for all objects (denoted $\ll_h$).
 For instance, in history $h_2$ above,  we may consider the version order $(x_1 \ll_{h_2} x_2)$.
 
 A transaction $T_i$ \emph{depends on} some transaction $T_j$, written $T_i \depends T_k$ when $T_j$ precedes $T_i$, $T_i$ reads-from $T_j$, or such a relation holds transitively.
@@ -76,8 +80,8 @@ We observe that it is simpler if the items read prior the binding are either, al
 In which case, we will say that the binding is fair.
 
 \begin{definition}[Fair binding]
-  Consider that a transaction $T_i$ is bound to a transaction $T_j$ on some register $x$.
-  This binding is \emph{fair} when, for every register $y$ read before $x$, either $y$ is read by $T_j$ or by one of its dependencies.
+  Consider that a transaction $T_i$ is bound to a transaction $T_j$ on some object $x$.
+  This binding is \emph{fair} when, for every object $y$ accessed before $x$, either $y$ is accessed by $T_j$ or by one of its dependencies.
 \end{definition}
 
 Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.
@@ -122,12 +126,62 @@ Opacity ($\OPA$) and strict serializability ($\SSER$) coincide when no transacti
 As a consequence of the above definition, if in a stricter serializable history all the aborted transaction exhibit fair bindings, the history is opaque.
 
 \begin{corollary}
+  \labcor{criteria:1}
   If ($h \in \SPSER$) exhibits no unfair bindings then ($h \in \OPA$) holds.
 \end{corollary}
 
-The above corollary gives us a criteria for stricter serializable TM implementations to attain opacity.
-The next section discuss the applicability of this criteria in practical applications.
+\refcor{criteria:1} offers a properties on histories which, provided it aplies, allows to reach opacity.
+Based on this property, the section that follows presents a \emph{robustness} analysis against $\SPSER$.
+This means that we give a static analysis of workloads for which this property applies.
 
 \subsection{Applicability}
 \labsection{criteria:applicability}
 
+The state of an object commonly include a reference to another object.
+These references between objects form the \emph{object graph} of the application.
+Processes know initially one (or more) \emph{root} objects in this graph, and upon performing a computation traverse the object graph appropriately.
+
+Consider that a transaction $T$ access in order objects $x_1, \ldots, x_m$.
+We say that $T$ executes a \emph{simple traversal} if for all $i \in [1,m-1]$, the state of $x_i$ includes a reference to $x_{i+1}$.
+Let us call $P$ the following property on the application.
+
+\begin{itemize}
+\item[($P$)]
+  The object graph forms initially a forest and every transaction maintains this invariant.
+  Moreover, every transaction in the application executes a simple traversal.
+\end{itemize}
+
+The proposition below proves that, if $\mathcal{P}$ holds, then the application is robust against $\SPSER$.
+
+\begin{proposition}
+  Consider some set of transaction $\mathcal{T}$ for which property $P$ holds.
+  Define $H_{\mathcal{T}}$ the histories form using transaction in $\mathcal{T}$.
+  Then, it is true that $\SPSER \inter H_{\mathcal{T}} \subset \OPA$.
+\end{proposition}
+
+\begin{proof}
+  Choose some history $h \in H_{\mathcal{T}} \inter \SPSER$, and let $T_i$ be a transaction that aborts in $h$.
+  %% We prove by induction that each of the bindings of $T_i$ is fair in $h$.
+  %% To this end, we consider all the reads executed by $T_i$, following the order $\hb_h$.  
+  From the definition of $\SPSER$, one of the bindings of $T_i$ is fair in $h$.
+  Define $x$ and $T_j$ such that
+  \begin{inparaenum}
+  \item $T_i$ is bound to $T_j$ on $x$, and
+  \item $x$ is the first object read by $T_i$ for which this binding is unfair.
+  \end{inparaenum}
+  
+  Since $h \in \SPSER$ holds, then $\committed{h}$ is equivalent to a sequential history $\lambda$.
+  By definition of $x$, there exists a position $p$ in $\lambda$ after $T_j$ where we may put the execution of $T_i$ in $h$ up to $r_i(x)$.
+  This gives us history $\hat{\lambda}$.
+  In this history,
+  transaction $T_j$ precedes transaction $T_i$,
+  transation $T_i$ observes a strictly consistent snapshot.
+  For each object $x^k$ accessed by $T_i$ before $x$, we prove that
+  either $T_j$ accesses $x^k$, or one of its dependency access it.
+  (By induction.)
+  $x^1$ is a root
+
+  if $T_j$
+  
+  
+\end{proof}
