@@ -4,6 +4,9 @@
 In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
 Then, we formulate our notion of stricter serializability.
 
+\subsection{System Model}
+\labsection{criteria:model}
+
 Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory region.
 Each process manipulates registers in the shared memory with the help of transactions.
 When a process begins a new transaction, it calls function \stmBeginFunction.
@@ -14,14 +17,17 @@ A \emph{history} is a sequence of invocations and responses of the tranasctional
 As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the transactions executed by some processes.
 In history $h_2$, process $p$, $q$ and $r$ execute respectively transactions ${\color{blue}{T_1}}=w(x)$, ${\color{red}{T_2}}=w(x)$ and ${\color{OliveGreen}{T_3}}=r(x)$.
 All the transactions but $T_4$ completes in this history.
-For simplicity, complete transactions that are not explicitely aborting in a history commit immediately after their last operations.
+For simplicity, complete transactions that are not explicitely aborted in a history commit immediately after their last operations.
+We note $\committed{h}$ the set of transactions that commit during history $h$.
+In the case of history $h_2$, we have $\committed{h_2}=\{T_1,T_2,T_3\}$.
 
 \input{figures/sample}
 
 A history induces a real-time order between transactions (denoted $\hb_h$).
-This order holds between two transactions $T_i$ and $T_j$ when $T_i$ terminates in $h$ before $T_j$ begins.
-For instance in history $h_2$, transaction $T_2=w(x)$ precedes transaction $T_3=r(x)$.
-When two transactions are noto related with real-time, they are \emph{concurrent}.
+This order holds between transactions $T_i$ and $T_j$ when $T_i$ terminates in $h$ before $T_j$ begins.
+For instance in history $h_2$, transaction $T_1$ precedes transaction $T_3$.
+When two transactions are not related with real-time, they are \emph{concurrent}.
+
 
 A \emph{version} is the state of a register as produced by the write of a transaction.
 When transaction $T_i$ writes to some register $x$, an operation denoted $w_i(x_i)$, it creates a new version $x_i$ of $x$.
@@ -30,29 +36,29 @@ When a transaction $T_i$ reads version $x_j$, we say that $T_i$ \emph{read-from}
 
 Given some history $h$ and some register $x$, a version order on $x$ for $h$ is a total order relation over the versions of $x$ in $h$.
 By extension, a version order for $h$ is the union of all the version orders for all registers (denoted $\ll_h$).
-For instance, in history $h_1$ above,  we may consider the version order $(x_1 \ll_{h_1} x_2)$\vs{do we need this sentence? something missing maybe here}.
+For instance, in history $h_2$ above,  we may consider the version order $(x_1 \ll_{h_2} x_2)$.
 
-A transaction $T_i$ \emph{depends on} a transaction $T_j$, written $T_i \depends T_k$ when $T_i$ reads a version written by $T_j$, or such a relation holds transitively.
-A transaction observes a \emph{consistent snapshot}~\cite{chandy1985distributed} when it never misses the effects of some transaction it depends on.
-In other words, transaction $T_i$ in a history $h$ observes a consistent snapshot when
+A transaction $T_i$ \emph{depends on} some transaction $T_j$, written $T_i \depends T_k$ when $T_j$ precedes $T_i$, $T_i$ reads-from $T_j$, or such a relation holds transitively.
+A transaction observes a \emph{strictly consistent snapshot} \cite{berstein?} when it never misses the effects of some transaction it depends on.
+In other words, the snapshot of transaction $T_i$ in history $h$ is strictly consistent when
 \begin{inparaenum}
 \item $T_i$ reads version $x_j$,
 \item $T_k$ writes version $x_k$, and 
 \item $T_i$ depends on $T_{k}$,
 \end{inparaenum}
 then version $x_k$ is followed by version $x_j$.
-Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \implies (x_k \ll_{h,x} x_j)$, where $\ll_{h}$ is some version order defined for history $h$.
+Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \implies (x_k \ll_{h,x} x_j)$, where $\ll_{h}$ is some version order defined over history $h$.
 
 \subsection{Contention and bindings}
 \labsection{criteria:bindings}
 
-Internally, a transaction memory is built using a set of \emph{base objects}, such as locsk.
+Internally, a transaction memory is built upon a set of \emph{base objects}, such as locks.
 When two transactions are concurrent, their steps on these base objects are interleaving.
 If the two transactions access disjoint objects and the TM is disjoint-access parallel, no contention occurs.
 However, in the case they access the base object, they may slow down each other.
 
 A transactional read is \emph{invisible} when it does not change the state of the base objects implementing it.
-With invisible reads, contention is basically free.
+With invisible reads, read contention is basically free.
 Conversely, if the two transactions are concurrently writing, it is possible to detect the contention and abort. % preventively.
 When a read-write conflict occurs, a \emph{race condition} occurs between the reader and the writer.
 If the read operation takes place after the write, the reader is bound to use the version produced by the writer.
@@ -65,19 +71,19 @@ When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the 
 This is for instance the case of transaction $T_4$ in history $h_2$, where this transaction is bound to $T_3$ on $y$.
 As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
 
-Tracking this causality is difficult for the conention manager since it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
-We observe that it is simpler if the items read previously are either also read by the writer, or by one of its dependencies.
+Tracking this causality relation is difficult for the conention manager as it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
+We observe that it is simpler if the items read prior the binding are either, also read by the writer, or by someof its dependencies.
 In which case, we will say that the binding is fair.
 
 \begin{definition}[Fair binding]
-  Consider that a transaction $T_i$ is bound to transaction $T_j$ on some register $x$.
-  This binding is \emph{fair} when, for every register $y$ read before $x$, either $y$ is read by $T_j$ or by some of its dependencies.
+  Consider that a transaction $T_i$ is bound to a transaction $T_j$ on some register $x$.
+  This binding is \emph{fair} when, for every register $y$ read before $x$, either $y$ is read by $T_j$ or by one of its dependencies.
 \end{definition}
 
-As an example, consider history $h_1$.
-In this history, ...
-
-\vs{ remember to complete this somehow}
+Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.
+Indeed, this transaction did not read any data item before accesing the version of $y$ written by $T_4$.
+When the binding is fair, the reader can leverage the metadata left by the writter to check prior versions it has read and ensure the consistency of later read operations.
+In the next section, we formalize this idea with the notion of stricter serializability.
 
 \subsection{Stricter serializability}
 \labsection{criteria:spser}
@@ -85,29 +91,43 @@ Here we introduce and describe in details \sser, the stricter serializability co
 %is a stronger consistency criteria than strict serializability (\textsc{SSer}).
 The \sser criteria requires that committed transactions form a sequential history.
 In addition, \sser prohibits transactions to view inconsistencies unless one of their bindings is unfair.
-Below, we give a graph characterization of stricter serializability.
-\vs{Pierre, can you add a sentence of why we provide such a 'graph characterization' ? to what end is this useful?}
+Inline with prior art \cite{berstein,opa}, we give a graph characterization of stricter serializability.
 
-\begin{definition}[Serialization graph]
+\begin{definition}[Strict Serialization graph]
   Consider some version order $\ll_h$ for $h$.
-  We note $<$ the relations over the commmitted transactions in $h$ induced by $\ll_h$; namely:
+  We note $<$ the various relations over $\committed{h}$ induced by $\ll_h$, as defined below.
+  The serialization graph of history $(h,\ll_h)$ is defined as $(\committed{h},<)$.
   \begin{displaymath}
     \begin{array}{l}
+      \forall T_i, T_j \in \committed{h} : 
       T_i < T_{j \neq i}  \equaldef \\
       \lor~ T_i \hb_h T_j {\hspace{16.8em}\text{(1)}} \\
       \lor~ \exists x : \lor~ r_j(x_i) \in h {\hspace{13.3em}\text{(2)}} \\
       \hspace{2.9em}\lor~ \exists T_k : x_k \ll_{h,x} x_j \land \lor~T_k = T_i {\hspace{5em}\text{(3)}} \\
       \hspace{12.2em} \lor~ r_i(x_k) \in h {\hspace{3.9em}\text{(4)}}
     \end{array}
-  \end{displaymath}
+  \end{displaymath}  
 \end{definition}
-
 In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
 
 \begin{definition}[Stricter serializability]
-  A history $h$ belongs to stricter serializability if its serialization graph is acyclic and if some transaction $T_i$ observes an inconsistent snapshot in $h$, then one of its bindings is unfair.
+  A history $h$ is stricter serializable ($h \in \SPSER$) when
+  \begin{inparaenum}
+  \item for some version order $\ll_h$, the serialization graph $(\committed{h},<)$ is acyclic, and
+  \item for every transaction $T_i$ that aborts in $h$, either $T_i$ observes a strictly consistent snapshot in $h$, or one of its bindings is unfair.
+  \end{inparaenum}
 \end{definition}
 
+Opacity ($\OPA$) and strict serializability ($\SSER$) coincide when no transaction abort during an history.
+As a consequence of the above definition, if in a stricter serializable history all the aborted transaction exhibit fair bindings, the history is opaque.
+
 \begin{corollary}
-  If $h \in \SSER$ exhibits no unfair bindings then $h \in \OPA$.
+  If ($h \in \SPSER$) exhibits no unfair bindings then ($h \in \OPA$) holds.
 \end{corollary}
+
+The above corollary gives us a criteria for stricter serializable TM implementations to attain opacity.
+The next section discuss the applicability of this criteria in practical applications.
+
+\subsection{Applicability}
+\labsection{criteria:applicability}
+

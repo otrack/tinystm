@@ -196,3 +196,19 @@ from which we deduce that history $h$ is opaque.
     Since transaction $T_j$ commits this call succeeds, leading to $\clockOf{T_j} = t$.
     Hence at that point in time, $\writeSetOf{T_i}[x] = \readSetOf{T_j}[x]$.
     Because $T_j$ cannot read another version of $x$ later on (\refline{stm:extend:3}), this invariant holds forever.
+
+
+    \begin{proof}
+  We consider one after the other the transactions that abort in $h$.
+  The order in which these transaction $T$ is considered is the order in which they return an abort event.
+  For each such transaction $T_{i \geq 0}$, let $h_{|<T_i}$ be the sub-history of $h$ that contains all the events that precede the abort event of $T_i$.
+  We claim that: $\forall i > 0 : h_{|<T_i} \in \OPA$.
+  (Case $i=0$)
+  History $h_{|<T_0}$ contains no aborted transaction and all but transaction $T_0$ commits in $h$.
+  Moreover, since the bindings of $T_0$ are all fair, this transaction see a consistent snpashot in $h_{|<T_0}$.
+  As a consequence, $h_{|<T_0} \in OPA$ holds.
+  (Case $i>0$)
+  All the transactions in $h_{|<T_{i-1}}$ either commit in $h$, or they observe a consistent snapshot before aborting.
+  Since the bindings of $T_i$ are all fair, this transaction see also a consistent snpashot in $h_{|<T_0}$.
+  Thus, $h_{|<T_i} \in OPA$ is true.  
+\end{proof}
