@@ -17,9 +17,9 @@ This operation does not return any value and it may also abort.
 At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction.
 This calls returns either $\flagCommit$, to indicate that the transaction commits, or $\flagAbort$ if it aborts.
 
-A \emph{history} is a sequence of invocations and responses of the tranasctional operations by one or more processes.
+A \emph{history} is a sequence of invocations and responses of transactional operations by one or more processes.
 As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the transactions executed by some processes.
-In history $h_2$, process $p$, $q$ and $r$ execute respectively transactions ${\color{blue}{T_1}}=w(x)$, ${\color{red}{T_2}}=w(x)$ and ${\color{OliveGreen}{T_3}}=r(x)$.
+In history $h_2$, process $p$, $q$ and $r$ execute respectively transactions ${\color{blue}{T_1}}=w(x)$, ${\color{red}{T_2}}=w(x)$ then ${\color{Purple}{T_4}}=r(y);r(x)$, and ${\color{OliveGreen}{T_3}}=r(x)$.
 All the transactions but $T_4$ completes in this history.
 For simplicity, complete transactions that are not explicitely aborted in a history commit immediately after their last operations.
 We note $\committed{h}$ the set of transactions that commit during history $h$.
@@ -28,21 +28,29 @@ In the case of history $h_2$, we have $\committed{h_2}=\{T_1,T_2,T_3\}$.
 \input{figures/sample}
 
 A history induces a real-time order between transactions (denoted $\hb_h$).
-This order holds between transactions $T_i$ and $T_j$ when $T_i$ terminates in $h$ before $T_j$ begins.
+This order holds between two transactions $T_i$ and $T_j$ when $T_i$ terminates in $h$ before $T_j$ begins.
 For instance in history $h_2$, transaction $T_1$ precedes transaction $T_3$.
 When two transactions are not related with real-time, they are \emph{concurrent}.
 
-
 A \emph{version} is the state of a shared object as produced by the write of a transaction.
-When transaction $T_i$ writes to some object $x$, an operation denoted $w_i(x_i)$, it creates a new version $x_i$ of $x$.
+This means that when transaction $T_i$ writes to some object $x$, an operation denoted $w_i(x_i)$, it creates the version $x_i$ of $x$.
 Versions allow to uniquely identify the state of an object as observed by a read operation, \emph{e.g.}, $r_3(x_1)$ in $h_2$.
 When a transaction $T_i$ reads version $x_j$, we say that $T_i$ \emph{read-from} transaction $T_j$.
 
 Given some history $h$ and some object $x$, a version order on $x$ for $h$ is a total order relation over the versions of $x$ in $h$.
 By extension, a version order for $h$ is the union of all the version orders for all objects (denoted $\ll_h$).
-For instance, in history $h_2$ above,  we may consider the version order $(x_1 \ll_{h_2} x_2)$.
+For instance, in history $h_2$ above, we may consider the version order $(x_1 \ll_{h_2} x_2)$.
 
+Consider an history $h$ and some version order $\ll_h$.
 A transaction $T_i$ \emph{depends on} some transaction $T_j$, written $T_i \depends T_k$ when $T_j$ precedes $T_i$, $T_i$ reads-from $T_j$, or such a relation holds transitively.
+Transaction $T_i$ \emph{anti-depends} from $T_j$ on object $x$, when $T_i$ reads a version $x_k$, $T_j$ writes object $x$, and $x_k$ precedes $x_j$ in the version order ($x_k \ll_{h} x_j$).
+An anti-dependency between $T_i$ and $T_j$ on object $x$ is a \emph{reverse-commit anti-dependency} (for short, RC-anti-dependency) \cite{hans16} when $T_j$ commits before $T_i$ and $T_i$ writes some object $y \neq x$.
+
+To illustrate the above definitions, consider again history $h_2$.
+In this history, transaction $T_3$ depends on $T_1$ and $T_2$.
+On the other hand, if $x_2 \ll_h x_1$ holds and $T_4$ reads $x_2$, then this transaction exhibits an anti-dependency with $T_1$.
+This anti-dependency becomes an RC-anti-dependency if $T_4$ executes an additional step where it writes some object $z$.
+
 A transaction observes a \emph{strictly consistent snapshot} \cite{berstein?} when it never misses the effects of some transaction it depends on.
 In other words, the snapshot of transaction $T_i$ in history $h$ is strictly consistent when
 \begin{inparaenum}
@@ -56,15 +64,17 @@ Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \i
 \subsection{Contention and bindings}
 \labsection{criteria:bindings}
 
-Internally, a transaction memory is built upon a set of \emph{base objects}, such as locks.
+Internally, a transaction memory is built upon a set of \emph{base objects}, such as locks or registers.
 When two transactions are concurrent, their steps on these base objects are interleaving.
 If the two transactions access disjoint objects and the TM is disjoint-access parallel, no contention occurs.
 However, in the case they access the base object, they may slow down each other.
 
 A transactional read is \emph{invisible} when it does not change the state of the base objects implementing it.
 With invisible reads, read contention is basically free.
-Conversely, if the two transactions are concurrently writing, it is possible to detect the contention and abort. % preventively.
-When a read-write conflict occurs, a \emph{race condition} occurs between the reader and the writer.
+From a performance point of view, this property is consequently appealing, since workloads exhibit in most case a large ratio of read operations.
+
+When two transactions are concurrently writing to some object, it is possible to detect the contention and abort preventively one of them.
+On the other hand, when a read-write conflict occurs, a \emph{race condition} occurs between the reader and the writer.
 If the read operation takes place after the write, the reader is bound to use the version produced by the writer.
 
 \begin{definition}[Binding]
@@ -76,12 +86,12 @@ This is for instance the case of transaction $T_4$ in history $h_2$, where this 
 As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
 
 Tracking this causality relation is difficult for the conention manager as it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
-We observe that it is simpler if the items read prior the binding are either, also read by the writer, or by someof its dependencies.
+We observe that it is simpler if the items read prior the binding are either, also accessed by the writer, or by one of its dependencies.
 In which case, we will say that the binding is fair.
 
 \begin{definition}[Fair binding]
   Consider that a transaction $T_i$ is bound to a transaction $T_j$ on some object $x$.
-  This binding is \emph{fair} when, for every object $y$ accessed before $x$, either $y$ is accessed by $T_j$ or by one of its dependencies.
+  This binding is \emph{fair} when, for every object $y$ accessed before $x$, either $y$ is accessed by $T_j$ or by some transaction $T_k$ with $T_j \depends T_k$.
 \end{definition}
 
 Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.
@@ -91,8 +101,7 @@ In the next section, we formalize this idea with the notion of stricter serializ
 
 \subsection{Stricter serializability}
 \labsection{criteria:spser}
-Here we introduce and describe in details \sser, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
-%is a stronger consistency criteria than strict serializability (\textsc{SSer}).
+Here we introduce and describe in details \SPSER, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
 The \sser criteria requires that committed transactions form a sequential history.
 In addition, \sser prohibits transactions to view inconsistencies unless one of their bindings is unfair.
 Inline with prior art \cite{berstein,opa}, we give a graph characterization of stricter serializability.
@@ -130,58 +139,84 @@ As a consequence of the above definition, if in a stricter serializable history 
   If ($h \in \SPSER$) exhibits no unfair bindings then ($h \in \OPA$) holds.
 \end{corollary}
 
-\refcor{criteria:1} offers a properties on histories which, provided it aplies, allows to reach opacity.
-Based on this property, the section that follows presents a \emph{robustness} analysis against $\SPSER$.
-This means that we give a static analysis of workloads for which this property applies.
-
 \subsection{Applicability}
 \labsection{criteria:applicability}
+
+\refcor{criteria:1} offers a convenient property on histories that, when it aplies, allows to reach opacity.
+Based on this property, we detail in this section a workload for which this property applies.
+In other words, we give a robustness criteria \cite{alexey} against $\SPSER$.
+
+To conduct our analysis, we focus specifically on $\SPSER$ implementations that allow invisible reads.
+As pointed out at the begining of this section, this restriction is motivated by perfomance since most workloads are read-intensive.
+In this context, the result of \citet{hans16} tells us that it is not possible to jointly achieve
+\begin{inparaenum}
+\item $\SSER$,
+\item read invisibility,
+\item minimal progressiveness, and
+\item accept RC-anti-dependencies.
+\end{inparaenum}
+As a consequence, we have to prune histories that exhibits such patterns from our analysis;
+hereafter, we shall note these histories $\RCAD$.
+
+\subsubsection{A robustness criteria}
+\labsection{criteria:robustness}
 
 The state of an object commonly include a reference to another object.
 These references between objects form the \emph{object graph} of the application.
 Processes know initially one (or more) \emph{root} objects in this graph, and upon performing a computation traverse the object graph appropriately.
 
 Consider that a transaction $T$ access in order objects $x_1, \ldots, x_m$.
-We say that $T$ executes a \emph{simple traversal} if for all $i \in [1,m-1]$, the state of $x_i$ includes a reference to $x_{i+1}$.
-Let us call $P$ the following property on the application.
+We say that $T$ cross a \emph{simple path} if for all $i \in [1,m-1]$, the state of $x_i$ includes a reference to $x_{i+1}$.
+At the light of this definition, we call $P$ the following property on a workload.
 
 \begin{itemize}
 \item[($P$)]
   The object graph forms initially a forest and every transaction maintains this invariant.
-  Moreover, every transaction in the application executes a simple traversal.
+  Moreover, every transaction in the workload crosses a simple path.
 \end{itemize}
 
-The proposition below proves that, if $\mathcal{P}$ holds, then the application is robust against $\SPSER$.
+The proposition that follows proves that, provided $\mathcal{P}$ holds and the TM does not accept RC-anti-dependencies, then the workload is robust against $\SPSER$.
 
 \begin{proposition}
-  Consider some set of transaction $\mathcal{T}$ for which property $P$ holds.
-  Define $H_{\mathcal{T}}$ the histories form using transaction in $\mathcal{T}$.
-  Then, it is true that $\SPSER \inter H_{\mathcal{T}} \subset \OPA$.
+  Let $\mathcal{T}$ be some set of transactions for which property $P$ holds.
+  Define $H_{\mathcal{T}}$ the histories built upon transactions in $\mathcal{T}$.
+  It is true that: $(\SPSER \inter H_{\mathcal{T}} \setminus \RCAD) \subset \OPA$.
 \end{proposition}
 
 \begin{proof}
   Choose some history $h \in H_{\mathcal{T}} \inter \SPSER$, and let $T_i$ be a transaction that aborts in $h$.
-  %% We prove by induction that each of the bindings of $T_i$ is fair in $h$.
-  %% To this end, we consider all the reads executed by $T_i$, following the order $\hb_h$.  
-  From the definition of $\SPSER$, one of the bindings of $T_i$ is fair in $h$.
-  Define $x$ and $T_j$ such that
-  \begin{inparaenum}
-  \item $T_i$ is bound to $T_j$ on $x$, and
-  \item $x$ is the first object read by $T_i$ for which this binding is unfair.
-  \end{inparaenum}
-  
-  Since $h \in \SPSER$ holds, then $\committed{h}$ is equivalent to a sequential history $\lambda$.
-  By definition of $x$, there exists a position $p$ in $\lambda$ after $T_j$ where we may put the execution of $T_i$ in $h$ up to $r_i(x)$.
-  This gives us history $\hat{\lambda}$.
-  In this history,
-  transaction $T_j$ precedes transaction $T_i$,
-  transation $T_i$ observes a strictly consistent snapshot.
-  For each object $x^k$ accessed by $T_i$ before $x$, we prove that
-  either $T_j$ accesses $x^k$, or one of its dependency access it.
-  (By induction.)
-  $x^1$ is a root
+  In what follows, we prove all of the bindings of $T_i$ are fair in $h$.
+  By definition of $\SPSER$, this leads to the fact that $h \in \OPA$.
 
-  if $T_j$
-  
-  
+  We proceed by induction.
+  Define $x$ and $T_j$ such that $T_i$ is bound to $T_j$ on $x$ and assume that all the prior bindings of $T_i$ are fair.
+  Let $\pi_i$ be the path taken by $T_i$ to read $x$.
+  Similarly, define $\pi_j$ as the path taken by $T_j$ before object $x$.
+  By hypothesis, all the bindings before $x$ are fair for $T_i$.
+  Since $h \in \SPSER$, the snapshot read by $T_i$ is strictly consistent up to $x$.
+
+  Let us note $\lambda$ the linerization of the transactions that commit in $h$.
+  We know that history $\lambda$ is of the form $\lambda=T_{a_1} \ldots T_{a_j} T_j T_{a_{j+}} \ldots T_{a_m}$.
+  Let us observe that $\pi_j$ equals the path to object $x$ after transaction $T_{a_j}$.
+  Similarly for some $T_{a_i}$, $\pi_i$ is the path to $x$ after transaction $T_{a_i}$.  
+  According to the positions of $T_{a_i}$ and $T_{a_j}$ in $\lambda$, we may consider the following cases:
+  \begin{itemize}
+  \item ($T_{a_j} = T_{a_i}$)
+    In this case, the two paths are equals.
+    Consequently all the object reads by $T_i$ are also accessed by $T_j$.
+    It follows that the binding is fair.    
+  \item ($T_{a_j} <_{\lambda} T_{a_i}$)
+    Name $T$ the first transaction that modifies the path $\pi_j$.
+    Since $T_i$ observes a strictly consistent snapshot up to $x$ in $h$, $T$ commits before $T_i$ in $h$.
+    Now, observe that $T_j$ is concurrent to $T_j$, thus it is also concurrent to $T$.
+    Both $T$ and $T_j$ starts from the same root object, $T$ modifies the path $\pi_j$ and commits before $T_j$,
+    Since $T$ writes $x$, history $h$ exhibits and RC-anti-dependency between $T$ and $T_j$.
+    Absurd.
+  \item ($T_{a_i} <_{\lambda} T_{a_j}$)
+    Let $y$ be an object read by $T_i$ in the path $\pi_i$ and assume that $y$ is no more in $\pi_j$.
+    Name $T \leq_{\lambda} T_{a_j}$ the transaction that removes $y$ from the path leading to $x$.
+    To unlink $y$, while maintaining the forest property of the object graph, $T$ must make a bridge between an object $y'$ before $y$ and an object $y''$ after it.
+    As a consequence, this transaction reads $y$ when executing this operation.
+    Then, because $T$ appears before $T_j$ in $\lambda$ and $h \notin \RCAD$, necessarily $T$ is a dependency of transaction $T_j$.
+  \end{itemize}
 \end{proof}

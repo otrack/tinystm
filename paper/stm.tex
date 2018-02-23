@@ -1,30 +1,26 @@
 \section{Algorithm}
 \labsection{stm}
 
-In this section, we depict a locality-aware software transactional memory.
-The pseudo-code of our construction is presented in \refalg{stm}.
-This algorithm follows the general design of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
-
-In what follows, we give an overview of the algorithm, present its internals then justify some design choices.
+In this section, we present a software transactional memory to implement $\SPSER$.
+This construction is disjoint-access parallel and weakly-progressive, i.e., it aborts a transaction only if it encounters a concurrent conflicting transaction 
+This section gives an overview of the algorithm, present its internals and justify some design choices.
 A correctness proofs follows.
 
 \subsection{Overview}
 \labsection{stm:overview}
 
-\refalg{stm} depicts the pseudo-code of our implementation of the STM interface at some process $p$.
-Our design follows a deferred update schema that consists in two steps.
+\refalg{stm} depicts the pseudo-code of our construction of the STM interface at some process $p$.
+Our design follow the general design of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
+\refalg{stm} employs a deferred update schema that consists in two steps.
 A transaction first executes optimistically, buffering its updates.
 Then at commit time the transaction is certified and, provided it commits, its updates are applied to the shared memory.
 
 During the execution of a transaction, process $p$ checks that the objects accessed so far did not change.
 Similarly to LSA, this check is lazily executed.
-\refalg{stm} executes it only when a shared object appears to have been recently updated, or when transaction terminates.
+\refalg{stm} executes it only when a shared object appears to have been recently updated, or when the transaction terminates.
 
 \subsection{Tracking Time}
 \labsection{stm:time}
-
-%% define consistent clock as any mechanism from $H$ to (\tickSet,<)
-%% satisfying for any two e, e' in $H$, $\hb e' \implies \Theta(e) < \Theta(e')$.
 
 \refalg{stm} tracks time to compute how concurrent transactions interleave during an execution.
 To this end, the algorithm makes use of logical clocks.
@@ -37,17 +33,16 @@ The sequential specification of a logical clock guarantees a single property, th
 \end{inparaenum}
 
 \refalg{stm} associates logical clocks with both processes and transactions.
-To retrieve the clock associated with some object $i$, our algorithm uses function $\clockOf{i}$.
-Notice that in the pseudo-code, when it is clear from the context, 
-we write $\clockOf{i}$ as a shorthand for $\clockOf{i}.\mathit{read}()$.
+To retrieve the clock associated with some object $i$, the algorithm uses function $\clockOf{i}$.
+Notice that in the pseudo-code, when it is clear from the context, we write $\clockOf{i}$ as a shorthand for $\clockOf{i}.\mathit{read}()$.
 
 The clock associated with a transaction is always local (\refline{stm:var:1}).
 In the case of a process, it might be shared or not (\refline{stm:var:2}).
 The flexibility of our design comes from this locality choice for \clockOf{p}.
 When the clock is shared, it is linearizable.
-To implement an (obstruction-free) linearizable clock we proceeds as follows.
+To implement an (obstruction-free) linearizable clock we employ the following common approach:
 \begin{construction}
-  Let $x$ be a shared object initialized to $0$.
+  Let $x$ be a shared register initialized to $0$.
   When $\cread$ is called, we return the value stored in $x$.
   Upon executing $\cadv(v)$, we fetch the value stored in $x$, say $u$.
   If $v > u$ holds, we execute a compare-and-swap to replace $u$ with $v$; 
@@ -58,11 +53,11 @@ To implement an (obstruction-free) linearizable clock we proceeds as follows.
 \input{algorithms/stm.tex}
 
 \subsection{Details}
-\labsection{stm:detail}
+\labsection{stm:details}
 
 In \refalg{stm}, each object $x$ has a \emph{location} in the shared memory, denoted $\locationOf{x}$.
 This location stores a pair $(t,d)$, where $t \in \naturalSet$ is a \emph{timestamp}, and $d$ is the actual content of $x$ as seen by transactions.
-We name a pair $(t,d)$ a \emph{version} of the object $x$.
+For simplicity, we name hereafter a pair $(t,d)$ a \emph{version} of object $x$.
 Since the location of object $x$ is unique, a single version of object $x$ may exist at a time in the memory.
 As usual, we asume some transaction $\transInit$ that intializes for every object $x$ the location $\locationOf{x}$ to $(0,\bot)$.
 Furthermore, we consider that each object $x$ is atomic.
@@ -115,7 +110,7 @@ In detail, the execution of a transaction $T$ proceeds as follows.
 
 \refalg{stm} replaces the global clock usually employed in STM architectures with a locality-aware clock.
 When \clockOf{p} is local to each process, \refalg{stm} ensures strict disjoint access parallelism (DAP) \cite{Attiya2015}.
-More formally, this means that two transaction $T$ and $T'$ access concurrently a low-level object at the implementation side only if the two transactions actually contend on some high-level object at the interface (here objects).
+More formally, this means that two transaction access concurrently a bae object of the implementation only if they contend on some shared object.
 Provided the workload is parallel, DAP ensures the scalability of \refalg{stm}.
 We assess empirically this claim in \refsection{evaluation}.
 
@@ -128,8 +123,8 @@ Upon a call to $\clockOf{p}$, the algortihm returns the clock defined for the so
 \labsection{stm:guarantees}
 
 In this section, we prove the different properties \refalg{stm} provides.
-First, we show that our STM design is weakly progressive and strictly serializable.
-Then, we prove that, when $\clockOf{p}$ is local, \refalg{stm} is strictly disjoint-parallel.
+First, we show that our STM design is weakly progressive and stricter serializable.
+Then, we prove that, when $\clockOf{p}$ is local, \refalg{stm} is disjoint-access parallel.
 
 \paragraph{(Weak-progress)}
 A transaction executes under \emph{weak progressiveness} \cite{Guerraoui:2009}, or equivalently it is \emph{weakly progressive}, when it aborts only if it encounters a conflicting transaction.
@@ -142,20 +137,19 @@ It follows that if $T$ aborts then it observes a conflict with a concurrent tran
 From which we deduce that it is executing under weak progressiveness.
 
 \paragraph{(Stricter serializability)}
-Consider some run $\run$ of \refalg{stm}, and let $h$ be the history induced by \run.
+Consider some run $\run$ of \refalg{stm}, and let $h$ be the history produced in \run.
 At the light of its pseudo-code, every function defined in \refalg{stm} is wait-free.
 As a consequence, we may consider without lack of generality that $h$ is complete, i.e., every transaction executed in $h$ terminates with either a commit or an abort event.
-In what follows,we consider the version order $\ll_h$ that corresponds to the order in which writes are linearized in $\rho$.
-Below, we first prove that $<$ is acyclic for this definition of $\ll_h$.
-Then, we prove that if a transaction does not exhibit any unfair binding then it observes a consistent snapshot.
-
-For some transaction, let us note $\clockOf{T_i}_f$ the final value of $\clockOf{T}$.
+In what follows, we define that $\ll_h$ as the order in which writes to the object locations are linearized in $\rho$.
+We first prove that $<$ is acyclic for this definition of $\ll_h$.
+Then, we show that, if a transaction does not exhibit any unfair binding, then it observes a strictly consistent snapshot.
+For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clockOf{T}$.
 
 \begin{proposition}
-  \labprop{sser:1}
+  \labprop{stm:1}
   Consider two transactions $T_i$ and $T_{j \neq i}$ in $h$.
-  If either $T_i \depends T_j$ or  $x_j \ll_h x_i$ holds, then $\clockOf{T_i}_f \geq \clockOf{T_i}_f$ is true.
-  In addition, if transaction $T_i$ commits then the ordering is strict, i.e., $\clockOf{T_i}_f > \clockOf{T_i}_f$.
+  If either $T_i \depends T_j$ or  $x_j \ll_h x_i$ holds, then $\clockOf{T_i}_f \geq \clockOf{T_j}_f$ is true.
+  In addition, if transaction $T_i$ commits then the ordering is strict, i.e., $\clockOf{T_i}_f > \clockOf{T_j}_f$.
 \end{proposition}
 
 \begin{proof}
@@ -177,9 +171,9 @@ For some transaction, let us note $\clockOf{T_i}_f$ the final value of $\clockOf
 \end{proof}
 
 \begin{proposition}
-  \labprop{sser:1}
+  \labprop{stm:1}
   Consider two transactions $T_i$ and $T_{j \neq i}$ in $h$ such that $T_i < T_j$.
-  If $T_i$ and $T_j$ transactions conflict then $T_i$ invokes $\stmCommitFunction$ before $T_j$ in $h$.
+  If transactions $T_i$ and $T_j$ conflict then $T_i$ invokes $\stmCommitFunction$ before $T_j$ in $h$.
 \end{proposition}
 
 \begin{proof}
@@ -210,8 +204,7 @@ For some transaction, let us note $\clockOf{T_i}_f$ the final value of $\clockOf
     Now, from the definition of $\ll_{h,x}$ the write of version $x_k$ takes place before the write of version $x_j$ in $\rho$.
     Since $T_i$ reads version $x_k$ in $h$, a pair $(\msgAny,x_k)$ is in $\readSetOf{T_i}$.    
     As a consequence, when $T_i$ executes \refline{stm:extend:5} the 
-    
-    
+       
     
     It follows, that the transaction has already 
     
@@ -219,28 +212,17 @@ For some transaction, let us note $\clockOf{T_i}_f$ the final value of $\clockOf
   
 \end{proof}
 
-\begin{proposition}  
-  \labprop{sser:2}
-  Relation $((\union_{x} \stmPrec{x}) ~\union \hb_h)$ is acyclic.
-\end{proposition}
-
-\begin{proof}
-  As a starter, observe that if transaction $T$ reads object, then $\readSetOf{T}[x] < \clockOf{T}_f$ holds.
-  This observation tell us that a chain $(T_i \stmPrec{x} T_j \stmPrec{y} T_k)$ implies $(\clockOf{T_i}_f < \clockOf{T_k}_f)$.
-  From which we deduce that claim $(\union_{x} \stmPrec{x})$ is acyclic.
-  Then, \refprop{sser:1} tell us that if $T_i \stmPrec{x} T_j$ holds then $T_j$ cannot commit before $T_i$.
-  It follows that relation $((\union_{x} \stmPrec{x}) ~\union \hb_h)$ is acyclic.  
-\end{proof}
-
 The above proposition leads immediately to the following theorem.
 
 \begin{theorem}
-  \labtheo{ss}
-  History $h$ is strictly serializable.
+  \labtheo{spser}
+  History $h$ belongs to $\SPSER$.
 \end{theorem}
 
 \begin{proof}
-  some details
+  \refprop{stm:1}
+  
+  
 \end{proof}
 
 \paragraph{(Disjoint-access parallelism)}

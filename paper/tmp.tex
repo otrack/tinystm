@@ -221,3 +221,17 @@ from which we deduce that history $h$ is opaque.
 
   for which this is true.
   a transaction to which $T_i$ is bound for which $x^k_{i_k}$ is first 
+
+    Consider that this binding is the first in the sense of $\hb_h$.
+  %%  
+  Since $h \in \SPSER$ holds, then $\committed{h}$ is equivalent to some sequential history $\lambda$.
+  By definition of $x$, there exists a position $p$ in $\lambda$ after $T_j$ where we may put the execution of $T_i$ in $h$ up to $r_i(x_j)$.
+  This gives us history $\hat{\lambda}$.
+  In this history, transaction $T_j$ precedes transaction $T_i$.
+  As $h \in \SPSER$ and all the bindings prior to $r_i(x_j)$ are fair, excluding $r_i(x_j)$, transation $T_i$ observes a strictly consistent snapshot 
+  Now including $r_i(x_j)$ the snapshot of $T_i$ is not consistent.
+  This implies that for some object $y$ read prior to $x$, $T_i$ reads some version $y_k$ and $T_j$ write a version $y_i$.
+  %%
+  Transaction $T_i$ reads a path $p_i$ prior to accessing $x$.
+  As the binding of $T_i$ to $T_j$ over $x$ is unfair, transaction $T_j$ traverse a path $p_j$ for which one of the object read is not access by $T_i$, nor by any of its dependencies.
+  Let $z$ be such an object and name $T_z$ the first transaction that modifies path $p_j$.
