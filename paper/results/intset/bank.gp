@@ -53,8 +53,8 @@ set label 1099 "# cores" at 9.5,-200000000
 
 set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22.18,800000000 font "Helvetica,12pt" 
 
-plot "bank-global_0.8_1048576.log" u  5:xtic(2) ls 1 title "Global Clock",\
-     "bank-global_async_0.8_1048576.log" u 5:xtic(2) ls 3 title "Thread Clock"
+plot "bank-global_0.8_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
+     "bank-global_async_0.8_1048576.log" u 5:xtic(2) ls 3 title "Alg3"
 
 X_POS=1
 Y_POS=0
@@ -98,8 +98,8 @@ set label 2048 "48"  at 23.5,-200000000  font "Helvetica,12pt"
 set label 2099 "# cores" at 9.5,-400000000
 #set yrange [0:90]
 unset ylabel
-plot "bank-global_1_1048576.log" u  5:xtic(2) ls 1 title "Global Clock",\
-     "bank-global_async_1_1048576.log" u  5:xtic(2) ls 3 title "Thread" 
+plot "bank-global_1_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
+     "bank-global_async_1_1048576.log" u  5:xtic(2) ls 3 title "Alg3" 
 	 							  
 !epstopdf "bank.eps"
 !rm "bank.eps"
