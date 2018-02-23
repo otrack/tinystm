@@ -51,7 +51,7 @@ In this history, transaction $T_3$ depends on $T_1$ and $T_2$.
 On the other hand, if $x_2 \ll_h x_1$ holds and $T_4$ reads $x_2$, then this transaction exhibits an anti-dependency with $T_1$.
 This anti-dependency becomes an RC-anti-dependency if $T_4$ executes an additional step where it writes some object $z$.
 
-A transaction observes a \emph{strictly consistent snapshot} \cite{berstein?} when it never misses the effects of some transaction it depends on.
+A transaction observes a \emph{strictly consistent snapshot}~\cite{cc:coh:997} when it never misses the effects of some transaction it depends on.
 In other words, the snapshot of transaction $T_i$ in history $h$ is strictly consistent when
 \begin{inparaenum}
 \item $T_i$ reads version $x_j$,
@@ -104,7 +104,7 @@ In the next section, we formalize this idea with the notion of stricter serializ
 Here we introduce and describe in details \SPSER, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
 The \sser criteria requires that committed transactions form a sequential history.
 In addition, \sser prohibits transactions to view inconsistencies unless one of their bindings is unfair.
-Inline with prior art \cite{berstein,opa}, we give a graph characterization of stricter serializability.
+Similar to related work~\cite{syn:db:1467}, we give a graph characterization of stricter serializability.
 
 \begin{definition}[Strict serialization graph]
   Consider some version order $\ll_h$ for $h$.
