@@ -20,18 +20,20 @@ different transaction patterns.
 The bank benchmark consists in simulating transfers between bank
 accounts. Each transaction reads two accounts and updates the two
 accounts. We run this benchmark with 10k bank accounts, and a locality
-of 1 (meaning that 100\% of transfers are local to a thread). We
-measure the number of transfers performed by a set of threads in 10 s.
+of 0.8 (meaning that 80\% of transfers are local to a thread, while 20
+\% are between any account). We measure the number of transfers
+performed by a set of threads in 10 s.
 
-The results are reported in figure \ref{todo}.
+The results are reported in figure \ref{todo}.\ft{todo: include a
+  figure showing the performance (with locality=0.8 ?)}
 %
 The results show that the performance obtained with the global clock
-merely improve as the number of thread increases: 48 threads achieve 3
+merely improve as the number of thread increases: 48 threads achieve 2.8
 millions transactions per second, while 1 thread achieve 2.2 millions
 transactions per second.
 %
 Our implementation perform better: the speedup obtained with 48
-threads reaches \ft{TODO}. This can be explained by the low contention
+threads reaches 3100 \%. This can be explained by the low contention
 in this application: since the threads each work on independant data,
 there is no contention when performing the transactions.
 
