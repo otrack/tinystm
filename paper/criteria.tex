@@ -59,7 +59,7 @@ In other words, the snapshot of transaction $T_i$ in history $h$ is strictly con
 \item $T_i$ depends on $T_{k}$,
 \end{inparaenum}
 then version $x_k$ is followed by version $x_j$.
-Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \implies (x_k \ll_{h,x} x_j)$, where $\ll_{h}$ is some version order defined over history $h$.
+Formally, $((r_i(x_j) \in h) \land (w_k(x_k) \in h) \land (T_i \depends T_k)) \implies (x_k \ll_h x_j)$, where $\ll_{h}$ is some version order defined over history $h$.
 
 \subsection{Contention and bindings}
 \labsection{criteria:bindings}
@@ -106,17 +106,16 @@ The \sser criteria requires that committed transactions form a sequential histor
 In addition, \sser prohibits transactions to view inconsistencies unless one of their bindings is unfair.
 Inline with prior art \cite{berstein,opa}, we give a graph characterization of stricter serializability.
 
-\begin{definition}[Strict Serialization graph]
+\begin{definition}[Strict serialization graph]
   Consider some version order $\ll_h$ for $h$.
-  We note $<$ the various relations over $\committed{h}$ induced by $\ll_h$, as defined below.
-  The serialization graph of history $(h,\ll_h)$ is defined as $(\committed{h},<)$.
+  As defined below, relation $<$ captures all the relations over $\committed{h}$ induced by $\ll_h$.
+  The serialization graph of history $h$ induced by $\ll_h$, written $\SSG(h,\ll_h)$, is $(\committed{h},<)$.
   \begin{displaymath}
     \begin{array}{l}
-      \forall T_i, T_j \in \committed{h} : 
       T_i < T_{j \neq i}  \equaldef \\
       \lor~ T_i \hb_h T_j {\hspace{16.8em}\text{(1)}} \\
       \lor~ \exists x : \lor~ r_j(x_i) \in h {\hspace{13.3em}\text{(2)}} \\
-      \hspace{2.9em}\lor~ \exists T_k : x_k \ll_{h,x} x_j \land \lor~T_k = T_i {\hspace{5em}\text{(3)}} \\
+      \hspace{2.9em}\lor~ \exists T_k : x_k \ll_h x_j \land \lor~T_k = T_i {\hspace{5em}\text{(3)}} \\
       \hspace{12.2em} \lor~ r_i(x_k) \in h {\hspace{3.9em}\text{(4)}}
     \end{array}
   \end{displaymath}  
@@ -211,7 +210,7 @@ The proposition that follows proves that, provided $\mathcal{P}$ holds and the T
     Now, observe that $T_j$ is concurrent to $T_j$, thus it is also concurrent to $T$.
     Both $T$ and $T_j$ starts from the same root object, $T$ modifies the path $\pi_j$ and commits before $T_j$,
     Since $T$ writes $x$, history $h$ exhibits and RC-anti-dependency between $T$ and $T_j$.
-    Absurd.
+    Contradiction.
   \item ($T_{a_i} <_{\lambda} T_{a_j}$)
     Let $y$ be an object read by $T_i$ in the path $\pi_i$ and assume that $y$ is no more in $\pi_j$.
     Name $T \leq_{\lambda} T_{a_j}$ the transaction that removes $y$ from the path leading to $x$.
