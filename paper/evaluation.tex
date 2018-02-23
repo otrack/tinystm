@@ -1,2 +1,73 @@
 \section{Evaluation}
 \labsection{evaluation}
+
+
+In this Section, we evaluate the implementation of the algorithm
+described in \refsection{stm}.  We implemented \ft{TODO: find a name} in
+\textsc{TinySTM} \cite{FelberFMR10}, and we compare this implementation
+with the vanilla \textsc{TinySTM}.
+%
+The experiments were conducted on Opteron48, a 48 cores machine with
+256 GB of RAM. Opteron48 is equipped with 4 dodeca-core AMD Opteron
+6172, and 8 NUMA nodes.
+
+To evaluate our implementation, we used the test suite shipped with
+TinySTM. This test suite is composed of several STM applications wtih
+different transaction patterns.
+
+\subsection{Bank}
+
+The bank benchmark consists in simulating transfers between bank
+accounts. Each transaction reads two accounts and updates the two
+accounts. We run this benchmark with 10k bank accounts, and a locality
+of 1 (meaning that 100\% of transfers are local to a thread). We
+measure the number of transfers performed by a set of threads in 10 s.
+
+The results are reported in figure \ref{todo}.
+%
+The results show that the performance obtained with the global clock
+merely improve as the number of thread increases: 48 threads achieve 3
+millions transactions per second, while 1 thread achieve 2.2 millions
+transactions per second.
+%
+Our implementation perform better: the speedup obtained with 48
+threads reaches \ft{TODO}. This can be explained by the low contention
+in this application: since the threads each work on independant data,
+there is no contention when performing the transactions.
+
+\subsection{Linked list}
+
+The linked-list benchmark consists in modifying a sorted linked list
+concurrently. Each thread randomly adds or removes a node from the
+list. We run this benchmark with a range of 512 (meaning that each
+thread randomly adds/removes a value comprised between -255 and +256)
+and a linked list initialized with 256 values.
+
+The results are reported in Figure \ref{todo}.
+%
+The results show that the global clock outperforms our
+implementation. This is due to the high contention in this application
+that causes our optimistic algorithm to abort \ft{that's not the right
+  verb} many transactions.
+
+\subsection{Reb-black tree}
+
+The red-black tree benchmark is similar to the linked-list benchmark
+except that the values are stored in a self-balancing binary search
+tree. We run this benchmark with a range of $10^7$ values, and a
+binary tree initialized with $10^5$ values.
+
+The results are reported in Figure \ref{todo}.
+%
+When using the global clock, the performance of this application
+improves linearly up to 12 threads. It then stalls to approximately 50
+millions transactions per second.
+%
+On this application, our implementation scales linearly as the number
+of threads grows. It achieves 176 millions transactions per second
+with 48 threads.
+%
+In this benchmark, the likelyhood of a concurrent transaction is very
+low because of the high number of values in the tree. However,
+\ft{explain why the global clock performs poorly}.
+%
