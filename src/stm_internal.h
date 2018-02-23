@@ -919,12 +919,17 @@ int_stm_prepare(stm_tx_t *tx)
 
  start:
   /* Start timestamp */
+#ifdef THREAD_CLOCK
+  tx->clock = 0;
+#else
   tx->clock = GET_CLOCK; /* OPT: Could be delayed until first read/write */
   if (unlikely(tx->clock >= VERSION_MAX)) {
     /* Block all transactions and reset clock */
     stm_quiesce_barrier(tx, rollover_clock, NULL);
     goto start;
   }
+#endif
+  
 #if CM == CM_MODULAR
   if (tx->stat_retries == 0)
     tx->timestamp = tx->clock;
