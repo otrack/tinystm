@@ -26,7 +26,7 @@ set grid y
 set key horizontal top center width 0.5 sample 0.2  spacing 1 #font "Helvetica,12pt" 
 
 plot "data/bank_global_locality.log" u 7:xtic(3) ls 1 title "TinySTM",\
-     "data/bank_thread_locality.log" u 7:xtic(3) ls 3 title "Alg3"
+     "data/bank_thread_locality.log" u 7:xtic(3) ls 3 title "Algorithm 1"
 
 !epstopdf "bank-speedup.eps"
 !rm "bank-speedup.eps"

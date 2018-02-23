@@ -54,7 +54,7 @@ set label 1099 "# cores"at 9.5,-10000000
 set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 21.18,77500000 font "Helvetica,12pt" 
 
 plot "bank-global_0.8_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
-     "bank_thread_locality_0_8.log" u 5:xtic(2) ls 3 title "Alg3"
+     "bank_thread_locality_0_8.log" u 5:xtic(2) ls 3 title "Algorithm 1"
 
 X_POS=1
 Y_POS=0
@@ -99,7 +99,7 @@ set label 2099 "# cores" at 9.5,-10000000
 #set yrange [0:90]
 unset ylabel
 plot "bank-global_1_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
-     "bank_thread_locality_0_8.log" u  5:xtic(2) ls 3 title "Alg3" 
+     "bank_thread_locality_0_8.log" u  5:xtic(2) ls 3 title "Algorithm 1" 
 	 							  
 !epstopdf "bank.eps"
 !rm "bank.eps"
