@@ -51,12 +51,18 @@ list. We run this benchmark with a range of 512 (meaning that each
 thread randomly adds/removes a value comprised between -255 and +256)
 and a linked list initialized with 256 values.
 
-The results are reported in Figure \ref{todo}.
+The results are reported in Figure \ref{fig:benchmarking:llrb}.
 %
 The results show that the global clock outperforms our
 implementation. This is due to the high contention in this application
 that causes our optimistic algorithm to abort \ft{that's not the right
   verb} many transactions.
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[scale = 1.0]{results/intset/ll-rb.pdf}
+	\caption{\label{fig:benchmarking:llrb}}
+\end{figure}
 
 \subsection{Reb-black tree}
 
