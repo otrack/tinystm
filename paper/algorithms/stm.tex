@@ -1,6 +1,6 @@
 \begin{algorithm}[!t]
 
-  \caption{A locality-aware STM -- code at process $p$}
+  \caption{A $\SPSER$ transactional memory -- code at process $p$}
   \labalg{stm}
   \scriptsize
 
@@ -14,7 +14,7 @@
     \vspace{1em}
     
     \StartFunction{$\stmBegin{T}$}
-    \State $\clockOf{T}.\cadv(\mathit{min}_p \clockOf{p})$ \labline{stm:start:1}
+    \State $\clockOf{T}.\cadv(\mathit{min}_{q} \clockOf{q})$ \labline{stm:start:1}
     \State $\readSetOf{T} \assign \emptySet$ \labline{stm:start:2}
     \State $\writeSetOf{T} \assign \emptySet$ \labline{stm:start:3}
     \EndFunction

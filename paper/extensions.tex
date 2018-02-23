@@ -65,10 +65,10 @@ Then, we present a mechanism to adapt clocks dynamically to the workload, in ord
 %% \end{inparaenum}
 %% Item (ii) is generally true in the case of a referential integrity linking $y$ to $x$ (i.e., $y$ stores a reference to $x$).
 
+
 \paragraph{(Global clock.)}
-When processes use a global clock, \refalg{stm} is idenrtical to the original code of TinySTM.
+
 This means that each transaction, even if it aborts, observes a strictly consistent snapshot.
-Such a property, together with \reftheo{ss}, leads to the fact that \refalg{stm} is opaque.
 
 \begin{proposition}
   \labprop{ext:1}
@@ -134,4 +134,9 @@ where we mark using $[ \ldots ]$ the begin and end of a transaction.
 \end{proof}
 
 In practice, we conjoin clocks with the help of a global lock.
+
+\paragraph{(Disjoint-access parallelism)}
+The logical clocks used in \refalg{stm} can be shared or local to each process.
+When they are are local, function $\clockOf{p}$ becomes injective.
+
 

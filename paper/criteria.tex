@@ -78,7 +78,7 @@ On the other hand, when a read-write conflict occurs, a \emph{race condition} oc
 If the read operation takes place after the write, the reader is bound to use the version produced by the writer.
 
 \begin{definition}[Binding]
-  When a transaction $T_i$ reads-from a concurrent transaction $T_j$, we say that $T_i$ is bound to $T_j$ on $x$.
+  When a transaction $T_i$ reads-from a concurrent transaction $T_j$ in a history $h$, we say that $T_i$ is bound to $T_j$ on $x$.
 \end{definition}
 
 When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the consistency of its snapshot, $T_i$ must read the updates and causal dependencies of $T_j$ that are intersecting with its read set.
@@ -90,8 +90,8 @@ We observe that it is simpler if the items read prior the binding are either, al
 In which case, we will say that the binding is fair.
 
 \begin{definition}[Fair binding]
-  Consider that a transaction $T_i$ is bound to a transaction $T_j$ on some object $x$.
-  This binding is \emph{fair} when, for every object $y$ accessed before $x$, either $y$ is accessed by $T_j$ or by some transaction $T_k$ with $T_j \depends T_k$.
+  Consider that in some history $h$ a transaction $T_i$ is bound to a transaction $T_j$ on some object $x$.
+  This binding is \emph{fair} when every object $y$ read (but not written) by $T_i$ before $x$ in $h$ is also accessed by $T_j$.
 \end{definition}
 
 Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.

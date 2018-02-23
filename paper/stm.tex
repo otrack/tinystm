@@ -1,23 +1,28 @@
 \section{Algorithm}
 \labsection{stm}
 
-In this section, we present a software transactional memory to implement $\SPSER$.
-This construction is disjoint-access parallel and weakly-progressive, i.e., it aborts a transaction only if it encounters a concurrent conflicting transaction 
-This section gives an overview of the algorithm, present its internals and justify some design choices.
+In this section, we present a transactional memory that attains $\SPSER$.
+Our construction is weakly-progressive, that is, it aborts a transaction only if it encounters a concurrent conflicting transaction.
+Reads operations are invisible, that is they do not modify any base object of the implementation.
+Moreover, and contrary to several existing TM designs, our design does not require a global clock.
+
+We first give an overview of the algorithm, present its internals and justify some design choices.
 A correctness proofs follows.
+We close this section with discussing the parameters of our algorithm and possible.
+In particular, we explain how to tailor it to be disjoint-access parallel.
 
 \subsection{Overview}
 \labsection{stm:overview}
 
 \refalg{stm} depicts the pseudo-code of our construction of the STM interface at some process $p$.
-Our design follow the general design of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
+Our design follow the general approach of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
 \refalg{stm} employs a deferred update schema that consists in two steps.
 A transaction first executes optimistically, buffering its updates.
-Then at commit time the transaction is certified and, provided it commits, its updates are applied to the shared memory.
+Then, at commit time, the transaction is certified and if it commits its updates are applied to the shared memory.
 
-During the execution of a transaction, process $p$ checks that the objects accessed so far did not change.
+During the execution of a transaction, a process checks that the objects accessed so far did not change.
 Similarly to LSA, this check is lazily executed.
-\refalg{stm} executes it only when a shared object appears to have been recently updated, or when the transaction terminates.
+More specifically, \refalg{stm} executes it only if a shared object appears to have been recently updated, or when the transaction terminates.
 
 \subsection{Tracking Time}
 \labsection{stm:time}
@@ -32,9 +37,11 @@ The sequential specification of a logical clock guarantees a single property, th
   Formally, for every history $h$, $(\responseAny{\cread}{v} \in h) \implies (v \geq \max{(\{u : \cadv(u) \hb_h \cread \} \union \{0\})})$.
 \end{inparaenum}
 
-\refalg{stm} associates logical clocks with both processes and transactions.
-To retrieve the clock associated with some object $i$, the algorithm uses function $\clockOf{i}$.
-Notice that in the pseudo-code, when it is clear from the context, we write $\clockOf{i}$ as a shorthand for $\clockOf{i}.\mathit{read}()$.
+\refalg{stm} associates logical clocks with both processes and
+transactions.  To retrieve the clock associated with some object $i$,
+the algorithm uses function $\clockOf{i}$.  Notice that in the
+pseudo-code, when it is clear from the context, we write $\clockOf{i}$
+as a shorthand for $\clockOf{i}.\mathit{read}()$.
 
 The clock associated with a transaction is always local (\refline{stm:var:1}).
 In the case of a process, it might be shared or not (\refline{stm:var:2}).
@@ -60,26 +67,27 @@ This location stores a pair $(t,d)$, where $t \in \naturalSet$ is a \emph{timest
 For simplicity, we shall name hereafter a pair $(t,d)$ a \emph{version} of object $x$.
 Since the location of object $x$ is unique, a single version of object $x$ may exist at a time in the memory.
 As usual, we asume some transaction $\transInit$ that intializes for every object $x$ the location $\locationOf{x}$ to $(0,\bot)$.
-Furthermore, we consider that each object $x$ is atomic.
+Furthermore, we consider that each read or write operation to some location $\locationOf{x}$ is atomic.
 
-\refalg{stm} associates each object with a lock.
+\refalg{stm} associates a lock to each object.
 To manipulate the lock-related functions of object $x$, 
 a process $p$ employs appropriately the functions $\lock{x}$, $\isLocked{x}$ and $\unlock{x}$.
 
 For every transaction $T$ submitted to the system, \refalg{stm} maintains three local data structures:
-\begin{inparaenum}[]
-\item $\clockOf{T}$ is the logical clock of transaction $T$,
-\item $\readSetOf{T}$ is a map that contains its \emph{read set}, and 
-\item $\writeSetOf{T}$ is another map that stores the \emph{write set} of $T$.
-\end{inparaenum}
+\begin{inparaenumorig}[]
+\item $\clockOf{T}$ is the logical clock of transaction $T$;
+\item $\readSetOf{T}$ is a map that contains its read set; and 
+\item $\writeSetOf{T}$ is another map that stores the write set of $T$.
+\end{inparaenumorig}
 \refalg{stm} updates incrementally $\readSetOf{T}$ and $\writeSetOf{T}$ over the course of the execution.
-The read set serves to check that the view of the shared memory, or \emph{snpashot}, seen by the transaction is consistent.
+The read set serves to check that snpashot of the shared memory as seen by the transaction is strictly consistent.
 The write set buffers updates.
-In detail, the execution of a transaction $T$ proceeds as follows.
+With more details, the execution of a transaction $T$ proceeds as follows.
 
 \begin{itemize}
 \item[-] %
-  When $T$ starts its execution, \refalg{stm} initializes $\clockOf{T}$ to the value of $\clockOf{p}$, then both $\readSetOf{T}$ and $\writeSetOf{T}$ to $\emptySet$ (\reflines{stm:start:1}{stm:start:3}).
+  When $T$ starts its execution, \refalg{stm} initializes $\clockOf{T}$ to the smallest value of $\clockOf{q}$ for any process $q$ executing the TM.
+  Then, both $\readSetOf{T}$ and $\writeSetOf{T}$ are set to $\emptySet$.
 \item[-] %
   When $T$ accesses a shared object $x$, if $x$ was previously written, its value is returned (\refline{stm:read:1}).
   Otherwise, \refalg{stm} fetches atomically the version $(d,t)$, as seen in location $\locationOf{x}$.
@@ -104,27 +112,16 @@ In detail, the execution of a transaction $T$ proceeds as follows.
   When $T$ requests to commit, \refalg{stm} certifies the read set by calling function $\stmExtend{}$ with the clock of $T$ (\refline{stm:try:1}).
   If this test succeeds, transaction $T$ commits (\reflines{stm:commit:1}{stm:commit:6}).
   In such a case, \clockOf{T} ticks to reach its final value (\refline{stm:commit:1}).
-  By construction, this value is greater than the clock of process $p$ at the time transaction $T$ started (\refline{stm:start:1}), as well as all the timestamps of all the versions read or written by $T$ (\reflinestwo{stm:read:5}{stm:write:4}).
+  By construction, this value is greater than the timestamps of all the versions read or written by $T$ (\reflinestwo{stm:read:5}{stm:write:4}).
   \refalg{stm} updates the clock of $p$ with the final value of \clockOf{T} (\refline{stm:commit:2}), then it updates the items written by $T$ with their novel versions (\refline{stm:commit:4}).
 \end{itemize}
-
-\refalg{stm} replaces the global clock usually employed in STM architectures with a locality-aware clock.
-When \clockOf{p} is local to each process, \refalg{stm} ensures strict disjoint access parallelism (DAP) \cite{Attiya2015}.
-More formally, this means that two transaction access concurrently a bae object of the implementation only if they contend on some shared object.
-Provided the workload is parallel, DAP ensures the scalability of \refalg{stm}.
-We assess empirically this claim in \refsection{evaluation}.
-
-On the other hand, if processes need to synchronize too often, maintaining consistency among the various clocks is expensive.
-In this situation, it might be of interest to find a compromise between the cost of cache coherency and the need for synchronization.
-For instance, in a NUMA architecture, \refalg{stm} may assign a common clock per hardware socket.
-Upon a call to $\clockOf{p}$, the algortihm returns the clock defined for the socket in which the processor executing process $p$ resides.
 
 \subsection{Guarantees}
 \labsection{stm:guarantees}
 
-In this section, we prove the different properties \refalg{stm} provides.
-First, we show that our STM design is weakly progressive and stricter serializable.
-Then, we prove that, when $\clockOf{p}$ is local, \refalg{stm} is disjoint-access parallel.
+In this section, we assess the core properties of \refalg{stm}.
+First, we show that our TM design is weakly progressive, i.e., that the algorithm aborts a transaction only if it encounters a concurrent conflicting transaction.
+Then, we prove that \refalg{stm} is stricter serializable.
 
 \paragraph{(Weak-progress)}
 A transaction executes under \emph{weak progressiveness} \cite{Guerraoui:2009}, or equivalently it is \emph{weakly progressive}, when it aborts only if it encounters a conflicting transaction.
@@ -178,8 +175,27 @@ For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clock
 
 \begin{proposition}
   \labprop{stm:2}
-  Consider two transactions $T_i$ and $T_{j \neq i}$ in $\committed{h}$ such that $T_i < T_j$.
-  Then, transaction $T_i$ invokes $\stmCommitFunction$ before transaction $T_j$ in $h$.
+  History $h$ does not exhibit any RC-anti-dependencies ($h \notin \RCAD$)
+\end{proposition}
+
+\begin{proof}
+  Consider $T_i$, $T_j$ and $T_k$ such that $r_i(x_k), w_j(x_j) \in h$, $x_k \ll_h x_j$ and $T_j$ commits before $T_i$.
+  %
+  When $T_j$ invokes $\stmCommitFunction$, it holds a lock on $x$.
+  This lock is released at \refline{stm:commit:5} after version $x_j$ is written at location $\locationOf{x}$.
+  %
+  Then, consider the time at which $T_i$ invokes $\stmTryCommitFunction$.
+  The call at \refline{stm:try:1} leads to fetching $\locationOf{x}$ at \refline{stm:extend:2}.
+  Since $T_i$ reads version $x_k$ in $h$, a pair $(x_k,\clockOf{T_k}_f)$ is in $\readSetOf{T_i}$.
+  From the definition of $\ll_h$ the write of $(x_k,\clockOf{T_k}_f)$ takes place before the write of version $(x_j,\clockOf{T_j}_f)$ in $\rho$.
+  Hence, $\locationOf{x}$ does not contain anymore $(x_k,\clockOf{T_k}_f)$
+  Applying \refprop{stm:1}, $T_i$ executes \refline{stm:extend:4} and aborts at \refline{stm:try:3}.
+\end{proof}
+
+\begin{proposition}
+  \labprop{stm:3}
+  Consider two transactions $T_i$ and $T_{j \neq i}$ in $\committed{h}$.
+  If $T_i < T_j$ holds, transaction $T_i$ invokes $\stmCommitFunction$ before transaction $T_j$ in $h$.
 \end{proposition}
 
 \begin{proof}
@@ -200,35 +216,8 @@ For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clock
     As a consequence, transaction $T_i$ takes a lock on object $x$ after $T_i$ invokes operation $\stmCommitFunction$.
     From which it follows that the claim holds.
   \item ($\exists x, T_k : x_k \ll_x x_j \land r_i(x_k)$)\\
-    For the sake of contradiction, assume that $T_j$ invokes $\stmCommitFunction$ before $T_i$.
-    When $T_j$ invokes $\stmCommitFunction$, it holds a lock on $x$.
-    This lock is released at \refline{stm:commit:5} after version $x_j$ is written at location $\locationOf{x}$.
-    %
-    Then, consider the time at which $T_i$ invokes $\stmTryCommitFunction$.
-    The call at \refline{stm:try:1} leads to fetching $\locationOf{x}$ at \refline{stm:extend:2}.
-    Since $T_i$ reads version $x_k$ in $h$, a pair $(\clockOf{T_k}_f, x_k)$ is in $\readSetOf{T_i}$.
-    From the definition of $\ll_h$ the write of $(\clockOf{T_k}_f, x_k)$ takes place before the write of version $(\clockOf{T_j}_f,x_j)$ in $\rho$.
-    Hence, $\locationOf{x}$ does not contain anymore $(\clockOf{T_k}_f, x_k)$
-    Applying \refprop{stm:1}, $T_i$ executes \refline{stm:extend:4} and aborts at \refline{stm:try:3}.
-    Contradiction.
+    Follows from \refprop{stm:2}.
   \end{compactitem}
-  
-\end{proof}
-
-\begin{proposition}
-  \labprop{stm:3}
-  History $h$ does not exhibit any RC-anti-dependencies ($h \notin \RCAD$)
-\end{proposition}
-
-\begin{proof}
-
-  Consider $T_i$, $T_j$ and $T_k$ such that $r_i(x_k), w_j(x_j) \in h$, $x_k \ll_h x_j$ and $T_j$ commits before $T_i$.
-  %
-  When $T_i$ invokes $\stmTryCommit$, transaction $T_j$ is committed.
-  Thus, when $T_i$ executes \refline{stm:try:1} to call $\stmExtendFunction$, it fetches $(x_j,\clockOf{T_j})$ from $\locationOf{x}$.
-  On the other hand, $(x_k, \clockOf{T_k}_f) \in \readSetOf{T_i}$ holds at that time.
-  From \refprop{stm:1}, $\clockOf{T_j}_f \neq \clockOf{T_k}_f$.
-  It follows that the test at \refline{stm:extend:3} fails, leading $T_j$ to abort at \refline{stm:try:2}.  
   
 \end{proof}
 
@@ -238,49 +227,61 @@ For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clock
 \end{theorem}
 
 \begin{proof}
-  \refprop{stm:2} tells us that if $T_i < T_j$ holds then $T_i$ commits before $T_j$.
-  It follows that the strict serialization graph $(\committed{h},<)$ is acyclic.
+  \refprop{stm:3} tells us that if $T_i < T_j$ holds then $T_i$ commits before $T_j$.
+  It follows that the $\SSG(h,\ll_h)$ is acyclic.
 
   Let us now turn our attention to the second property of $\SPSER$.
-  To this end, assume that a transaction $T_i$ aborts in $h$.
-  For the sake of contradiction, consider that $T_i$ exhibits fair bindings and yet observes a non-strictly consistent snapshot.
+  Assume that a transaction $T_i$ aborts in $h$.
+  For the sake of contradiction, consider that $T_i$ exhibits fair bindings and yet that it observes a non-strictly consistent snapshot.
 
-  Applying the definition given in \refsection{criteria:model}, there exist transactions $T_j$ and $T_{k \neq j}$ such that $T_i \depends T_j$, $r_i(x_k)$ occurs in $h$ and $x_k \ll_h x_j$.  
-  If $T_j \ll_{h} T_i$, then transaction $T_i$ cannot observe version $x_k$.
-  Consequently, transaction $T_j$ is concurrent to $T_i$.
-  In addition, there exists a transaction $T_l$ and some object $y$ such that $T_i$ performs $r_i(y_l)$ and $T_l \depends T_j$.
-
-  Relation $<$ is acyclic, thus $x_k \neq y_l$ holds.  
-  It remains to consider the following two cases:
+  Applying the definition given in \refsection{criteria:model}, there exist transactions $T_j$ and $T_k$ such that $T_i \depends T_j$, $r_i(x_k)$ occurs in $h$ and $x_k \ll_h x_j$.  
+  Applying \refprop{stm:3}, if $T_j \hb_{h} T_i$ holds, transaction $T_i$ cannot observe version $x_k$.
+  Thus, transaction $T_j$ is concurrent to $T_i$.
+  Moreover, by definition of $T_i \depends T_j$, there exist a transaction $T_l$ (possibly, $T_j$) and some object $y$ such that $T_i$ performs $r_i(y_l)$ and $T_l \depends T_j$.
+  In what follows, we prove that $T_i$ aborts before returning $y_l$.
+  
+  For starter, relation $<$ is acyclic, thus $x_k \neq y_l$ holds.  
+  It then remains to investigate the following two cases:
   \begin{compactitem}
   \item ($r_i(y_l) \hb_h r_i(x_k)$)\\
-    From \refprop{stm:2} and $T_l \depends T_j$, transaction $T_j$ is committed at the time $T_i$ reads object $x$.
+    From \refprop{stm:3} and $T_l \depends T_j$, transaction $T_j$ is committed at the time $T_i$ reads object $x$.
     Contradiction.
   \item ($r_i(x_k) \hb_h r_i(y_l)$)\\
-    We first argue that the timestamp fetches from $\locationOf{y}$ at the time $T_i$ executes \refline{stm:read:2} is greater than $\clockOf{T_i}$.
+    We first argue that, at the time $T_i$ executes \refline{stm:read:2}, the timestamp fetches from $\locationOf{y}$ is greater than $\clockOf{T_i}$.
     \begin{proof}
       First of all, observe that $T_j$ is not committed at the time $T_i$ reads object $x$ (since $x_{k} \ll_h x_{j}$ holds).
-      Denoting $q$ the process that executes $T_j$, $\clockOf{q} < \clockOf{T_j}_f$ is true when $T_i$ begins its execution at \refline{stm:start:1}.
-      %%    
-      Since transaction $T_l$ is concurrent to $T_i$ and $r_i(y_l)$ occurs, $T_i$ is bound to $T_l$ on $y$.
-      Assume some object $z$ read by $T_i$ before $y$.
-      Because the binding of $T_i$ to $T_l$ is fair, $T_l$ (or one of its dependencies) accesses $z$.
-      As $h \in \RCAD$, if some transaction $T_r$ updates to version $z_r$ the object $z$ read by $T_i$ this transaction cannot be concurrent to $T_l$.
+      Hence, denoting $q$ the process that executes $T_j$, $\clockOf{q} < \clockOf{T_j}_f$ is true when $T_i$ begins its execution at \refline{stm:start:1}.
+      From the pseudo-code at \refline{stm:start:1}, $\clockOf{T_i} < \clockOf{T_j}_f$ holds at the start of $T_i$.
+      %
+      Because $T_j$ is concurrent to $T_i$, $T_l$ is also concurrent to $T_i$ by \refprop{stm:3}.
+      Thus, as $r_i(y_l)$ occurs, $T_i$ is bound to $T_l$ on $y$.
+      Now, consider some object $z$ read by $T_i$ before $y$, and name $z_r$ the version read by $T_i$.
+      Since the binding of $T_i$ to $T_l$ is fair, $T_l$ accesses $z$.
+      As $h \notin \RCAD$, transaction $T_r$ cannot update object $z$ concurrently to $T_l$.
       Hence, applying \refprop{stm:1}, $\clockOf{T_r}_f < \clockOf{T_l}_f$ holds.
-      This leas to the fact that $\clockOf{T_i} < \clockOf{T_l}_f$ at the time $T_i$ invokes \stmReadFunction on $x$.
-      k
+      As a consequence, the relation $\clockOf{T_i} < \clockOf{T_l}_f$ is true.
     \end{proof}
-    Consequently, transaction $T_i$ invokes \stmExtendFunction at \refline{stm:refline:6}.
-    Transaction $T_j$ is committed at that time.
-    Since $T_j \depends T_l$, $T_j$ is also commited.
-    Following a reasoning similar to the one given in \refprop{stm:3}, the test at \refline{stm:extend:3} fails.
+    From what precedes, transaction $T_i$ invokes \stmExtendFunction at \refline{stm:read:6}.
+    We know that transaction $T_j$ is committed at that time (since $T_l$ is committed and $T_l \depends T_j$ holds).
+    Thus, the test at \refline{stm:extend:3} fails and $T_i$ aborts before returning $y_l$.
   \end{compactitem}
 \end{proof}
 
-\paragraph{(Disjoint-access parallelism)}
-The logical clocks used in \refalg{stm} can be shared or local to each process.
-When they are are local, function $\clockOf{p}$ becomes injective.
-Consider such a scenario and two transactions $T_i$ and $T_j$ that do not access on a common object.
-If $T_i$ and $T_j$ are executed by distinct processes, then they do not contend on some base object in \refalg{stm}.
-It follows that \refalg{stm} is strictly disjoint-access parallel.
+\subsection{Discussion}
+\labsection{stm:discussion}
 
+\refalg{stm} replaces the global clock usually employed in STM architectures with a more flexible mechanism.
+For some process $p$, \clockOf{p} can be local to $p$, shared across a subset of the processes, or even all of them.
+
+If processes need to synchronize too often, maintaining consistency among the various clocks is expensive.
+In this situation, it might be of interest to find a compromise between the cost of cache coherency and the need for synchronization.
+For instance, in a NUMA architecture, \refalg{stm} may assign a clock per hardware socket.
+Upon a call to $\clockOf{p}$, the algortihm returns the clock defined for the socket in which the processor executing process $p$ resides.
+
+On the other hand, when the processes use a global clock, \refalg{stm} boils down to the original code of TinySTM \cite{}.
+In this case, a read-only transaction alayws sees a strictly consistent snapshot and it may commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:abort:1}.
+
+A last observation is that our algorithm works even if one of the processes takes no step.
+This implies that the call to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) is strictly speaking unecessary, and it can be skipped without impacting the correctness of \refalg{stm}.
+Clocks are in fact only used to avoid extending the snapshot at each read step (contrary to, e.g., \cite{}).
+In such a case, \refalg{stm} is disjoint-access parallel since in a scenario where two transactions access disjoint objects, they do not contend on any base object of the implementation.
