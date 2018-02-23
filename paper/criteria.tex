@@ -2,12 +2,12 @@
 \labsection{criteria}
 
 In what follows, we present the elements of our system model, as commonly found in textbooks (e.g., \cite{}).
-Then, we formulate our notion of stricter serializability.
+Then, we formulate our notion of stricter serializability and discuss its applicability.
 
 \subsection{System Model}
 \labsection{criteria:model}
 
-Software transactional memory (STM) is a recent paradigm that allows multiple processes to access concurently a memory region.
+Transactional memory (TM) is a recent paradigm that allows multiple processes to access concurently a memory region.
 Each process manipulates \emph{objects} in the shared memory with the help of transactions.
 When a process begins a new transaction, it calls function \stmBeginFunction.
 Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operations on the shared objects according to some internal (not modeled) logic.
@@ -15,7 +15,7 @@ Operation \stmRead{x} takes as input an object $x$ and returns either a value in
 A write \stmRead{x,v} changes $x$ to the value $v$ in the domain of $x$.
 This operation does not return any value and it may also abort.
 At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction.
-This calls returns either $\flagCommit$, to indicate that the transaction commits, or $\flagAbort$ if it aborts.
+This calls returns either $\flagCommit$, to indicate that the transaction commits, or $\flagAbort$ if the transaction fails.
 
 A \emph{history} is a sequence of invocations and responses of transactional operations by one or more processes.
 As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the transactions executed by some processes.

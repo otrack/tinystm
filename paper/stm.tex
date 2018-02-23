@@ -2,13 +2,13 @@
 \labsection{stm}
 
 In this section, we present a transactional memory that attains $\SPSER$.
-Our construction is weakly-progressive, that is, it aborts a transaction only if it encounters a concurrent conflicting transaction.
-Reads operations are invisible, that is they do not modify any base object of the implementation.
-Moreover, and contrary to several existing TM designs, our design does not require a global clock.
+Contrary to several existing TM implementation, our design does not require a global clock.
+It is weakly-progressive, aborting a transaction only if it encounters a concurrent conflicting transaction.
+Moreover, reads operations do not modify the base objects of the implementation (read invisibility).
 
 We first give an overview of the algorithm, present its internals and justify some design choices.
 A correctness proofs follows.
-We close this section with discussing the parameters of our algorithm and possible.
+We close this section with a discussion on the parameters of our algorithm.
 In particular, we explain how to tailor it to be disjoint-access parallel.
 
 \subsection{Overview}
