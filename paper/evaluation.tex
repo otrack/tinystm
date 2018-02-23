@@ -24,7 +24,7 @@ of 0.8 (meaning that 80\% of transfers are local to a thread, while 20
 \% are between any account). We measure the number of transfers
 performed by a set of threads in 10 s.
 
-The results are reported in figure \ref{todo}.\ft{todo: include a
+The results are reported in figure \ref{fig:benchmarking:bank}.\ft{todo: include a
   figure showing the performance (with locality=0.8 ?)}
 %
 The results show that the performance obtained with the global clock
@@ -36,6 +36,12 @@ Our implementation perform better: the speedup obtained with 48
 threads reaches 3100 \%. This can be explained by the low contention
 in this application: since the threads each work on independant data,
 there is no contention when performing the transactions.
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[scale = 1.0]{results/intset/bank.pdf}
+	\caption{\vs{bank bench}\label{fig:benchmarking:bank}}
+\end{figure}
 
 \subsection{Linked list}
 

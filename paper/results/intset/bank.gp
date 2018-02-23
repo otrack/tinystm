@@ -59,7 +59,7 @@ set style fill solid border -1
 set boxwidth 0.9
 #set xtic rotate by -35 scale 0
 
-set title "2\^{20} accounts, locality=0"
+set title "2\^{20} accounts, locality=1.0"
 #set ylabel "Throughput (MB/s)"
 set xlabel "# cores"
 set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22.18,1550000000 font "Helvetica,12pt" 
