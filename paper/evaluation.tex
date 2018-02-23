@@ -1,14 +1,14 @@
 \section{Evaluation}
 \labsection{evaluation}
 
+In this Section, we evaluate the implementation of the algorithm described in \refsection{stm}.  
+We implemented and integrated our algorithm inside \textsc{TinySTM}~\cite{FelberFMR10}.
+We compare the performance of our implementation against the default \textsc{TinySTM} distribution, (v1.0.5).
 
-In this Section, we evaluate the implementation of the algorithm
-described in \refsection{stm}.  
-We implemented our algorithm in the context of \textsc{TinySTM}~\cite{FelberFMR10}, which we also use as baseline for our evaluation. %and we compare this implementation with the vanilla \textsc{TinySTM}.
 The experiments are conducted on an AMD Opteron48, a 48-cores machine with 256 GB of RAM. 
-This machine embeds 4 dodeca-core AMD Opteron 6172, and 8 NUMA nodes.
+This machine has 4 dodeca-core AMD Opteron 6172, and 8 NUMA nodes.
 
-To evaluate the performance our implementation, we use the test suite included with \textsc{TinySTM}. 
+To evaluate the performance our implementation on this multi-core platform, we use the test suite included with \textsc{TinySTM}. 
 This test suite is composed of several STM applications with different transaction patterns.
 The reminder of this section briefly describes the benchmarks as well discussing our results.
  

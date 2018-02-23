@@ -51,7 +51,7 @@ set label 1040 "40"  at 19.5,-100000000  font "Helvetica,12pt"
 set label 1048 "48"  at 23.5,-100000000  font "Helvetica,12pt"
 set label 1099 "# cores" at 9.5,-200000000
 
-set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22.18,800000000 font "Helvetica,12pt" 
+set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22.18,770000000 font "Helvetica,12pt" 
 
 plot "bank-global_0.8_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
      "bank-global_async_0.8_1048576.log" u 5:xtic(2) ls 3 title "Alg3"
