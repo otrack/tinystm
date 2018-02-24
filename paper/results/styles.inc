@@ -72,3 +72,6 @@ set style line 303  linewidth 2.000 pointtype 2 dashtype 5 pointsize default poi
 set style line 304  linewidth 2.000 pointtype 2 dashtype 6 pointsize default pointinterval 0
 set style line 305  linewidth 2.000 pointtype 2 dashtype 7 pointsize default pointinterval 0
 set style line 306  linewidth 2.000 pointtype 2 dashtype 8 pointsize default pointinterval 0
+
+set style line 1001 lc rgb 'black' lt 1 lw 1 pt 9 ps 2
+set style line 1003 lc rgb 'black' lt 1 lw 3
