@@ -8,11 +8,11 @@ In the second part (\refsection{criteria:spser} and later sections), we formulat
 \subsection{System Model}
 \labsection{criteria:model}
 
-Transactional memory (TM) is a recent paradigm that allows multiple processes to access concurently a memory region.
+Transactional memory (TM) is a recent paradigm that allows multiple processes to access concurrently a memory region.
 Each process manipulates \emph{objects} in the shared memory with the help of transactions.
 When a process begins a new transaction, it calls function \stmBeginFunction.
 Then, it executes a sequence of \stmReadFunction and \stmWriteFunction operations on the shared objects according to some internal (not modeled) logic.
-Operation \stmRead{x} takes as input an object $x$ and returns either a value in the domain of $x$, or a flag $\flagAbort$ to indicate that the transation aborts.
+Operation \stmRead{x} takes as input an object $x$ and returns either a value in the domain of $x$, or a flag $\flagAbort$ to indicate that the transition aborts.
 A write \stmRead{x,v} changes $x$ to the value $v$ in the domain of $x$.
 This operation does not return any value and it may also abort.
 At the end of the execution, the process calls \stmTryCommitFunction to terminate the transaction.
@@ -22,7 +22,7 @@ A \emph{history} is a sequence of invocations and responses of transactional ope
 As illustrated below, a history is commonly represented with parallel timelines, where each timeline represents the transactions executed by some processes.
 In history $h_2$, process $p$, $q$ and $r$ execute respectively transactions ${\color{blue}{T_1}}=w(x)$, ${\color{red}{T_2}}=w(x)$ then ${\color{Purple}{T_4}}=r(y);r(x)$, and ${\color{OliveGreen}{T_3}}=r(x)$.
 All the transactions but $T_4$ completes in this history.
-For simplicity, complete transactions that are not explicitely aborted in a history commit immediately after their last operations.
+For simplicity, complete transactions that are not explicitly aborted in a history commit immediately after their last operations.
 We note $\committed{h}$ the set of transactions that commit during history $h$.
 In the case of history $h_2$, we have $\committed{h_2}=\{T_1,T_2,T_3\}$.
 
@@ -74,7 +74,7 @@ A transactional read is \emph{invisible} when it does not change the state of th
 With invisible reads, read contention is basically free.
 From a performance point of view, this property is consequently appealing, since workloads exhibit in most case a large ratio of read operations.
 
-When two transactions are concurrently writing to some object, it is possible to detect the contention and abort preventively one of them.
+When two transactions are concurrently writing to some object, it is possible to detect the contention and abort preemptively one of them.
 On the other hand, when a read-write conflict occurs, a \emph{race condition} occurs between the reader and the writer.
 If the read operation takes place after the write, the reader is bound to use the version produced by the writer.
 
@@ -86,7 +86,7 @@ When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the 
 This is for instance the case of transaction $T_4$ in history $h_2$, where this transaction is bound to $T_3$ on $y$.
 As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
 
-Tracking this causality relation is difficult for the conention manager as it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
+Tracking this causality relation is difficult for the contention manager as it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
 We observe that this tracking is easier if each version read prior the binding is either, accessed by the writer, or one of its dependencies.
 In which case, we will say that the binding is fair.
 
@@ -96,8 +96,8 @@ In which case, we will say that the binding is fair.
 \end{definition}
 
 Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.
-Indeed, this transaction did not read any data item before accesing the version of $y$ written by $T_4$.
-When the binding is fair, the reader can leverage the metadata left by the writter to check prior versions it has read and ensure the consistency of later read operations.
+Indeed, this transaction did not read any data item before accessing the version of $y$ written by $T_4$.
+When the binding is fair, the reader can leverage the metadata left by the writer to check prior versions it has read and ensure the consistency of later read operations.
 In the next section, we formalize this idea with the notion of stricter serializability.
 
 \subsection{Stricter serializability}
@@ -142,12 +142,12 @@ As a consequence of the above definition, if in a stricter serializable history 
 \subsection{Applicability}
 \labsection{criteria:applicability}
 
-\refcor{criteria:1} offers a convenient property on histories that, when it aplies, allows to reach opacity.
+\refcor{criteria:1} offers a convenient property on histories that, when it applies, allows to reach opacity.
 Based on this property, we detail in this section a workload for which this property applies.
-In other words, we give a robustness criteria \cite{alexey} against $\SPSER$.
+In other words, we give a robustness criteria \cite{CeroneG16} against $\SPSER$.
 
 To conduct our analysis, we focus specifically on $\SPSER$ implementations that allow invisible reads.
-As pointed out at the begining of this section, this restriction is motivated by perfomance since most workloads are read-intensive.
+As pointed out at the beginning of this section, this restriction is motivated by performance since most workloads are read-intensive.
 In this context, the result of \citet{hans16} tells us that it is not possible to jointly achieve
 \begin{inparaenum}
 \item $\SSER$,
@@ -192,7 +192,7 @@ The proposition that follows proves that, provided $\mathcal{P}$ holds and the T
   Define $x$ and $T_j$ such that $T_i$ is bound to $T_j$ on $x$ and assume that all the prior bindings of $T_i$ are fair.
   Since $h \in \SPSER$, the snapshot read by $T_i$ is strictly consistent up to $x$.
 
-  Note $\lambda$ the linerization of the transactions that commit in $h$.
+  Note $\lambda$ the linearization of the transactions that commit in $h$.
   For some transaction $T$ in $\lambda$, let $\pi$ and $\pi'$ be the paths to $x$ before and after transaction $T$.
   We observe that if transaction $T$ reaches $x$, then all the objects in $\pi$ and $\pi'$ are accessed by $T$.
   Indeed, to add an object $\pi$, $T$ must read it.

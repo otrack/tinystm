@@ -43,18 +43,16 @@ T\'el\'ecom SudParis, France
 \maketitle
 
 \begin{abstract}
-  Software transactional memory (STM) guarantees that a sequence of operations encapsulated into a transaction is atomic.
+  Transactional memory (TM) guarantees that a sequence of operations encapsulated into a transaction is atomic.
   This simple yet powerful paradigm is a promising direction for writing concurrent applications.
   %
-  Recent STM designs employ a time-based approach to leverage the performance advantage of invisible reads.
-  With the advent of many-core architectures and non-uniform memory architecture (NUMA),
-  this design is however hitting the synchronization wall of the cache coherency protocol.
+  Recent TM designs employ a time-based mechanism to leverage the performance advantage of invisible reads.
+  With the advent of many-core architectures and non-uniform memory (NUMA) architectures, this technique is however hitting the synchronization wall of the cache coherency protocol.
   %
-  In this paper, we propose a novel and flexible approach to address this limitation.
-  Our idea is to leverage the parallelism and the locality of applicative workloads to execute few global operations.
-  To that end, we introduce a new STM design that supports invisible reads, lazy snapshots 
-  and can be tailored to be either disjoint access parallel, or NUMA-aware.
-  Several empirical comparisons against a well-established STM design demonstrate that our design greatly improve perfmance\vs{check it matchs eval content}.
+  To address this limitation, we propose a novel and flexible approach based on a new consistency criteria named stricter serializability ($\SPSER$).
+  Workloads executed under $\SPSER$ are opaque when the object graph forms a tree and transactions traverse it top-down.  
+  We present a matching algorithm that supports invisible reads, lazy snapshots, and that can trade synchronization for more parallelism.
+  Several empirical results against a well-established TM design demonstrate the benefits of our solution.
 \end{abstract}
 
 \input{introduction}

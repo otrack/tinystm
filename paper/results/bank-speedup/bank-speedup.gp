@@ -17,7 +17,7 @@ set rmargin 2
 set style data histogram
 set style fill solid border -1
 set boxwidth 0.9
-set title "Bank Benchmark, 2\^{10} accounts"
+# set title "Bank Benchmark, 2\^{10} accounts"
 set ylabel "Speed-up (x times)"
 #set ytics font "Helvetica,12pt"
 set xlabel "Locality"

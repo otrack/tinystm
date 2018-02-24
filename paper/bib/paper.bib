@@ -133,7 +133,6 @@ pages="72--97",
  location = {Zurich, Switzerland},
  pages = {69--70},
  numpages = {2},
- url = {http://doi.acm.org/10.1145/1835698.1835713},
  doi = {10.1145/1835698.1835713},
  acmid = {1835713},
  publisher = {ACM},
@@ -152,7 +151,6 @@ pages="72--97",
  pages = {45:1--45:2},
  articleno = {45},
  numpages = {2},
- url = {http://doi.acm.org/10.1145/2851141.2851189},
  doi = {10.1145/2851141.2851189},
  acmid = {2851189},
  publisher = {ACM},
@@ -181,7 +179,6 @@ pages="72--97",
  location = {Savannah, GA, USA},
  pages = {404--415},
  numpages = {12},
- url = {http://doi.acm.org/10.1145/1480881.1480931},
  doi = {10.1145/1480881.1480931},
  acmid = {1480931},
  publisher = {ACM},
@@ -293,4 +290,180 @@ publisher="Springer Berlin Heidelberg",
 address="Berlin, Heidelberg",
 pages="269--283",
 isbn="978-3-662-53426-7"
+}
+
+@misc{emals,
+author={Ennals, Robert},
+title={{Software transactional memory should not be obstruction-free}},
+year=2005
+}
+
+@misc{dice06,
+author={Dice, Dave and Shavit, Nir},
+title={{What really makes transactions fast?}},
+booktitle={{TRANSACT06 ACM Workshop}},
+year=2006
+}
+
+
+@article{KuznetsovR15,
+  author    = {Petr Kuznetsov and
+               Srivatsan Ravi},
+  title     = {Why Transactional Memory Should Not Be Obstruction-Free},
+  journal   = {CoRR},
+  volume    = {abs/1502.02725},
+  year      = {2015},
+  archivePrefix = {arXiv},
+  eprint    = {1502.02725},
+  timestamp = {Wed, 07 Jun 2017 14:41:09 +0200},
+  biburl    = {http://dblp.org/rec/bib/journals/corr/KuznetsovR15},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
+@misc{ellen12,
+author={Ellen, Faith},
+title={{The Theory of Transactional Memory: What's There and What's Not}},
+booktitle={{4th Workshop on the Theory of Transactional Memory}},
+year=2012
+}
+
+@Article{Attiya2012,
+author="Attiya, Hagit
+and Hillel, Eshcar",
+title="A Single-Version STM that Is Multi-Versioned Permissive",
+journal="Theory of Computing Systems",
+year="2012",
+month="Nov",
+day="01",
+volume="51",
+number="4",
+pages="425--446",
+abstract="We present PermiSTM, a single-version STM that satisfies a practical notion of permissiveness, usually associated with keeping many versions: it never aborts read-only transactions, and it aborts other transactions only due to a conflicting transaction (writing to a common data item), thereby avoiding spurious aborts. PermiSTM also avoids unnecessary contention on the memory, being disjoint-access parallel.",
+issn="1433-0490",
+doi="10.1007/s00224-012-9406-3"
+}
+
+@InProceedings{guerraoui08,
+author="Guerraoui, Rachid
+and Henzinger, Thomas A.
+and Singh, Vasu",
+editor="Taubenfeld, Gadi",
+title="Permissiveness in Transactional Memories",
+booktitle="Distributed Computing",
+year="2008",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="305--319",
+abstract="We introduce the notion of permissiveness in transactional memories (TM). Intuitively, a TM is permissive if it never aborts a transaction when it need not. More specifically, a TM is permissive with respect to a safety property p if the TM accepts every history that satisfies p. Permissiveness, like safety and liveness, can be used as a metric to compare TMs. We illustrate that it is impractical to achieve permissiveness deterministically, and then show how randomization can be used to achieve permissiveness efficiently. We introduce Adaptive Validation STM (AVSTM), which is probabilistically permissive with respect to opacity; that is, every opaque history is accepted by AVSTM with positive probability. Moreover, AVSTM guarantees lock freedom. Owing to its permissiveness, AVSTM outperforms other STMs by up to 40{\%} in read dominated workloads in high contention scenarios. But, in low contention scenarios, the book-keeping done by AVSTM to achieve permissiveness makes AVSTM, on average, 20-30{\%} worse than existing STMs.",
+isbn="978-3-540-87779-0"
+}
+
+@inproceedings{Keidar:2009,
+ author = {Keidar, Idit and Perelman, Dmitri},
+ title = {On Avoiding Spare Aborts in Transactional Memory},
+ booktitle = {Proceedings of the Twenty-first Annual Symposium on Parallelism in Algorithms and Architectures},
+ series = {SPAA '09},
+ year = {2009},
+ isbn = {978-1-60558-606-9},
+ location = {Calgary, AB, Canada},
+ pages = {59--68},
+ numpages = {10},
+ doi = {10.1145/1583991.1584013},
+ acmid = {1584013},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {transactional memory},
+}
+
+@inproceedings{Diegues:2014,
+ author = {Diegues, Nuno and Romano, Paolo},
+ title = {Time-warp: Lightweight Abort Minimization in Transactional Memory},
+ booktitle = {Proceedings of the 19th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+ series = {PPoPP '14},
+ year = {2014},
+ isbn = {978-1-4503-2656-8},
+ location = {Orlando, Florida, USA},
+ pages = {167--178},
+ numpages = {12},
+ doi = {10.1145/2555243.2555259},
+ acmid = {2555259},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {multi-version, permissiveness, software transactional memory, spurious abort},
+}
+
+@inproceedings{Fernandes:2011,
+ author = {Fernandes, S{\'e}rgio Miguel and Cachopo, Jo\~{a}o},
+ title = {Lock-free and Scalable Multi-version Software Transactional Memory},
+ booktitle = {Proceedings of the 16th ACM Symposium on Principles and Practice of Parallel Programming},
+ series = {PPoPP '11},
+ year = {2011},
+ isbn = {978-1-4503-0119-0},
+ location = {San Antonio, TX, USA},
+ pages = {179--188},
+ numpages = {10},
+ doi = {10.1145/1941553.1941579},
+ acmid = {1941579},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {garbage collection, lock-free synchronization, multi-version concurrency control, transactional memory},
+}
+
+@inproceedings{Nguyen:2017,
+ author = {Nguyen, Donald and Pingali, Keshav},
+ title = {What Scalable Programs Need from Transactional Memory},
+ booktitle = {Proceedings of the Twenty-Second International Conference on Architectural Support for Programming Languages and Operating Systems},
+ series = {ASPLOS '17},
+ year = {2017},
+ isbn = {978-1-4503-4465-4},
+ location = {Xi'an, China},
+ pages = {105--118},
+ numpages = {14},
+ doi = {10.1145/3037697.3037750},
+ acmid = {3037750},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {programming models, scalability, stampede benchmarks, transactional memory, transactions},
+} 
+
+@inproceedings{Attiya:2009,
+ author = {Attiya, Hagit and Hillel, Eshcar and Milani, Alessia},
+ title = {Inherent Limitations on Disjoint-access Parallel Implementations of Transactional Memory},
+ booktitle = {Proceedings of the Twenty-first Annual Symposium on Parallelism in Algorithms and Architectures},
+ series = {SPAA '09},
+ year = {2009},
+ isbn = {978-1-60558-606-9},
+ location = {Calgary, AB, Canada},
+ pages = {69--78},
+ numpages = {10},
+ doi = {10.1145/1583991.1584015},
+ acmid = {1584015},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {disjoint-access parallelism, impossibility result, lower bound, partial snapshots, transactional memory},
+} 
+
+@article{Ravi17,
+  author    = {Srivatsan Ravi},
+  title     = {Lower Bounds for Transactional Memory},
+  journal   = {Bulletin of the {EATCS}},
+  volume    = {121},
+  year      = {2017},
+  timestamp = {Mon, 10 Apr 2017 14:34:33 +0200},
+  biburl    = {http://dblp.org/rec/bib/journals/eatcs/Ravi17},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
+@inproceedings{CeroneG16,
+  author    = {Andrea Cerone and
+               Alexey Gotsman},
+  title     = {Analysing Snapshot Isolation},
+  booktitle = {Proceedings of the 2016 {ACM} Symposium on Principles of Distributed
+               Computing, {PODC} 2016, Chicago, IL, USA, July 25-28, 2016},
+  pages     = {55--64},
+  year      = {2016},
+  doi       = {10.1145/2933057.2933096},
+  timestamp = {Mon, 08 Aug 2016 15:50:45 +0200},
+  biburl    = {http://dblp.org/rec/bib/conf/podc/CeroneG16},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
 }

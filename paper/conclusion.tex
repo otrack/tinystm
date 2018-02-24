@@ -1,6 +1,11 @@
 \section{Conclusion}
 \labsection{conclusion}
-This paper presented a new consistency criteria, \emph{i.e.} Stricter Serializability, designed to take advantage of modern CPU architectures.
-We provided formal proof of its correctness as well as a prototype implementation.
-Our evaluation study demonstrated that our solution outperforms state-of-the-art systems and implementations for most of the workloads. 
-We plan to release our implementation as open-source to facilitate experimental reproducibility. 
+
+TM systems must handle a tradeoff between consistency and performance.
+It is impractical to take into account all possible combinations of read and write conflicts, as it would lead to leargely inefficient solutions.
+For instance, as pointed out by \citet{hans16}, accepting $\RCAD$ histories brings only a small performance benefits in the general case.
+
+Inspired by line of research, this paper introduces a new consistency criteria, named stricter serializability ($\SPSER$).
+Workloads executed under $\SPSER$ are opaque when the object graph forms a tree and transactions traverse it top-down.
+We present an algorithm to attain this criteria together with a proof of its correctness.
+Our evaluation study demonstrates that such an approach is very efficient in weakly-contended workloads.

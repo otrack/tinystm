@@ -49,7 +49,7 @@ set label 1024 "24"     at 10.5,-400000  font "Helvetica,12pt"
 set label 1032 "32"     at 14.5,-400000  font "Helvetica,12pt"
 set label 1040 "40"     at 19.5,-400000  font "Helvetica,12pt"
 set label 1048 "48"     at 23.5,-400000  font "Helvetica,12pt"
-set label 1099 "# cores" at 9.5,-800000
+set label 1099 "# threads" at 9.5,-800000
 
 set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22,4500000 font "Helvetica,12pt" 
 
@@ -95,7 +95,7 @@ set label 2024 "24"     at 10.5,-20000000  font "Helvetica,12pt"
 set label 2032 "32"     at 14.5,-20000000  font "Helvetica,12pt"
 set label 2040 "40"     at 19.5,-20000000  font "Helvetica,12pt"
 set label 2048 "48"     at 23.5,-20000000  font "Helvetica,12pt"
-set label 2099 "# cores" at 9.5,-40000000
+set label 2099 "# threads" at 9.5,-40000000
 #set yrange [0:90]
 unset ylabel
 plot "rb_global_100k.log" u  3:xtic(2) ls 1 title "TinySTM",\
