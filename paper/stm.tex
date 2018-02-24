@@ -18,7 +18,7 @@ In particular, we explain how to tailor it to be disjoint-access parallel.
 Our design follow the general approach of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
 \refalg{stm} employs a deferred update schema that consists in two steps.
 A transaction first executes optimistically, buffering its updates.
-Then, at commit time, the transaction is certified and if it commits its updates are applied to the shared memory.
+Then, at commit time, the transaction is certified and, if it commits, its updates are applied to the shared memory.
 
 During the execution of a transaction, a process checks that the objects accessed so far did not change.
 Similarly to LSA, this check is lazily executed.
