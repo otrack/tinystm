@@ -6,22 +6,22 @@ This paradigm greatly simplifies the programming of modern highly-parallel compu
 
 % blocking TM
 \citet{emals} suggests to build deadlock-free lock-based TMs rather than non-blocking ones.
-Empirical evidences \cite{dice06} and theoretical results \cite{Guerraoui:2008,KuznetsovR15} support this claim.
+Empirical evidences~\cite{dice06} and theoretical results~\cite{Guerraoui:2008,KuznetsovR15} support this claim.
 
 % permissiveness
 At first glance, it might be of interest that a TM design accepts all correct histories; a property named \emph{permissiveness} \cite{guerraoui08}.
-Such TM algorithms need to track large dependencies \cite{Keidar:2009} and/or acquire locks for read operations \cite{Attiya2012}.
-Both techniques are known to have a significant impact on performance.
+Such TM algorithms need to track large dependencies \cite{Keidar:2009} and/or acquire locks for read operations~\cite{Attiya2012}.
+However, both techniques are known to have a significant impact on performance.
 
 % validation
-Early TM implementations such as DSTM \cite{herlihy2003software} validate all the prior reads when accessing a new object.
-The complexity of such an approach is quadratic in the number of objects read along the execution path.
+Early TM implementations (such as DSTM~\cite{herlihy2003software}) validate all the prior reads when accessing a new object.
+The complexity of this approach is quadratic in the number of objects read along the execution path.
 A time-based TM avoids this effort by relying on the use a global clock to timestamp object versions.
-\citet{zhang2008commit} compare several such approaches; namely TL2~\cite{dice2006transactional}, LSA \cite{riegel2006lazy} and GCC\cite{spear2006conflict}.
+\citet{zhang2008commit} compare several such approaches, namely TL2~\cite{dice2006transactional}, LSA \cite{riegel2006lazy} and GCC\cite{spear2006conflict}.
 They provide guidelines to reduce unnecessary validations and shorten the commit sequence.
 
 % single version, invisible read
-Multi-versioning \cite{Fernandes:2011, Diegues:2014} brings a major benefit: allowing read-only transactions to complete.
+Multi-versioning~\cite{Fernandes:2011, Diegues:2014} brings a major benefit: allowing read-only transactions to complete.
 This clearly boosts certain workloads but managing multiple versions has a non-negligible performance cost on the TM internals.
 Similarly, invisible reads ensure that read operations do not contend in most cases.
 However, such a technique limits progress or the consistency criteria satisfied by the TM \cite{Attiya:2009}.
@@ -29,8 +29,8 @@ In the case of \refalg{stm}, both read-only and updates transaction are certain 
 
 % DAP
 New challenges arise when considering multicore architectures and cache coherency strategies for NUMA architectures.
-Clock contention~\cite{6121290} is one of the them.
-To avoid this problem, workloads as well as TM designs should be more parallel \cite{Nguyen:2017}.
+Clock contention~\cite{6121290} is one of them.
+To avoid this problem, workloads as well as TM designs should take into account parallelism~\cite{Nguyen:2017}.
 \citet{6121290} propose to group threads into zones, and that each zone shares a clock and a clock table.
 To timestamp a new version, the TL2C algorithm of \citet{Avni:2008} tags it with a local counter together with the thread id.
 Each thread stores a vector of the latest timestamp it encountered.
