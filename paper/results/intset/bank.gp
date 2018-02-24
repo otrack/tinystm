@@ -15,7 +15,7 @@ set size 1,0.6
 
 set bmargin 2.5
 set tmargin 0.0
-set lmargin 0.7
+set lmargin 1
 set rmargin 1
 
 set multiplot
