@@ -131,23 +131,23 @@ In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a re
   \end{inparaenum}
 \end{definition}
 
-Opacity ($\OPA$) and strict serializability ($\SSER$) coincide when no transaction abort during an history.
+Opacity ($\OPA$) and strict serializability ($\SSER$) coincide when no transaction aborts during an history.
 As a consequence of the above definition, if in a stricter serializable history all the aborted transaction exhibit fair bindings, the history is opaque.
 
 \begin{corollary}
   \labcor{criteria:1}
-  If ($h \in \SPSER$) exhibits no unfair bindings then ($h \in \OPA$) holds.
+  If ($h \in \SPSER$) exhibits no unfair bindings, then ($h \in \OPA$) holds.
 \end{corollary}
 
 \subsection{Applicability}
 \labsection{criteria:applicability}
 
 \refcor{criteria:1} offers a convenient property on histories that, when it applies, allows to reach opacity.
-Based on this property, we detail in this section a workload for which this property applies.
-In other words, we give a robustness criteria \cite{CeroneG16} against $\SPSER$.
+Based on this property, this section details a workload for which this property applies.
+In other words, we give a robustness criteria~\cite{CeroneG16} against $\SPSER$.
 
 To conduct our analysis, we focus specifically on $\SPSER$ implementations that allow invisible reads.
-As pointed out at the beginning of this section, this restriction is motivated by performance since most workloads are read-intensive.
+As pointed out earlier, this restriction is motivated by performance since most workloads are read-intensive.
 In this context, the result of \citet{hans16} tells us that it is not possible to jointly achieve
 \begin{inparaenum}
 \item $\SSER$,
