@@ -86,12 +86,12 @@ This is for instance the case of transaction $T_4$ in history $h_2$, where this 
 As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
 
 Tracking this causality relation is difficult for the conention manager as it requires to inspect the readset, rely on a global clock, or use large amount of metadata \cite{}.
-We observe that it is simpler if the items read prior the binding are either, also accessed by the writer, or by one of its dependencies.
+We observe that this tracking is easier if each version read prior the binding is either, accessed by the writer, or one of its dependencies.
 In which case, we will say that the binding is fair.
 
 \begin{definition}[Fair binding]
   Consider that in some history $h$ a transaction $T_i$ is bound to a transaction $T_j$ on some object $x$.
-  This binding is \emph{fair} when every object $y$ read (but not written) by $T_i$ before $x$ in $h$ is also accessed by $T_j$.
+  This binding is \emph{fair} when, for every version $y_k$ read by $T_i$ before $x_j$ in $h$, $T_j \depends T_k$ holds.
 \end{definition}
 
 Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.
@@ -102,8 +102,8 @@ In the next section, we formalize this idea with the notion of stricter serializ
 \subsection{Stricter serializability}
 \labsection{criteria:spser}
 Here we introduce and describe in details \SPSER, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
-The \sser criteria requires that committed transactions form a sequential history.
-In addition, \sser prohibits transactions to view inconsistencies unless one of their bindings is unfair.
+The \SSER criteria requires that committed transactions form a sequential history.
+In addition, \SSER prohibits transactions to view inconsistencies unless one of their bindings is unfair.
 Similar to related work~\cite{syn:db:1467}, we give a graph characterization of stricter serializability.
 
 \begin{definition}[Strict serialization graph]
@@ -169,8 +169,8 @@ We say that $T$ cross a \emph{simple path} if for all $i \in [1,m-1]$, the state
 At the light of this definition, we call $P$ the following property on a workload.
 
 \begin{itemize}
-\item[($P$)]
-  The object graph forms initially a forest and every transaction maintains this invariant.
+\item[($\mathcal{P}$)]
+  The object graph forms initially a tree and every transaction maintains this invariant.
   Moreover, every transaction in the workload crosses a simple path.
 \end{itemize}
 
@@ -184,38 +184,40 @@ The proposition that follows proves that, provided $\mathcal{P}$ holds and the T
 
 \begin{proof}
   Choose some history $h \in H_{\mathcal{T}} \inter \SPSER$, and let $T_i$ be a transaction that aborts in $h$.
-  In what follows, we prove all of the bindings of $T_i$ are fair in $h$.
+  In what follows, we prove that all of the bindings of $T_i$ are fair in $h$.
   By definition of $\SPSER$, this leads to the fact that $h \in \OPA$.
 
   We proceed by induction.
   Define $x$ and $T_j$ such that $T_i$ is bound to $T_j$ on $x$ and assume that all the prior bindings of $T_i$ are fair.
-  Let $\pi_i$ be the path taken by $T_i$ to read $x$.
-  Similarly, define $\pi_j$ as the path taken by $T_j$ before object $x$.
-  By hypothesis, all the bindings before $x$ are fair for $T_i$.
   Since $h \in \SPSER$, the snapshot read by $T_i$ is strictly consistent up to $x$.
 
-  Let us note $\lambda$ the linerization of the transactions that commit in $h$.
-  We know that history $\lambda$ is of the form $\lambda=T_{a_1} \ldots T_{a_j} T_j T_{a_{j+}} \ldots T_{a_m}$.
-  Let us observe that $\pi_j$ equals the path to object $x$ after transaction $T_{a_j}$.
-  Similarly for some $T_{a_i}$, $\pi_i$ is the path to $x$ after transaction $T_{a_i}$.  
-  According to the positions of $T_{a_i}$ and $T_{a_j}$ in $\lambda$, we may consider the following cases:
+  Note $\lambda$ the linerization of the transactions that commit in $h$.
+  For some transaction $T$ in $\lambda$, let $\pi$ and $\pi'$ be the paths to $x$ before and after transaction $T$.
+  We observe that if transaction $T$ reaches $x$, then all the objects in $\pi$ and $\pi'$ are accessed by $T$.
+  Indeed, to add an object $\pi$, $T$ must read it.
+  Conversely, to unlink a set of objects $Y$ from $\pi$, while preserving property $\mathcal{P}$, $T$ must make a bridge between some object $y'$ before $Y$ and some object $y''$ after it.
+
+  Let $\pi_i$ be the path taken by $T_i$ to access object $x$.
+  Note $T_{i'} \in \lambda$ the transaction such that $\pi_i$ is the path to $x$ after transaction $T_{i'}$.
+  (Since $T_i$ observes a strictly consistent snapshot, such a transaction exists.)
+  Name respectively $\pi_j$ and ${\pi_j}'$ the path before and after $T_j$.  
+  According to the positions of $T_{i'}$ and $T_{j}$ in $\lambda$, we may consider the following cases:
   \begin{itemize}
-  \item ($T_{a_j} = T_{a_i}$)
-    In this case, the two paths are equals.
-    Consequently all the object reads by $T_i$ are also accessed by $T_j$.
-    It follows that the binding is fair.    
-  \item ($T_{a_j} <_{\lambda} T_{a_i}$)
-    Name $T$ the first transaction that modifies the path $\pi_j$.
+  \item ($T_j = T_{i'}$)
+    Since $T_j$ reaches $x$, all the objects in $\pi_i = {\pi_j}'$ are accessed by $T_j$; thus the binding is fair.
+  \item ($T_{j} <_{\lambda} T_{i'}$)
+    Name $T$ the first transaction that modifies the path ${\pi_j}'$.
     Since $T_i$ observes a strictly consistent snapshot up to $x$ in $h$, $T$ commits before $T_i$ in $h$.
-    Now, observe that $T_j$ is concurrent to $T_j$, thus it is also concurrent to $T$.
-    Both $T$ and $T_j$ starts from the same root object, $T$ modifies the path $\pi_j$ and commits before $T_j$,
-    Since $T$ writes $x$, history $h$ exhibits and RC-anti-dependency between $T$ and $T_j$.
+    Observe that $T_j$ is concurrent to $T_i$ in $h$, thus it is also concurrent to $T$.
+    Moreover, transaction $T$ commits before $T_j$,
+    Since $T$ modifies ${\pi_j}'$, history $h$ exhibits and RC-anti-dependency between $T$ and $T_j$.
     Contradiction.
-  \item ($T_{a_i} <_{\lambda} T_{a_j}$)
+  \item ($T_{i'} <_{\lambda} T_j$)
     Let $y$ be an object read by $T_i$ in the path $\pi_i$ and assume that $y$ is no more in $\pi_j$.
-    Name $T \leq_{\lambda} T_{a_j}$ the transaction that removes $y$ from the path leading to $x$.
-    To unlink $y$, while maintaining the forest property of the object graph, $T$ must make a bridge between an object $y'$ before $y$ and an object $y''$ after it.
-    As a consequence, this transaction reads $y$ when executing this operation.
-    Then, because $T$ appears before $T_j$ in $\lambda$ and $h \notin \RCAD$, necessarily $T$ is a dependency of transaction $T_j$.
+    Name $T \leq_{\lambda} T_{j}$ the transaction that removes some set $Y$ of objects from $\pi_i$, with $y \in Y$.
+    To preserve property $\mathcal{P}$, $T$ updates some object $y'$ prior to $Y$ in the path to $x$.
+    Because $h \notin \RCAD$, this removal is not concurrent to $T_j$.
+    Applying by induction this reasoning, we obtain $T_j \depends T$.
   \end{itemize}
 \end{proof}
+

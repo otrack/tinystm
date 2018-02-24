@@ -256,10 +256,9 @@ For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clock
       Because $T_j$ is concurrent to $T_i$, $T_l$ is also concurrent to $T_i$ by \refprop{stm:3}.
       Thus, as $r_i(y_l)$ occurs, $T_i$ is bound to $T_l$ on $y$.
       Now, consider some object $z$ read by $T_i$ before $y$, and name $z_r$ the version read by $T_i$.
-      Since the binding of $T_i$ to $T_l$ is fair, $T_l$ accesses $z$.
-      As $h \notin \RCAD$, transaction $T_r$ cannot update object $z$ concurrently to $T_l$.
-      Hence, applying \refprop{stm:1}, $\clockOf{T_r}_f < \clockOf{T_l}_f$ holds.
-      As a consequence, the relation $\clockOf{T_i} < \clockOf{T_l}_f$ is true.
+      Since the binding of $T_i$ to $T_l$ is fair, $T_l \depends T_r$ is true.
+      Hence, applying \refprop{stm:1}, we have $\clockOf{T_r}_f < \clockOf{T_l}_f$.
+      It follows that the relation $\clockOf{T_i} < \clockOf{T_l}_f$ is true.
     \end{proof}
     From what precedes, transaction $T_i$ invokes \stmExtendFunction at \refline{stm:read:6}.
     We know that transaction $T_j$ is committed at that time (since $T_l$ is committed and $T_l \depends T_j$ holds).
@@ -279,9 +278,11 @@ For instance, in a NUMA architecture, \refalg{stm} may assign a clock per hardwa
 Upon a call to $\clockOf{p}$, the algortihm returns the clock defined for the socket in which the processor executing process $p$ resides.
 
 On the other hand, when the processes use a global clock, \refalg{stm} boils down to the original code of TinySTM \cite{}.
-In this case, a read-only transaction alayws sees a strictly consistent snapshot and it may commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:abort:1}.
+In this case, a read-only transaction alayws sees a strictly consistent snapshot.
+As a consequence, it can commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:abort:1}.
 
 A last observation is that our algorithm works even if one of the processes takes no step.
-This implies that the call to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) is strictly speaking unecessary, and it can be skipped without impacting the correctness of \refalg{stm}.
-Clocks are in fact only used to avoid extending the snapshot at each read step (contrary to, e.g., \cite{}).
-In such a case, \refalg{stm} is disjoint-access parallel since in a scenario where two transactions access disjoint objects, they do not contend on any base object of the implementation.
+This implies that the calls to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) are strictly speaking unecessary and can be skipped without impacting the correctness of \refalg{stm}.
+Clocks are solely used to avoid extending the snapshot at each step where a larger timestamp is encountered.
+If process clocks are not used, when two transactions access disjoint objects, they do not contend on any base object of the implementation.
+As a consequence, such a variation of \refalg{stm} is disjoint-access parallel.
