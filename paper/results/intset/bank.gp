@@ -15,7 +15,7 @@ set size 1,0.6
 
 set bmargin 2.5
 set tmargin 0.0
-set lmargin 0.7
+set lmargin 1
 set rmargin 1
 
 set multiplot
@@ -42,19 +42,19 @@ set ytics font "Helvetica,12pt"
 #set xlabel "# cores"
 #set yrange [0:20]
 unset xtics
-set label 1001 "1"      at 0,-100000000  font "Helvetica,12pt"
-set label 1008 "8"      at 3,-100000000  font "Helvetica,12pt"
-set label 1016 "16"   at 6.5,-100000000  font "Helvetica,12pt"
-set label 1024 "24"  at 10.5,-100000000  font "Helvetica,12pt"
-set label 1032 "32"  at 14.5,-100000000  font "Helvetica,12pt"
-set label 1040 "40"  at 19.5,-100000000  font "Helvetica,12pt"
-set label 1048 "48"  at 23.5,-100000000  font "Helvetica,12pt"
-set label 1099 "# cores" at 9.5,-200000000
+set label 1001 "1"         at 0,-3000000  font "Helvetica,12pt"
+set label 1008 "8"         at 3,-3000000  font "Helvetica,12pt"
+set label 1016 "16"      at 6.5,-3000000  font "Helvetica,12pt"
+set label 1024 "24"     at 10.5,-3000000  font "Helvetica,12pt"
+set label 1032 "32"     at 14.5,-3000000  font "Helvetica,12pt"
+set label 1040 "40"     at 19.5,-3000000  font "Helvetica,12pt"
+set label 1048 "48"     at 23.5,-3000000  font "Helvetica,12pt"
+set label 1099 "# cores"at 9.5,-10000000
 
-set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22.18,800000000 font "Helvetica,12pt" 
+set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 21.18,77500000 font "Helvetica,12pt" 
 
 plot "bank-global_0.8_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
-     "bank-global_async_0.8_1048576.log" u 5:xtic(2) ls 3 title "Alg3"
+     "bank_thread_locality_0_8.log" u 5:xtic(2) ls 3 title "Algorithm 1"
 
 X_POS=1
 Y_POS=0
@@ -73,7 +73,7 @@ set boxwidth 0.9
 set title "2\^{20} accounts, locality=1.0"
 #set ylabel "Throughput (MB/s)"
 unset xlabel #"# cores"
-set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22.18,1550000000 font "Helvetica,12pt" 
+set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 21.18,77500000 font "Helvetica,12pt" 
 #set xtics 2,2,32
 
 set ytics font "Helvetica,12pt"
@@ -88,18 +88,18 @@ unset label 1040
 unset label 1048
 unset label 1099
 
-set label 2001 "1"      at 0,-200000000  font "Helvetica,12pt"
-set label 2008 "8"      at 3,-200000000  font "Helvetica,12pt"
-set label 2016 "16"   at 6.5,-200000000  font "Helvetica,12pt"
-set label 2024 "24"  at 10.5,-200000000  font "Helvetica,12pt"
-set label 2032 "32"  at 14.5,-200000000  font "Helvetica,12pt"
-set label 2040 "40"  at 19.5,-200000000  font "Helvetica,12pt"
-set label 2048 "48"  at 23.5,-200000000  font "Helvetica,12pt"
-set label 2099 "# cores" at 9.5,-400000000
+set label 2001 "1"          at 0,-3000000  font "Helvetica,12pt"
+set label 2008 "8"          at 3,-3000000  font "Helvetica,12pt"
+set label 2016 "16"       at 6.5,-3000000  font "Helvetica,12pt"
+set label 2024 "24"      at 10.5,-3000000  font "Helvetica,12pt"
+set label 2032 "32"      at 14.5,-3000000  font "Helvetica,12pt"
+set label 2040 "40"      at 19.5,-3000000  font "Helvetica,12pt"
+set label 2048 "48"      at 23.5,-3000000  font "Helvetica,12pt"
+set label 2099 "# cores" at 9.5,-10000000
 #set yrange [0:90]
 unset ylabel
 plot "bank-global_1_1048576.log" u  5:xtic(2) ls 1 title "TinySTM",\
-     "bank-global_async_1_1048576.log" u  5:xtic(2) ls 3 title "Alg3" 
+     "bank_thread_locality_0_8.log" u  5:xtic(2) ls 3 title "Algorithm 1" 
 	 							  
 !epstopdf "bank.eps"
 !rm "bank.eps"

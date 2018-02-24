@@ -54,7 +54,7 @@ set label 1099 "# cores" at 9.5,-800000
 set key horizontal top width 0.5 sample 0.2  spacing 1 font "Helvetica,12pt"  at 22,4500000 font "Helvetica,12pt" 
 
 plot "ll-global.log" u  3:xtic(2) ls 1 title "TinySTM",\
-     "ll-global_async.log" u 3:xtic(2) ls 3 title "Alg3"
+     "ll-global_async.log" u 3:xtic(2) ls 3 title "Algorithm 1"
 
 X_POS=1
 Y_POS=0
@@ -99,7 +99,7 @@ set label 2099 "# cores" at 9.5,-40000000
 #set yrange [0:90]
 unset ylabel
 plot "rb_global_100k.log" u  3:xtic(2) ls 1 title "TinySTM",\
-     "rb-global_async.log" u  3:xtic(2) ls 3 title "Alg3" 
+     "rb-global_async.log" u  3:xtic(2) ls 3 title "Algorithm 1" 
 	 							  
 !epstopdf "ll-rb.eps"
 !rm "ll-rb.eps"

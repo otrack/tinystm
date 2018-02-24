@@ -1,14 +1,14 @@
 \section{Evaluation}
 \labsection{evaluation}
 
+In this Section, we evaluate the implementation of the algorithm described in \refsection{stm}.  
+We implemented and integrated our algorithm inside \textsc{TinySTM}~\cite{FelberFMR10}.
+We compare the performance of our implementation against the default \textsc{TinySTM} distribution, (v1.0.5).
 
-In this Section, we evaluate the implementation of the algorithm
-described in \refsection{stm}.  
-We implemented our algorithm in the context of \textsc{TinySTM}~\cite{FelberFMR10}, which we also use as baseline for our evaluation. %and we compare this implementation with the vanilla \textsc{TinySTM}.
 The experiments are conducted on an AMD Opteron48, a 48-cores machine with 256 GB of RAM. 
-This machine embeds 4 dodeca-core AMD Opteron 6172, and 8 NUMA nodes.
+This machine has 4 dodeca-core AMD Opteron 6172, and 8 NUMA nodes.
 
-To evaluate the performance our implementation, we use the test suite included with \textsc{TinySTM}. 
+To evaluate the performance our implementation on this multi-core platform, we use the test suite included with \textsc{TinySTM}. 
 This test suite is composed of several STM applications with different transaction patterns.
 The reminder of this section briefly describes the benchmarks as well discussing our results.
  
@@ -57,14 +57,14 @@ This is due to the high contention in this application that causes our optimisti
 \begin{figure}[!t]
 	\centering
 	\includegraphics[scale = 1.0]{results/intset/ll-rb.pdf}
-	\caption{Linked-list (left) and Red-Black tree (right) benchmarks.\label{fig:benchmarking:llrb}}
+	\caption{Linked-list (left) and Red-Black tree (right) benchmarks. Y-axis: transactions/sec. \label{fig:benchmarking:llrb}}
 \end{figure}
 
 \subsection{Reb-black tree}
 
 The red-black tree benchmark is similar to the linked-list benchmark except that the values are stored in a self-balancing binary search tree. 
 We run this benchmark with a range of $10^7$ values, and a binary tree initialized with $10^5$ values.
-Figure~\ref{fig:benchmarking:llrb}(right) reports our results.
+Figure~\ref{fig:benchmarking:llrb} (right) reports our results.
 
 When using the global clock, the performance of this application improves linearly up to 12 threads. 
 It then stalls to approximately 50 millions transactions per second.

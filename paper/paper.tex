@@ -9,7 +9,7 @@
 \begin{document}
 
 \newboolean{showcomments}
-\setboolean{showcomments}{true}
+\setboolean{showcomments}{false}
 \ifthenelse{\boolean{showcomments}}
 { \newcommand{\mynote}[3]{
    \fbox{\bfseries\sffamily\scriptsize#1}
@@ -26,14 +26,14 @@
 % slides from euro-tm 2014
 % https://docs.google.com/presentation/d/1AFntDVRBWmjOMjNzX90ZGo0cG4Jd7Pewas4CeemD5TQ/edit#slide=id.p
 
-\author{(authors omitted due to double-blind review policy)}
+%\author{(authors omitted due to double-blind review policy)}
 
 \title{A Locality-Aware Software Transactional Memory}
 
 \author{Pierre Sutra\inst{2} \and Patrick Marlier\inst{1} \and
  Valerio Schiavoni\inst{1} \and Fran\c{c}ois Trahay\inst{2}}
 \institute{
-Universit\'e de Neuch\^atel, Switzerland
+University of Neuch\^atel, Switzerland
 \email{\{patrick.marlier,valerio.schiavoni\}@unine.ch}
 \and
 T\'el\'ecom SudParis, France

@@ -8,11 +8,12 @@ Therefore, several mechanisms were introduced to reduce the effort of conflict d
 DSTM~\cite{herlihy2003software} validates all previously accessed object when a new object is about to be opened. 
 However, this approach does not scale, and its complexity is quadratic to the number of opened objects within a transaction.
 
-Several time-based STM designs use a global version clock (e.g., Dice \cite{dice}, Riegel \cite{riegel2006lazy}, \cite{14})\vs{cannot infer the 3 previous references} to avoid the effort of incrementally validating the read set at commit time. 
-TinySTM \cite{FelberFMR10} is a time-based STM that uses a lazy snapshot technique. 
+Several time-based STM designs use a global version clock (e.g., Riegel \cite{riegel2006lazy}) to avoid the effort of incrementally validating the read set at commit time. 
+TinySTM~\cite{FelberFMR10} is a time-based STM that uses a lazy snapshot technique. 
 On commit the TM assigns a timestamp from the global clock to the currently written objects. 
 Any transaction constructs a snapshot of linearization points for ensuring consistency. 
 By keeping a validity interval of timestamps, it can be verified whether a validation is really necessary. 
+We use TinySTM as baseline for our evaluation.
 
 The authors of \cite{zhang2008commit} compare Transactional Locking II (TL2)~\cite{dice2006transactional}, Lazy Snapshot (LSS)\cite{riegel2006lazy} and Global Commit Counter (GCC)~\cite{spear2006conflict}. 
 All of them require a new timestamp for each update transaction (total order).
