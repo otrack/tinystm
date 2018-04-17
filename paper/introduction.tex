@@ -11,8 +11,9 @@ The engine that orchestrates concurrent transactions run by the application, i.e
 A large number of concurrency manager implementations exists, ranging from pessimistic lock-based implementations~\cite{harris2005revocable,afek2012pessimistic} to completely optimistic ones~\cite{hassan2014optimistic}, with~\cite{perelman2011smv} or without multi-version support~\cite{attiya2012single}.
 For application workloads that exhibit a high degree of parallelism, these designs tend to favor optimistic concurrency control.
 In particular, a widely accepted approach consists in executing tentatively invisible read operations and validating them on the course of the transaction execution to enforce consistency.
-Disjoint-access parallelism (DAP)~\cite{ellen2012universal} ensures that concurrent transactions operating on disjoint part of the application do not contend in the concurrency manager.
-This property is key to ensures that the system scales with the numbers of cores.
+For performance reasons, another important property is disjoint-access parallelism (DAP)~\cite{ellen2012universal}.
+This property ensures that concurrent transactions operating on disjoint part of the application do not contend in the concurrency manager.
+Thus, it is key to ensures that the system scales with the numbers of cores.
 
 % why OPA
 From a developer's point of view, the interleaving of transactions must satisfy some form of correctness.
@@ -24,27 +25,27 @@ In this history, $T_1$ aborts after reading inconsistent values for $x$ and $y$.
 Yet, $h_1$ is compliant with \SSER.
 \input{figures/not-opaque}
 
-Opacity (\OPA) was introduced~\cite{guerraoui2008correctness} to avoid the side-effects of so-called \emph{doomed transactions}, \emph{i.e.}, transactions which eventually abort (such as $T_1$ in history $h_1$).%
+Opacity (\OPA) was introduced~\cite{guerraoui2008correctness} to avoid the eratic behavior of so-called \emph{doomed transactions}, \emph{i.e.}, transactions which eventually abort (such as $T_1$ in history $h_1$).%
 \footnote{
   Allowing $T_1$ to return both $x_0$ and $y_2$ may have serious consequences in a non-managed environment.
   % def. notion of managed env., that is an environment à la PL/SQL where object are sronngly typed and exception caught.
-  As shown in~\cite{guerraoui2008correctness}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
+  As pointed out in~\cite{guerraoui2008correctness}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
 }
 In addition to \SSER, \OPA requires that aborted transactions observe a prefix of the committed transactions.
 This is the usual consistency criteria for TM.
 
 % the cost of achieving OPA
 Achieving \OPA is known to be expensive, even for weak progress properties on the transactions \cite{Ravi17}.
-In particular, ensuring that a transaction always sees a consistent snapshot when read are invisible require to either validate the read set after each read operation, or to rely on a global clock.
-The former approach has a quadratic-time validation complexity.
-The latter approach is expensive in multi-core/multi-processors architecture, due to a synchronization wall.
+In particular, ensuring that a transaction always sees a consistent snapshot when reads are invisible generally asks to re-validate the read set after each read operation, or to rely on a global clock.
+The former approach increases the time complexity of execution.
+The latter is expensive in multi-core/multi-processors architecture, due to the synchronization wall.
 
 % our contributions
 In this paper, we address these shortcomings with a new consistency criteria, named \emph{stricter serializability} (\SPSER).
-This criteria extends strict serializability by avoiding specifically the inconsistency depicted in history $h_1$.
+This criteria extends strict serializability by avoiding specifically the inconsistency illustrated in history $h_1$.
 We describe in detail a corresponding TM algorithm that ensures invisible reads, and permits transactions to commit as long as they do not contend with conflicting transactions.
 We further validate our design by means of a full implementation of \SPSER and several experiments.
-Our results show that when the workloads are strongly parallel, \SPSER offers close-to-optimum performance.
+Our results show that when the workloads are embarrassingly parallel, \SPSER offers close-to-optimum performance.
 
 \textbf{Outline.}
 This paper is organized as follows.
