@@ -110,9 +110,8 @@ In addition, it prohibits transactions to view inconsistencies unless one of the
 
 \begin{definition}[Strict serialization graph]
   Consider some version order $\ll_h$ for $h$.
-  Relation $<$ captures all the relations over $\committed{h}$ induced by $\ll_h$.
-  The serialization graph of history $h$ induced by $\ll_h$, written $\SSG(h,\ll_h)$, is defined as $(\committed{h},<)$.
-  \begin{displaymath}
+  Below, we define a relation $<$ to capture all the relations over $\committed{h}$ induced by $\ll_h$.
+    \begin{displaymath}
     \begin{array}{l}
       T_i < T_{j \neq i}  \equaldef \\
       \lor~ T_i \hb_h T_j {\hspace{16.8em}\text{(1)}} \\
@@ -121,6 +120,8 @@ In addition, it prohibits transactions to view inconsistencies unless one of the
       \hspace{12.2em} \lor~ r_i(x_k) \in h {\hspace{3.9em}\text{(4)}}
     \end{array}
   \end{displaymath}  
+  This relation can be either a partial or a total order over the committed transactions in $h$.
+  The serialization graph of history $h$ induced by $\ll_h$, written $\SSG(h,\ll_h)$, is defined as $(\committed{h},<)$.
 \end{definition}
 In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
 
