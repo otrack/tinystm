@@ -36,7 +36,7 @@ set boxwidth 0.9
 #set xtic rotate by -35 scale 0 font "Helvetica,12pt"
 
 # set title "2\^{10} accounts, locality=0.8"
-set ylabel "tx/sec (10x6)"
+set ylabel "transactions/sec"
 set ytics font "Helvetica,12pt"
 #set xtics font "Helvetica, 9pt"
 #set xlabel "# cores"
