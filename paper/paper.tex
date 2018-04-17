@@ -1,4 +1,4 @@
-\documentclass{svproc}
+\documentclass[runningheads]{llncs}
 \usepackage{times}
 \usepackage{format}
 \usepackage{macros}
@@ -27,9 +27,10 @@
 % https://docs.google.com/presentation/d/1AFntDVRBWmjOMjNzX90ZGo0cG4Jd7Pewas4CeemD5TQ/edit#slide=id.p
 
 \title{Boosting Transactional Memory\\with Stricter Serializability}
+%\titlerunning{} %only if title too long
 
 \author{Pierre Sutra\inst{2} \and Patrick Marlier\inst{1} \and
- Valerio Schiavoni\inst{1} \and Fran\c{c}ois Trahay\inst{2}}
+ Valerio Schiavoni\inst{1}\orcidID{0000-0003-1493-6603} \and Fran\c{c}ois Trahay\inst{2}\orcidID{0000-0001-7329-1812}}
 \institute{
 University of Neuch\^atel, Switzerland
 \email{\{patrick.marlier,valerio.schiavoni\}@unine.ch}
@@ -51,6 +52,7 @@ T\'el\'ecom SudParis, France
   Workloads executed under $\SPSER$ are opaque when the object graph forms a tree and transactions traverse it top-down.  
   We present a matching algorithm that supports invisible reads, lazy snapshots, and that can trade synchronization for more parallelism.
   Several empirical results against a well-established TM design demonstrate the benefits of our solution.
+  \keywords{Transactional memory \and NUMA \and stricter serializability}
 \end{abstract}
 
 \input{introduction}
@@ -62,8 +64,8 @@ T\'el\'ecom SudParis, France
 \input{conclusion}
 
 {
-  \footnotesize
-  \bibliographystyle{abbrvnat}
+  %\footnotesize
+  \bibliographystyle{splncs04}
   \bibliography{bib/nicolas,bib/psutra,bib/mshapiro,bib/paper}
 }  
 
