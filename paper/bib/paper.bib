@@ -11,6 +11,7 @@
  numpages = {8},
  acmid = {1924440},
  publisher = {ACM},
+ doi = {10.1145/1924421.1924440},
  address = {New York, NY, USA},
 }
 
@@ -25,14 +26,24 @@
   publisher={ACM}
 }
 
-@incollection{perelman2011smv,
-  title={{SMV: selective multi-versioning STM}},
-  author={Perelman, Dmitri and Byshevsky, Anton and Litmanovich, Oleg and Keidar, Idit},
-  booktitle={Distributed Computing},
-  pages={125--140},
-  year={2011},
-  publisher={Springer}
+@InProceedings{perelman2011smv,
+author="Perelman, Dmitri
+and Byshevsky, Anton
+and Litmanovich, Oleg
+and Keidar, Idit",
+editor="Peleg, David",
+title="{SMV: Selective Multi-Versioning STM}",
+booktitle="Distributed Computing",
+year="2011",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="125--140",
+abstract="We present Selective Multi-Versioning (SMV), a new STM that reduces the number of aborts, especially those of long read-only transactions. SMV keeps old object versions as long as they might be useful for some transaction to read. It is able to do so while still allowing reading transactions to be invisible by relying on automatic garbage collection to dispose of obsolete versions.",
+isbn="978-3-642-24100-0",
+doi="10.1007/978-3-642-24100-0\_9"
 }
+
+
 
 @inproceedings{felber2010deuce,
   title={Deuce: Noninvasive concurrency with a Java STM},
@@ -42,31 +53,49 @@
 }
 
 @inproceedings{herlihy2003software,
-  title={Software transactional memory for dynamic-sized data structures},
-  author={Herlihy, Maurice and Luchangco, Victor and Moir, Mark and Scherer III, William N},
-  booktitle={Proceedings of the Twenty-second Annual Symposium on Principles of distributed computing},
-  pages={92--101},
-  year={2003},
-  organization={ACM}
-}
+ author = {Herlihy, Maurice and Luchangco, Victor and Moir, Mark and Scherer,III, William N.},
+ title = {Software Transactional Memory for Dynamic-sized Data Structures},
+ booktitle = {Proceedings of the Twenty-second Annual Symposium on Principles of Distributed Computing},
+ series = {PODC '03},
+ year = {2003},
+ isbn = {1-58113-708-7},
+ location = {Boston, Massachusetts},
+ pages = {92--101},
+ numpages = {10},
+ doi = {10.1145/872035.872048},
+ acmid = {872048},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
 
 @incollection{dice2006transactional,
-  title={Transactional locking II},
+  title={{Transactional locking II}},
   author={Dice, Dave and Shalev, Ori and Shavit, Nir},
   booktitle={Distributed Computing},
   pages={194--208},
   year={2006},
+  doi = "10.1007/11864219\_14",
   publisher={Springer}
 }
 
 @inproceedings{zhang2008commit,
-  title={{Commit phase in timestamp-based STM}},
-  author={Zhang, Rui and Budimli{\'c}, Zoran and Scherer III, William N},
-  booktitle={Proceedings of the twentieth annual Symposium on Parallelism in Algorithms and Architectures},
-  pages={326--335},
-  year={2008},
-  organization={ACM}
-}
+ author = {Zhang, Rui and Budimli\'{c}, Zoran and Scherer,III, William N.},
+ title = {Commit Phase in Timestamp-based Stm},
+ booktitle = {Proceedings of the Twentieth Annual Symposium on Parallelism in Algorithms and Architectures},
+ series = {SPAA '08},
+ year = {2008},
+ isbn = {978-1-59593-973-9},
+ location = {Munich, Germany},
+ pages = {326--335},
+ numpages = {10},
+ doi = {10.1145/1378533.1378589},
+ acmid = {1378589},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {commit sequence, timestamp, transactional memory},
+} 
+
 
 @incollection{riegel2006lazy,
   title={A lazy snapshot algorithm with eager validation},
@@ -74,29 +103,34 @@
   booktitle={Distributed Computing},
   pages={284--298},
   year={2006},
-  publisher={Springer}
+  publisher={Springer},
+  doi="10.1007/11864219\_20"
 }
 
 @incollection{spear2006conflict,
-  title={Conflict detection and validation strategies for software transactional memory},
+  title={{Conflict detection and validation strategies for software transactional memory}},
   author={Spear, Michael F and Marathe, Virendra J and Scherer III, William N and Scott, Michael L},
   booktitle={Distributed Computing},
   pages={179--193},
   year={2006},
-  publisher={Springer}
+  publisher={Springer},
+  doi="10.1007/11864219\_13"
 }
 
 @article{Lee:2006:PT:1137232.1137289,
  author = {Lee, Edward A.},
- title = {The Problem with Threads},
+ title = {{The Problem with Threads}},
  journal = {Computer},
  issue_date = {May 2006},
  volume = {39},
  number = {5},
  month = may,
  year = {2006},
+ issn = {0018-9162},
  pages = {33--42},
  numpages = {10},
+ doi = {10.1109/MC.2006.180},
+ acmid = {1137289},
  publisher = {IEEE Computer Society Press},
  address = {Los Alamitos, CA, USA},
  keywords = {Coordination languages, Design patterns, Nondeterminism, Programming paradigms, Programming paradigms, Threads, Nondeterminism, Design patterns, Coordination languages, Threads},
@@ -120,6 +154,7 @@ pages="72--97",
   booktitle={Parallel and Distributed Systems (ICPADS), 2011 IEEE 17th International Conference on},
   pages={292--299},
   year={2011},
+  doi = "10.1109/ICPADS.2011.144",
   organization={IEEE}
 }
 
@@ -196,13 +231,21 @@ pages="72--97",
 } 
 
 @inproceedings{harris2005revocable,
-  title={Revocable locks for non-blocking programming},
-  author={Harris, Tim and Fraser, Keir},
-  booktitle={Proceedings of the tenth ACM SIGPLAN symposium on Principles and practice of parallel programming},
-  pages={72--82},
-  year={2005},
-  organization={ACM}
-}
+ author = {Harris, Tim and Fraser, Keir},
+ title = {Revocable Locks for Non-blocking Programming},
+ booktitle = {Proceedings of the Tenth ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+ series = {PPoPP '05},
+ year = {2005},
+ isbn = {1-59593-080-9},
+ location = {Chicago, IL, USA},
+ pages = {72--82},
+ numpages = {11},
+ doi = {10.1145/1065944.1065954},
+ acmid = {1065954},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {locks, non-blocking algorithms, transactional memory},
+} 
 
 @inproceedings{afek2012pessimistic,
   title={Pessimistic software lock-elision},
@@ -210,59 +253,96 @@ pages="72--97",
   booktitle={International Symposium on Distributed Computing},
   pages={297--311},
   year={2012},
+  doi = "10.1007/978-3-642-33651-5\_21",
   organization={Springer}
 }
 
 @article{attiya2012single,
-  title={A single-version stm that is multi-versioned permissive},
+  title={{A Single-Version STM that Is Multi-Versioned Permissive}},
   author={Attiya, Hagit and Hillel, Eshcar},
   journal={Theory of Computing Systems},
   volume={51},
   number={4},
   pages={425--446},
   year={2012},
+  doi = "110.1007/s00224-012-9406-3",
   publisher={Springer}
 }
 
-@inproceedings{hassan2014optimistic,
-  title={Optimistic transactional boosting},
-  author={Hassan, Ahmed and Palmieri, Roberto and Ravindran, Binoy},
-  booktitle={ACM SIGPLAN Notices},
-  volume={49},
-  number={8},
-  pages={387--388},
-  year={2014},
-  organization={ACM}
+@article{hassan2014optimistic,
+ author = {Hassan, Ahmed and Palmieri, Roberto and Ravindran, Binoy},
+ title = {Optimistic Transactional Boosting},
+ journal = {SIGPLAN Not.},
+ issue_date = {August 2014},
+ volume = {49},
+ number = {8},
+ month = feb,
+ year = {2014},
+ issn = {0362-1340},
+ pages = {387--388},
+ numpages = {2},
+ doi = {10.1145/2692916.2555283},
+ acmid = {2555283},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {STM, transactional boosting, transactional data structures},
 }
 
-@inproceedings{ellen2012universal,
-  title={Universal constructions that ensure disjoint-access parallelism and wait-freedom},
-  author={Ellen, Faith and Fatourou, Panagiota and Kosmas, Eleftherios and Milani, Alessia and Travers, Corentin},
-  booktitle={Proceedings of the 2012 ACM symposium on Principles of distributed computing},
-  pages={115--124},
-  year={2012},
-  organization={ACM}
+@Article{ellen2012universal,
+author="Ellen, Faith
+and Fatourou, Panagiota
+and Kosmas, Eleftherios
+and Milani, Alessia
+and Travers, Corentin",
+title="Universal constructions that ensure disjoint-access parallelism and wait-freedom",
+journal="Distributed Computing",
+year="2016",
+month="Aug",
+day="01",
+volume="29",
+number="4",
+pages="251--277",
+abstract="A universal construction is a general mechanism for obtaining a concurrent implementation of an object from its sequential code. We show that there is no universal construction that is both disjoint-access parallel (guaranteeing the processes operating on different parts of an implemented object do not interfere with one another) and wait-free (guaranteeing progress for each nonfaulty process when accessing an object). In contrast, we present a universal construction which results in disjoint-access parallel, wait-free implementations of any object provided there is a bound on the number of data items accessed by each operation supported by the object.",
+issn="1432-0452",
+doi="10.1007/s00446-015-0261-8",
+url="https://doi.org/10.1007/s00446-015-0261-8"
 }
 
 @article{herlihy1990linearizability,
-  title={Linearizability: A correctness condition for concurrent objects},
-  author={Herlihy, Maurice P and Wing, Jeannette M},
-  journal={ACM Transactions on Programming Languages and Systems (TOPLAS)},
-  volume={12},
-  number={3},
-  pages={463--492},
-  year={1990},
-  publisher={ACM}
-}
+ author = {Herlihy, Maurice P. and Wing, Jeannette M.},
+ title = {Linearizability: A Correctness Condition for Concurrent Objects},
+ journal = {ACM Trans. Program. Lang. Syst.},
+ issue_date = {July 1990},
+ volume = {12},
+ number = {3},
+ month = jul,
+ year = {1990},
+ issn = {0164-0925},
+ pages = {463--492},
+ numpages = {30},
+ doi = {10.1145/78969.78972},
+ acmid = {78972},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
 
 @inproceedings{guerraoui2008correctness,
-  title={On the correctness of transactional memory},
-  author={Guerraoui, Rachid and Kapalka, Michal},
-  booktitle={Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming},
-  pages={175--184},
-  year={2008},
-  organization={ACM}
-}
+ author = {Guerraoui, Rachid and Kapalka, Michal},
+ title = {On the Correctness of Transactional Memory},
+ booktitle = {Proceedings of the 13th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+ series = {PPoPP '08},
+ year = {2008},
+ isbn = {978-1-59593-795-7},
+ location = {Salt Lake City, UT, USA},
+ pages = {175--184},
+ numpages = {10},
+ doi = {10.1145/1345206.1345233},
+ acmid = {1345233},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {correctness, lower bound, model, transactional memory},
+} 
+
 
 @article{chandy1985distributed,
   title={Distributed snapshots: Determining global states of distributed systems},
@@ -283,28 +363,31 @@ and Peluso, Sebastiano
 and Ravindran, Binoy",
 editor="Gavoille, Cyril
 and Ilcinkas, David",
-title="Opacity vs TMS2: Expectations and Reality",
+title="{Opacity vs TMS2: Expectations and Reality}",
 booktitle="Distributed Computing",
 year="2016",
 publisher="Springer Berlin Heidelberg",
 address="Berlin, Heidelberg",
 pages="269--283",
-isbn="978-3-662-53426-7"
+isbn="978-3-662-53426-7",
+doi="10.1007/978-3-662-53426-7\_20"
 }
 
-@misc{emals,
-author={Ennals, Robert},
-title={{Software transactional memory should not be obstruction-free}},
-year=2005
+@techreport{emals,
+  title={Software transactional memory should not be obstruction-free},
+  author={Ennals, Robert},
+  year={2006},
+  institution={Technical Report IRC-TR-06-052, Intel Research Cambridge Tech Report}
 }
 
-@misc{dice06,
-author={Dice, Dave and Shavit, Nir},
-title={{What really makes transactions fast?}},
-booktitle={{TRANSACT06 ACM Workshop}},
-year=2006
+@inproceedings{dice06,
+  title={What really makes transactions faster},
+  author={Dice, Dave and Shavit, Nir},
+  booktitle={Proc. of the 1st TRANSACT 2006 workshop},
+  volume={8},
+  pages={3},
+  year={2006}
 }
-
 
 @article{KuznetsovR15,
   author    = {Petr Kuznetsov and
@@ -327,35 +410,21 @@ booktitle={{4th Workshop on the Theory of Transactional Memory}},
 year=2012
 }
 
-@Article{Attiya2012,
-author="Attiya, Hagit
-and Hillel, Eshcar",
-title="A Single-Version STM that Is Multi-Versioned Permissive",
-journal="Theory of Computing Systems",
-year="2012",
-month="Nov",
-day="01",
-volume="51",
-number="4",
-pages="425--446",
-abstract="We present PermiSTM, a single-version STM that satisfies a practical notion of permissiveness, usually associated with keeping many versions: it never aborts read-only transactions, and it aborts other transactions only due to a conflicting transaction (writing to a common data item), thereby avoiding spurious aborts. PermiSTM also avoids unnecessary contention on the memory, being disjoint-access parallel.",
-issn="1433-0490",
-doi="10.1007/s00224-012-9406-3"
-}
 
 @InProceedings{guerraoui08,
 author="Guerraoui, Rachid
 and Henzinger, Thomas A.
 and Singh, Vasu",
 editor="Taubenfeld, Gadi",
-title="Permissiveness in Transactional Memories",
+title="{Permissiveness in Transactional Memories}",
 booktitle="Distributed Computing",
 year="2008",
 publisher="Springer Berlin Heidelberg",
 address="Berlin, Heidelberg",
 pages="305--319",
 abstract="We introduce the notion of permissiveness in transactional memories (TM). Intuitively, a TM is permissive if it never aborts a transaction when it need not. More specifically, a TM is permissive with respect to a safety property p if the TM accepts every history that satisfies p. Permissiveness, like safety and liveness, can be used as a metric to compare TMs. We illustrate that it is impractical to achieve permissiveness deterministically, and then show how randomization can be used to achieve permissiveness efficiently. We introduce Adaptive Validation STM (AVSTM), which is probabilistically permissive with respect to opacity; that is, every opaque history is accepted by AVSTM with positive probability. Moreover, AVSTM guarantees lock freedom. Owing to its permissiveness, AVSTM outperforms other STMs by up to 40{\%} in read dominated workloads in high contention scenarios. But, in low contention scenarios, the book-keeping done by AVSTM to achieve permissiveness makes AVSTM, on average, 20-30{\%} worse than existing STMs.",
-isbn="978-3-540-87779-0"
+isbn="978-3-540-87779-0",
+doi = "10.1007/978-3-540-87779-0\_21"
 }
 
 @inproceedings{Keidar:2009,
