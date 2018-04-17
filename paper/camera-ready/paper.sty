@@ -1,0 +1,57 @@
+% STM plots
+\tikzstyle{transA} = [color=blue]
+\tikzstyle{transB} = [color=red]
+\tikzstyle{transC} = [color=OliveGreen]
+\tikzstyle{transD} = [color=Purple]
+
+\tikzstyle{call} = [color=black,thick]
+\tikzstyle{callA} = [color=blue,thick]
+\tikzstyle{callB} = [color=red,thick]
+\tikzstyle{callC} = [color=OliveGreen,thick]
+\tikzstyle{callD} = [color=Purple,thick]
+
+\tikzset{
+    ncbar angle/.initial=90,
+    ncbar/.style={
+        to path=(\tikztostart)
+        -- ($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)
+        -- ($(\tikztotarget)!($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztostart)$)
+        -- (\tikztotarget)
+    },
+    ncbar/.default=0.5cm,
+}
+\tikzset{square left brace/.style={ncbar=0.05cm}}
+\tikzset{square right brace/.style={ncbar=-0.05cm}}
+
+%% \newcommand{\call}[5]{
+%%   \path[#3] (#1,#2) edge (7.5,1.8);
+%%   \path[callA,->] (7,2) edge (7,1.8);
+%%   \path[callA,->] (7.5,1.8) edge (7.5,2);
+%%   \node at (7,2.2) {$\flagAbort$};
+%%   \node at (7.5,2.2) {};  
+%% }
+
+% STM notions
+\newmathit@one{com}
+
+\newmathit@one{lock}
+\newmathit@one{unlock}
+\newmathit@one{isLocked}
+\newmathit@one{tickSet}
+
+\newcommand{\locationOf}[1]{\ensuremath{\mathit{loc}(#1)}}
+\newcommand{\clockOf}[1]{\ensuremath{\mathit{clock}(#1)}}
+\newcommand{\clockCompatibleOf}[1]{\ensuremath{\mathit{compat}(#1)}}
+
+\newcommand{\depends}{\mathrel{\unrhd}}
+
+\newcommand{\cread}{\ensuremath{\mathit{read}()}}
+\newcommand{\cadv}{\ensuremath{\mathit{adv}}}
+\newcommand{\cswitch}{\ensuremath{\mathit{switch}}}
+\newcommand{\barc}{\ensuremath{\overline{c}}}
+
+\newcommand{\stmPrec}[1]{\ensuremath{\xrightarrow{#1}}}
+
+\let\inparaenumorig=\inparaenum
+\renewenvironment{inparaenum}{\begin{inparaenumorig}[\em(i)]}{\end{inparaenumorig}}
+

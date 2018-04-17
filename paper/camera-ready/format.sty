@@ -1,0 +1,51 @@
+\usepackage[latin1]{inputenc} 
+\usepackage[T1]{fontenc}
+
+\pdfoutput=1
+
+% leads to better typograpy
+\usepackage[protrusion=true,expansion=true]{microtype}
+
+% Maths
+\usepackage{mathtools}
+\usepackage{amssymb,amsmath,stmaryrd,ifsym}
+\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n}
+
+% Algorithms
+\usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{algorithm}
+\newcommand{\smallalgnumfont}{\fontsize{8pt}{9pt}\selectfont}
+\algrenewcommand{\alglinenumber}[1]{\smallalgnumfont #1:}
+
+% Figures (tikz et al.)
+\usepackage{graphicx} 
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+\usepgflibrary{shapes.symbols} % LATEX and plain TEX and pure pgf 
+\usetikzlibrary{shapes.symbols,calc} % LATEX and plain TEX when using Tik Z 
+\usepackage{pstricks}
+
+% Code listing
+\usepackage{verbatim}
+\usepackage{listings}
+\lstset{float,
+  basicstyle=\scriptsize,
+  columns=fullflexible,
+  frame=tb,
+  captionpos=b,
+  mathescape=true,
+  tabsize=2,
+  escapeinside={(*@}{@*)}}
+
+% Others
+\usepackage[defblank]{paralist}
+\usepackage{xspace}
+\usepackage[numbers,square,sort&compress]{natbib}
+\usepackage{subfigure}
+\usepackage{multicol}
+\usepackage{array}
+% \usepackage{fullpage}
+\usepackage{multirow}
+
