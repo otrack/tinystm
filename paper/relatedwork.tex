@@ -5,7 +5,7 @@ Transactional memory (TM) allows to design applications with the help of sequenc
 This paradigm greatly simplifies the programming of modern highly-parallel computer architectures.
 
 % blocking TM
-\citet{emals} suggests to build deadlock-free lock-based TMs rather than non-blocking ones.
+Ennals \cite{emals} suggests to build deadlock-free lock-based TMs rather than non-blocking ones.
 Empirical evidences~\cite{dice06} and theoretical results~\cite{Guerraoui:2008,KuznetsovR15} support this claim.
 
 % permissiveness
@@ -17,7 +17,7 @@ However, both techniques are known to have a significant impact on performance.
 Early TM implementations (such as DSTM~\cite{herlihy2003software}) validate all the prior reads when accessing a new object.
 The complexity of this approach is quadratic in the number of objects read along the execution path.
 A time-based TM avoids this effort by relying on the use a global clock to timestamp object versions.
-\citet{zhang2008commit} compare several such approaches, namely TL2~\cite{dice2006transactional}, LSA \cite{riegel2006lazy} and GCC\cite{spear2006conflict}.
+Zhang et al. \cite{zhang2008commit} compare several such approaches, namely TL2~\cite{dice2006transactional}, LSA \cite{riegel2006lazy} and GCC\cite{spear2006conflict}.
 They provide guidelines to reduce unnecessary validations and shorten the commit sequence.
 
 % single version, invisible read
@@ -31,8 +31,8 @@ In the case of \refalg{stm}, both read-only and updates transaction are certain 
 New challenges arise when considering multicore architectures and cache coherency strategies for NUMA architectures.
 Clock contention~\cite{6121290} is one of them.
 To avoid this problem, workloads as well as TM designs should take into account parallelism~\cite{Nguyen:2017}.
-\citet{6121290} propose to group threads into zones, and that each zone shares a clock and a clock table.
-To timestamp a new version, the TL2C algorithm of \citet{Avni:2008} tags it with a local counter together with the thread id.
+Chan et al \cite{6121290} propose to group threads into zones, and that each zone shares a clock and a clock table.
+To timestamp a new version, the TL2C algorithm \cite{Avni:2008} tags it with a local counter together with the thread id.
 Each thread stores a vector of the latest timestamp it encountered.
 The algorithm preserves opacity by requiring that a transaction restarts if one of the vector entries is not up to date.
 

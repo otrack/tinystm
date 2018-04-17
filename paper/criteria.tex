@@ -88,7 +88,7 @@ When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the 
 This is for instance the case of transaction $T_4$ in history $h_2$, where this transaction is bound to $T_3$ on $y$.
 As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
 
-Tracking this causality relation is difficult for the contention manager as it requires to inspect the readset, rely on a global clock, or use large amount of metadata.
+Tracking this causality relation is difficult for the contention manager as it requires to inspect the read set, rely on a global clock, or use large amount of metadata.
 We observe that this tracking is easier if each version read prior the binding is either, accessed by the writer, or one of its dependencies.
 In which case, we will say that the binding is fair.
 
@@ -173,7 +173,7 @@ It should satisfy that
 
 To define our criteria, we focus specifically on $\SPSER$ implementations that allow invisible reads.
 As pointed out earlier, this restriction is motivated by performance since most workloads are read-intensive.
-In this context, the result of \citet{hans16} tells us that it is not possible to jointly achieve
+In this context, the result of Hans et al. \cite{hans16} tells us that it is not possible to jointly achieve
 \begin{inparaenum}
 \item $\SSER$,
 \item read invisibility,

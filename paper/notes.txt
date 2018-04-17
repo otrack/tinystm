@@ -34,18 +34,6 @@ performance of TM in case of read-dominated workloads."
 
 -- papier de A. Metveev ASPLOS'15.
 
-DAP ?
-p1. , and programmer
-p2. from a dev .. despite ?
-p3. explain r(x) and w(y) notation (footnote?)
-p2. side-effects -> the eratic behavior
-p2. allowing T_1 -> under SSER, T_1 may return x_0 and y_2
-as pointed out in \cite{}, this might have serious ...
-p2. "quadratic-time validation complexity"
-p2. a synchronization wall -> the synchronization wall
-p2. "The corresponding" ?
-p2. use of versions while not being defined ...
-
 p13. to some \emph{branch} of the bank
 p13. there is thus one branch per thread
 p13. _this_ workload is fully parallel

@@ -15,7 +15,7 @@ In particular, we explain how to tailor it to be disjoint-access parallel.
 \labsection{stm:overview}
 
 \refalg{stm} depicts the pseudo-code of our construction of the TM interface at some process $p$.
-Our design follow the general approach of the lazy snapshot algorithm (LSA) of \citet{FelberFMR10}, replacing the central clock with a more flexible mechanism.
+Our design follows the general approach of the lazy snapshot algorithm (LSA) \cite{FelberFMR10}, replacing the central clock with a more flexible mechanism.
 \refalg{stm} employs a deferred update schema that consists in two steps.
 A transaction first executes optimistically, buffering its updates.
 Then, at commit time, the transaction is certified and, if it commits, its updates are applied to the shared memory.
@@ -277,7 +277,7 @@ In this situation, it might be of interest to find a compromise between the cost
 For instance, in a NUMA architecture, \refalg{stm} may assign a clock per hardware socket.
 Upon a call to $\clockOf{p}$, the algorithm returns the clock defined for the socket in which the processor executing process $p$ resides.
 
-On the other hand, when the processes use a global clock, \refalg{stm} boils down to the original TinySTM algorithm of \citet{FelberFMR10}.
+On the other hand, when the processes use a global clock, \refalg{stm} boils down to the original TinySTM implementation \cite{FelberFMR10}..
 In this case, a read-only transaction always sees a strictly consistent snapshot.
 As a consequence, it can commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:abort:1}.
 
