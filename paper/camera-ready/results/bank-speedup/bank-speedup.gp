@@ -22,8 +22,8 @@ set ylabel "Speed-up (x times)"
 #set ytics font "Helvetica,12pt"
 set xlabel "Locality"
 set grid y
-
-set key horizontal top center width 0.5 sample 0.2  spacing 1 #font "Helvetica,12pt" 
+set xtics nomirror
+set key horizontal top center at 2.5,80 #font "Helvetica,12pt" 
 
 plot "data/bank_global_locality.log" u 7:xtic(3) ls 1 title "TinySTM",\
      "data/bank_thread_locality.log" u 7:xtic(3) ls 3 title "Algorithm 1"
