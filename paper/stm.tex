@@ -285,4 +285,4 @@ A last observation is that our algorithm works even if one of the processes take
 This implies that the calls to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) are strictly speaking necessary and can be skipped without impacting the correctness of \refalg{stm}.
 Clocks are solely used to avoid extending the snapshot at each step where a larger timestamp is encountered.
 If process clocks are not used, when two transactions access disjoint objects, they do not contend on any base object of the implementation.
-As a consequence, such a variation of \refalg{stm} is disjoint-access parallel.
+As a consequence, such a variation of \refalg{stm} is disjoint-access parallel (DAP).

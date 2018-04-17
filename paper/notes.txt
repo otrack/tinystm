@@ -1,3 +1,11 @@
+access = read or write
+\exists linearization -> no proof.
+simple path needed?
+OPA def.?
+OPA ~ SSER + SCONS?
+minimal progressiveness?
+RCAD: there is a read by *both* transactions on the updated data item.
+
 global clock alg. -> check TinySTM and Transactional Memory 2nd Ed. 
 
 https://infoscience.epfl.ch/record/130152/files/popl096-kapalka.pdf
@@ -12,13 +20,11 @@ require a contention manager to ensure OF
 (namely, a transaction running solo must eventually
 have the permission to abort another conflicting transaction)
 
-
 -- The PCL Theorem. Transactions cannot be Parallel, Consistent and Live.
 OF \land CAP \land C >= WAD |- \false
 (w. WAD ~ SI|PRAM)
 
 -- Maintaining Consistent Transactional States without a Global Clock [TLC]
-
 
 -- Disjoint-Access Parallelism: Impossibility, Possibility, and Cost of Transactional Memory Implementations (Sebastiano, PODC 15)
 "However, the invisibility of read-only transactions as well
@@ -27,3 +33,139 @@ as their ability to always commit in a finite number of steps
 performance of TM in case of read-dominated workloads."
 
 -- papier de A. Metveev ASPLOS'15.
+
+DAP ?
+p1. , and programmer
+p2. from a dev .. despite ?
+p3. explain r(x) and w(y) notation (footnote?)
+p2. side-effects -> the eratic behavior
+p2. allowing T_1 -> under SSER, T_1 may return x_0 and y_2
+as pointed out in \cite{}, this might have serious ...
+p2. "quadratic-time validation complexity"
+p2. a synchronization wall -> the synchronization wall
+p2. "The corresponding" ?
+p2. use of versions while not being defined ...
+
+p13. to some \emph{branch} of the bank
+p13. there is thus one branch per thread
+p13. _this_ workload is fully parallel
+p13. our result -> experimental results
+
+Fig.1 bank benchmarks - 2^10 accounts
+p14. we observe -> this figure shows that
+p14. Algorithm 1 _processes_
+p14. leverages the presence of data locality _in the bank application_
+p14. hence -> thus
+p15. In Figure 2_(left)
+p15 transactionS tend_
+p15. that long transactions abort _ref?_
+p15. reD-black tree
+p15. 50 millions transactions per second -> 50MPTS
+p15. the likelihood of _having two contending transactions_
+p15. because of the high number of values in the tree.
+-> because the tree is populated with a large number of values
+p15. _single-threaded_ execution
+
+p16. future workS
+p16 _,_ (v1.0.5)
+p16. "that read operations do not contend" with what ?
+p16. "all _the_ possible combination"
+
+
+----------------------- REVIEW 1 ---------------------
+PAPER: 25
+TITLE: Boosting Transactional Memory with Stricter Serializability
+AUTHORS: Pierre Sutra, Patrick Marlier, Valerio Schiavoni and François Trahay
+
+Overall evaluation: 1 (weak accept)
+
+----------- Overall evaluation -----------
+The authors of this paper propose a new consistency criteria called stricter seriazibility (SSER+) to deal with transactional memory operations in many-core numa architecture.
+As a researcher not expert in the specific domain of distributed memory protocols, I enjoyed reading the paper, as the concepts, models and proposed algorithm are clearly explained and discussed. There are some minor errors here and there, and a missing ref on page 4.
+The experimental evaluation focused my attention. The authors implement Alg. 1 inside TinySTM and compared it with some test suites provided by that software, using as a baseline the global clock sync mechanism provided by TinySTM. My first question is: is that mechanism the state-of-the-art, or just a baseline provided by the adopted software? Secondly, in Fig 1(a), why there is a small difference in performance for a single case, with threads between 32 and 40? Thirdly, why going form locality 0.8 to 1.0 in Fig. 1(b) produces a speedup of more than 2x? Other relative speedup are not *that* large, maybe a finer grain in such locality values would help the presentation of results. Also the linked-list and tree experiments are somewhat less interesting, since clearly if there are few data to play with (512 values in list) or a lot (10^5) in trees, the contention level varies.
+
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 25
+TITLE: Boosting Transactional Memory with Stricter Serializability
+AUTHORS: Pierre Sutra, Patrick Marlier, Valerio Schiavoni and François Trahay
+
+Overall evaluation: 2 (accept)
+
+----------- Overall evaluation -----------
+This paper presents an improved form of transactional memory based on an elegant insight: if certain types of problematic transaction patterns can be proactively excluded then it is easier to avoid serialization conflicts and synchronization can be relaxed. As a result, parallel execution can potentially proceed much more quickly.
+
+In particular, the authors first present "SSER+", the "stricter serialization" property that excludes their targeted class of problematic transaction patterns (which are allowed by the previous "strict serialization" property. They then present an algorithm implementing a memory that should be SSER+, and demonstrate that their algorithm allows large performance improvements over a globally synchronized transactional memory in cases where contention is relatively low (as is often the case).
+
+The writing itself is quite mathematically dense and difficult to follow, and the authors would do well to include diagrams and other aids to make it easier for the reader to comprehend their presentation.  I was unable to check all concepts in detail, and leave a trace of some of my confusions to help the authors improve their paper below.
+
+Nevertheless, I believe this paper should be accepted based on its contents, conditional on the authors making improvements in their presentation.
+
+Some of the confusions I encountered:
+- Footnote 3: How does a transaction return if it aborts? Aborting is typically a different flow than returning.
+- Section 2.1, para 2: Does T_4 abort or just not complete?
+- Section 2.1, para 2: Why is T_3 r(x)?
+- Section 2.1, para 5: Isn't x_1 >> x_2 in version order, given that T_1 > T_2? This version order example appears to be backwards.
+- Section 2.1, para 6: I believe it should be T_i triangle-equals T_j, not T_i triangle-equals T_k
+- Section 2.1, para 6: RCAD is confusing, and the problem it introduces is unclear
+- Section 2.1, para 7: How could T_4 read x_2, since it's after x_1 commits?
+- Section 2.2, para 4: What are the updates and causal dependencies?
+- Section 2.2, para 5: Is [] a missing citation or a new notation?
+- Section 2.3, para 1: Why do you want to see unfair inconsistencies? Doesn't this contradict what is stated later?
+- Definition 3: is < a total or partial order?
+- Definition 3: For some wedges, it appears they are intended to be "for all" rather than "or", otherwise the apparent nesting makes no sense. The nesting is also very unclear, so I am not sure whether I am interpreting it as the authors intend.
+- Definition 3 does not appear to hold if there are no relevant writes.
+
+- In experimental evaluation: do your tests check correctness, or just completion time?
+
+Minor points:
+- There are pervasive typos and grammar errors, which in some cases make reading more difficult
+
+
+----------------------- REVIEW 3 ---------------------
+PAPER: 25
+TITLE: Boosting Transactional Memory with Stricter Serializability
+AUTHORS: Pierre Sutra, Patrick Marlier, Valerio Schiavoni and François Trahay
+
+Overall evaluation: 1 (weak accept)
+
+----------- Overall evaluation -----------
+This paper proposes an implementation of transactional memories based on a novel consistency criteria, called stricter serialisability (SSER+). SSER+ is based on the notion of fair binding: a read version is either accessed by the writer or one of its dependencies. It is claimed that SSER+ implies OPA (a standard consistency criterion). The paper presents an algorithm that generates execution histories that enjoy SSER+ and avoids using a global clock. The algorithm has been implemented and its performance compared against an implementation based on SSER over three case studies. The results shows that the new proposal outperforms SSER in two scenarios where contention is low, while performs worst in an scenario of high contention. 
+
+I found the contribution in this paper interesting. Despite some presentation details, the material is well-presented and appears sound. 
+
+P1L-1 ensures -> ensure
+P2L-2. present -> presents
+P3L19. complete transactions -> completed transactions
+P3.Figure of (h2). I don’t know where event w3(y3) comes from. T3 is defined as just r(x). 
+P3L-10. concurrent. you may illustrate concurrent transactions in h2
+P3L-5. When defining read-from you assume that a transaction produces just a version for an object. You may discuss this. 
+P4L2. T_k -> T_j
+P4L4. Tj writes object x -> add that it produces the version xj that is referred afterwards.
+P4L-23. transaction memory -> transactional memory
+P4L-21. interleaving -> interleaved
+P4L-7. double-check example for bound transactions
+P4L-1. metadata []. Add reference
+P5.Def 3. \wedge \vee in item (3) ? which is the definition?
+
+P5L-4. OPA is not defined (it is just informally described in the introduction) but is then used in formal statements.
+
+Corollary. Corollary of what?
+P6L2. Theorem 1 ??? Corollary instead. 
+P6L10. prune -> from where?
+P6L19. P is written here as \mathcal{P} but then just referred as P. 
+P6.Proposition 1. H_{\mathcal{P}} has not been defined.  RCAD has not been formally defined. 
+P7L-15. follow -> follows
+P14. Fig. 1, the one on top. There is an anomaly in thread 38.
+
+
+----------------------- REVIEW 4 ---------------------
+PAPER: 25
+TITLE: Boosting Transactional Memory with Stricter Serializability
+AUTHORS: Pierre Sutra, Patrick Marlier, Valerio Schiavoni and François Trahay
+
+Overall evaluation: -1 (weak reject)
+
+----------- Overall evaluation -----------
+Out of scope, in several senses. Yet, a contribution for the coordination conference is clearly easy to find in the synch and concurrency techniques: the authors, however, do nothing to help the average coordination reader to find it.
+
