@@ -22,7 +22,7 @@ Then, at commit time, the transaction is certified and, if it commits, its updat
 
 During the execution of a transaction, a process checks that the objects accessed so far did not change.
 Similarly to LSA, this check is lazily executed.
-More specifically, \refalg{stm} executes it only if a shared object appears to have been recently updated, or when the transaction terminates.
+\refalg{stm} executes it only if the shared object was recently updated, or when the transaction terminates.
 
 \subsection{Tracking Time}
 \labsection{stm:time}
@@ -34,14 +34,12 @@ The sequential specification of a logical clock guarantees a single property, th
 \begin{inparaenum}
 \item[\emph{(Time Monotonicity)}]
   A read operation always returns at least the greatest value to which the clock advanced so far.
-  Formally, for every history $h$, $(\responseAny{\cread}{v} \in h) \implies (v \geq \max{(\{u : \cadv(u) \hb_h \cread \} \union \{0\})})$.
+  In every sequential history $h$, $(\responseAny{\cread}{v} \in h) \implies (v \geq \max{(\{u : \cadv(u) \hb_h \cread \} \union \{0\})})$.
 \end{inparaenum}
 
-\refalg{stm} associates logical clocks with both processes and
-transactions.  To retrieve the clock associated with some object $i$,
-the algorithm uses function $\clockOf{i}$.  Notice that in the
-pseudo-code, when it is clear from the context, we write $\clockOf{i}$
-as a shorthand for $\clockOf{i}.\mathit{read}()$.
+\refalg{stm} associates logical clocks with both processes and transactions.
+To retrieve the clock associated with some object $x$, the algorithm uses function $\clockOf{x}$.
+Notice that in the pseudo-code, when it is clear from the context, $\clockOf{x}$ is a shorthand for $\clockOf{x}.\mathit{read}()$.
 
 The clock associated with a transaction is always local (\refline{stm:var:1}).
 In the case of a process, it might be shared or not (\refline{stm:var:2}).
@@ -59,7 +57,7 @@ To implement an (obstruction-free) linearizable clock we employ the following co
 
 \input{algorithms/stm.tex}
 
-\subsection{Details}
+\subsection{Internals}
 \labsection{stm:details}
 
 In \refalg{stm}, each object $x$ has a \emph{location} in the shared memory, denoted $\locationOf{x}$.
@@ -83,7 +81,6 @@ For every transaction $T$ submitted to the system, \refalg{stm} maintains three 
 The read set serves to check that snapshot of the shared memory as seen by the transaction is strictly consistent.
 The write set buffers updates.
 With more details, the execution of a transaction $T$ proceeds as follows.
-
 \begin{itemize}
 \item[-] %
   When $T$ starts its execution, \refalg{stm} initializes $\clockOf{T}$ to the smallest value of $\clockOf{q}$ for any process $q$ executing the TM.
@@ -137,7 +134,7 @@ From which we deduce that it is executing under weak progressiveness.
 Consider some run $\run$ of \refalg{stm}, and let $h$ be the history produced in \run.
 At the light of its pseudo-code, every function defined in \refalg{stm} is wait-free.
 As a consequence, we may consider without lack of generality that $h$ is complete, i.e., every transaction executed in $h$ terminates with either a commit or an abort event.
-In what follows, we define that $\ll_h$ as the order in which writes to the object locations are linearized in $\rho$.
+In what follows, we let $\ll_h$ be the order in which writes to the object locations are linearized in $\rho$.
 We first prove that $<$ is acyclic for this definition of $\ll_h$.
 Then, we show that, if a transaction does not exhibit any unfair binding, then it observes a strictly consistent snapshot.
 For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clockOf{T}$.
@@ -282,7 +279,7 @@ In this case, a read-only transaction always sees a strictly consistent snapshot
 As a consequence, it can commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:abort:1}.
 
 A last observation is that our algorithm works even if one of the processes takes no step.
-This implies that the calls to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) are strictly speaking necessary and can be skipped without impacting the correctness of \refalg{stm}.
+This implies that the calls to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) are strictly speaking not necessary and can be skipped without impacting the correctness of \refalg{stm}.
 Clocks are solely used to avoid extending the snapshot at each step where a larger timestamp is encountered.
 If process clocks are not used, when two transactions access disjoint objects, they do not contend on any base object of the implementation.
 As a consequence, such a variation of \refalg{stm} is disjoint-access parallel (DAP).
