@@ -1,12 +1,12 @@
 \section{Evaluation}
 \labsection{evaluation}
 
-This section presents a performance study of our \SPSER transactional memory depicted in \refsection{stm}.
-To conduct this evaluation we implemented and integrated our algorithm inside \textsc{TinySTM}~\cite{FelberFMR10}.
+This section presents a performance study of our \SPSER transactional memory described in \refsection{stm}.
+To conduct this evaluation we implemented and integrated our algorithm inside \textsc{TinySTM}~\cite{FelberFMR10}, a state-of-the-art software transactional memory implementation.
 Our modifications account for approximatively 500 SLOC.
 We run \refalg{stm} in disjoint-access parallel mode.
 As explained in \refsection{stm:discussion}, in this variation the clocks of the processes are not accessed.
-A detailed evaluation of the other variations of \refalg{stm} is subject to future work.
+A detailed evaluation of the other variations of \refalg{stm} is left for future work.
 
 The experiments are conducted on an AMD Opteron48, a 48-cores machine with 256 GB of RAM. 
 This machine has 4 dodeca-core AMD Opteron 6172, and 8 NUMA nodes.
@@ -57,20 +57,21 @@ As a consequence of DAP, each thread works on independent data, hence improving 
   }
 \end{figure}
 
-\subsection{Linked-list}
+\subsection{Linked-Tist}
 \labsection{evaluation:ll}
 
 The linked-list benchmark consists in concurrently modifying a sorted linked-list of integers. 
 Each thread randomly adds or removes an integer from the list. 
 We run this benchmark for a range of $512$ values, \emph{i.e.} a thread randomly selects a value between $-255$ and $+256$ before doing an insertion/removal.
-The linked list is initialized to contains $256$ integers.
+The linked list is initialized to contain $256$ integers.
 We report our results in \reffigure{llrb}~(left).
 
-In \reffigure{llrb}, we observe that \textsc{TinyStm} outperforms our implementation in the linked-list benchmark.
+We observe that \textsc{TinyStm} outperforms our implementation in the linked-list benchmark.
 This is due to the fact that without proper clock synchronization, transaction tends to re-validate their reads frequently over their execution paths.
 In this scenario of high contention, it is (as expected) preferable to rely on a frequent synchronization mechanism such as the global clock used in \textsc{TinyStm}.
-To alleviate this issue, we plan in a future work to adjust dynamically the clocks used in \refalg{stm} accordingly to contention.
-Such a strategy can be put at work with the help of a global lock, similarly to the mechanism used to avoid that long transactions abort.
+To alleviate this issue, one could adjust dynamically the clocks used in \refalg{stm} accordingly to contention. 
+Such a strategy could rely on a global lock, similarly to the mechanism used to avoid that long transactions abort.
+We left the implementation of this optimization for future work
 
 \begin{figure}[!t]
   \centering
@@ -78,7 +79,7 @@ Such a strategy can be put at work with the help of a global lock, similarly to 
   \caption{Linked-list (left) and Red-Black tree (right) benchmarks. Y-axis: transactions/sec. \labfigure{llrb}}
 \end{figure}
 
-\subsection{Reb-black tree}
+\subsection{Red-Black Tree}
 \labsection{evaluation:rb}
 
 The red-black tree benchmark is similar to the linked-list benchmark except that the values are stored in a self-balancing binary search tree. 
