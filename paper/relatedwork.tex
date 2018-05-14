@@ -11,7 +11,7 @@ Empirical evidences~\cite{dice06} and theoretical results~\cite{Guerraoui:2008,K
 % permissiveness
 At first glance, it might be of interest that a TM design accepts all correct histories; a property named \emph{permissiveness} \cite{guerraoui08}.
 Such TM algorithms need to track large dependencies \cite{Keidar:2009} and/or acquire locks for read operations~\cite{attiya2012single}.
-However, both techniques are known to have a significant impact on performance.
+Both techniques are known to have a significant impact on performance.
 
 % validation
 Early TM implementations (such as DSTM~\cite{herlihy2003software}) validate all the prior reads when accessing a new object.
@@ -21,7 +21,7 @@ Zhang et al. \cite{zhang2008commit} compare several such approaches, namely TL2~
 They provide guidelines to reduce unnecessary validations and shorten the commit sequence.
 
 % single version, invisible read
-Multi-versioning~\cite{Fernandes:2011, Diegues:2014} brings a major benefit: allowing read-only transactions to complete.
+Multi-versioning~\cite{Fernandes:2011, Diegues:2014} brings a major benefit: allowing read-only transactions to complete despite contention.
 This clearly boosts certain workloads but managing multiple versions has a non-negligible performance cost on the TM internals.
 Similarly, invisible reads ensure that read operations do not contend in most cases.
 However, such a technique limits progress or the consistency criteria satisfied by the TM \cite{Attiya:2009}.

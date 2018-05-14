@@ -21,8 +21,8 @@ This calls returns either $\flagCommit$, to indicate that the transaction commit
 A \emph{history} is a sequence of invocations and responses of TM operations by one or more processes.
 As illustrated with history $h_2$ below, a history is commonly depicted as parallel timelines, where each timeline represents the transactions executed by a process.
 In history $h_2$, process $p$, $q$ and $r$ execute respectively transactions ${\color{blue}{T_1}}=w(x)$, ${\color{red}{T_2}}=w(x)$ then ${\color{Purple}{T_4}}=r(y);r(x)$, and ${\color{OliveGreen}{T_3}}=r(x);r(y)$.
-All the transactions but $T_4$ completes in this history.
-For simplicity, a complete transaction that is not explicitly aborted in the history commits immediately after its last operation.
+All the transactions but $T_4$ complete in this history.
+For simplicity, a complete transaction that is not explicitly aborted in a history commits immediately after its last operation.
 We note $\committed{h}$ the set of transactions that commit during history $h$.
 In the case of history $h_2$, we have $\committed{h_2}=\{T_1,T_2,T_3\}$.
 
@@ -58,7 +58,7 @@ This anti-dependency becomes an RC-anti-dependency if $T_4$ executes an addition
 
 Over the course of its execution, a transaction reads and writes versions of the shared objects.
 The set of versions read by the transaction forms its \emph{read set} (or snapshot).
-The versions written define the \emph{write set}.
+The versions written during the execution define the \emph{write set}.
 
 A transaction observes a \emph{strictly consistent} snapshot~\cite{cc:coh:997} when it never misses the effects of some transaction it depends on.
 In detail, the snapshot of transaction $T_i$ in history $h$ is strictly consistent when, for every version $x_j$ read by $T_i$, if $T_k$ writes version $x_k$, and $T_i$ depends on $T_{k}$, then $x_k$ is followed by $x_j$ in the version order.
@@ -67,7 +67,7 @@ In detail, the snapshot of transaction $T_i$ in history $h$ is strictly consiste
 \subsection{Contention and bindings}
 \labsection{criteria:bindings}
 
-Internally, a transaction memory is built upon a set of \emph{base objects}, such as locks or registers.
+Internally, a transactional memory is built upon a set of \emph{base objects}, such as locks or registers.
 When two transactions are concurrent, their steps on these base objects interleave.
 If the two transactions access disjoint objects and the TM is disjoint-access parallel, no contention occurs.
 However, in the case they access the same base object, they may slow down each other.
@@ -77,7 +77,7 @@ With invisible reads, read contention is basically free.
 From a performance point of view, this property is consequently appealing, since workloads exhibit in most case a large ratio of read operations.
 
 When two transactions are concurrently writing to some object, it is possible to detect the contention and abort preemptively one of them.
-On the other hand, when a read-write conflict occurs, a \emph{race condition} occurs between the reader and the writer.
+On the other hand, when a read-write conflict happens, a \emph{race condition} occurs between the reader and the writer.
 If the read operation takes place after the write, the reader is bound to use the version produced by the writer.
 
 \begin{definition}[Binding]
@@ -98,13 +98,13 @@ In which case, we will say that the binding is fair.
 \end{definition}
 
 Going back to history $h_3$, the binding of $T_4$ to $T_3$ on $y$ is fair.
-Indeed, this transaction did not read any data item before accessing the version of $y$ written by $T_4$.
+Indeed, this transaction did not read any data item before accessing the version of $y$ written by $T_3$.
 When the binding is fair, the reader can leverage the metadata left by the writer to check prior versions it has read and ensure the consistency of later read operations.
 In the next section, we formalize this idea with the notion of stricter serializability.
 
 \subsection{Stricter serializability}
 \labsection{criteria:spser}
-In what follows, we introduce and describe in details \SPSER, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
+In what follows, we introduce and describe in detail \SPSER, the stricter serializability consistency criteria that we build upon in the remainder of this paper.
 As strict serializability, \SPSER requires that committed transactions form a sequential history which preserves the real-time order.
 In addition, it prohibits transactions to view inconsistencies unless one of their bindings is unfair.
 
@@ -117,10 +117,10 @@ In addition, it prohibits transactions to view inconsistencies unless one of the
       \lor~ T_i \hb_h T_j {\hspace{16.8em}\text{(1)}} \\
       \lor~ \exists x : \lor~ r_j(x_i) \in h {\hspace{13.3em}\text{(2)}} \\
       \hspace{2.9em}\lor~ \exists T_k : x_k \ll_h x_j \land \lor~T_k = T_i {\hspace{5.7em}\text{(3)}} \\
-      \hspace{12.2em} \lor~ r_i(x_k) \in h {\hspace{3.9em}\text{(4)}}
+      \hspace{11.5em} \lor~ r_i(x_k) \in h {\hspace{4.6em}\text{(4)}}
     \end{array}
   \end{displaymath}  
-  This relation can be either a partial or a total order over the committed transactions in $h$.
+  Relation $<$ can be either a partial or a total order over the committed transactions in $h$.
   The serialization graph of history $h$ induced by $\ll_h$, written $\SSG(h,\ll_h)$, is defined as $(\committed{h},<)$.
 \end{definition}
 In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.

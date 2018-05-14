@@ -157,3 +157,4 @@ Overall evaluation: -1 (weak reject)
 ----------- Overall evaluation -----------
 Out of scope, in several senses. Yet, a contribution for the coordination conference is clearly easy to find in the synch and concurrency techniques: the authors, however, do nothing to help the average coordination reader to find it.
 
+

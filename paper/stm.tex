@@ -61,10 +61,10 @@ To implement an (obstruction-free) linearizable clock we employ the following co
 \labsection{stm:details}
 
 In \refalg{stm}, each object $x$ has a \emph{location} in the shared memory, denoted $\locationOf{x}$.
-This location stores a pair $(t,d)$, where $t \in \naturalSet$ is a \emph{timestamp}, and $d$ is the actual content of $x$ as seen by transactions.
-For simplicity, we shall name hereafter a pair $(t,d)$ a \emph{version} of object $x$.
+This location stores a pair $(d,t)$, where $d$ is the content of $x$ as seen by transactions and $t \in \naturalSet$ is a \emph{timestamp}.
+For simplicity, we shall name hereafter a pair $(d,t)$ a \emph{version} of object $x$.
 Since the location of object $x$ is unique, a single version of object $x$ may exist at a time in the memory.
-As usual, we assume some transaction $\transInit$ that initializes for every object $x$ the location $\locationOf{x}$ to $(0,\bot)$.
+As usual, we assume some transaction $\transInit$ that initializes for every object $x$ the location $\locationOf{x}$ to $(\bot,0)$.
 Furthermore, we consider that each read or write operation to some location $\locationOf{x}$ is atomic.
 
 \refalg{stm} associates a lock to each object.
@@ -78,7 +78,7 @@ For every transaction $T$ submitted to the system, \refalg{stm} maintains three 
 \item $\writeSetOf{T}$ is another map that stores the write set of $T$.
 \end{inparaenumorig}
 \refalg{stm} updates incrementally $\readSetOf{T}$ and $\writeSetOf{T}$ over the course of the execution.
-The read set serves to check that snapshot of the shared memory as seen by the transaction is strictly consistent.
+The read set serves to check that the snapshot of the shared memory as seen by the transaction is strictly consistent.
 The write set buffers updates.
 With more details, the execution of a transaction $T$ proceeds as follows.
 \begin{itemize}
@@ -102,13 +102,13 @@ With more details, the execution of a transaction $T$ proceeds as follows.
   otherwise transaction $T$ is aborted (\refline{stm:read:7}).
 \item[-] %
   Upon executing a write request on behalf of $T$ to some object $x$, \refalg{stm} takes the lock associated with $x$ (\refline{stm:write:1}), and in case of success, it buffers the update value $d$ in $\writeSetOf{T}$ (\refline{stm:write:6}).
-  The timestamp $t$ of $x$ at the time \refalg{stm} takes the lock serves two purposes.
-  First, \refalg{stm} checks that $t$ is lower than the current clock of $T$, and if not $T$ is extended (\refline{stm:write:4}).
-  Second, it is saved in \writeSetOf{T} to ensure that at commit time the timestamp of the version of $x$ written by $T$ is greater than $t$.
+  \refalg{stm} checks that the timestamp $t$ of $x$ when the lock is taken is lower than the current clock of $T$.
+  If not, $T$ is extended (\refline{stm:write:4}).
+  This computation ensures that at commit time the timestamp of the version of $x$ written by $T$ is greater than $t$.
 \item[-] %
   When $T$ requests to commit, \refalg{stm} certifies the read set by calling function $\stmExtend{}$ with the clock of $T$ (\refline{stm:try:1}).
-  If this test succeeds, transaction $T$ commits (\reflines{stm:commit:1}{stm:commit:6}).
-  In such a case, \clockOf{T} ticks to reach its final value (\refline{stm:commit:1}).
+  If this test succeeds, transaction $T$ commits (\reflines{stm:commit:0}{stm:commit:6}).
+  In such a case, when $T$ is an update, \clockOf{T} ticks to reach its final value (\refline{stm:commit:1}).
   By construction, this value is greater than the timestamps of all the versions read or written by $T$ (\reflinestwo{stm:read:5}{stm:write:4}).
   \refalg{stm} updates the clock of $p$ with the final value of \clockOf{T} (\refline{stm:commit:2}), then it updates the items written by $T$ with their novel versions (\refline{stm:commit:4}).
 \end{itemize}
@@ -143,7 +143,7 @@ For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clock
   \labprop{stm:1}
   Consider two transactions $T_i$ and $T_{j \neq i}$ in $h$.
   If either $T_i \depends T_j$ or  $x_j \ll_h x_i$ holds, then $\clockOf{T_i}_f \geq \clockOf{T_j}_f$ is true.
-  In addition, if transaction $T_i$ commits then the ordering is strict, i.e., $\clockOf{T_i}_f > \clockOf{T_j}_f$.
+  In addition, if transaction $T_i$ is an update that commits, this ordering is strict, i.e., $\clockOf{T_i}_f > \clockOf{T_j}_f$.
 \end{proposition}
 
 \begin{proof}
@@ -167,7 +167,7 @@ For some transaction, we shall note $\clockOf{T_i}_f$ the final value of $\clock
     Hence, after$T_i$ executes \refline{stm:write:4}, $\clockOf{T_i} \geq \clockOf{T_j}$ holds.
   \end{itemize}
   Since a clock is monotonic, the relation holds forever.
-  Then, if transaction $T_i$ commits, it must executes \refline{stm:commit:1}, leading to $\clockOf{T_i}_f > \clockOf{T_i}_f$.
+  Then, if transaction $T_i$ is an update that commits, it must executes \refline{stm:commit:1}, leading to $\clockOf{T_i}_f > \clockOf{T_i}_f$.
 \end{proof}
 
 \begin{proposition}
@@ -276,7 +276,7 @@ Upon a call to $\clockOf{p}$, the algorithm returns the clock defined for the so
 
 On the other hand, when the processes use a global clock, \refalg{stm} boils down to the original TinySTM implementation \cite{FelberFMR10}..
 In this case, a read-only transaction always sees a strictly consistent snapshot.
-As a consequence, it can commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:abort:1}.
+As a consequence, it can commit right after a call to $\stmTryCommitFunction$, i.e., without checking its snapshot at \refline{stm:try:1}.
 
 A last observation is that our algorithm works even if one of the processes takes no step.
 This implies that the calls to process clocks (at \reflinestwo{stm:start:1}{stm:commit:2}) are strictly speaking not necessary and can be skipped without impacting the correctness of \refalg{stm}.

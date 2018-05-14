@@ -22,12 +22,12 @@
     \vspace{1em}
 
     \StartFunction{$\stmRead{T,x}$}
-    \If{$(d,x) \in \writeSetOf{T}$}
+    \If{$(x,d) \in \writeSetOf{T}$}
       \Return $d$ \labline{stm:read:1}
     \EndIf
     \State $(d,t) \assign \locationOf{x}$ \labline{stm:read:2}
     \If{$\isLocked{x}$ \labline{stm:read:3} 
-      \\ \hspace{2.5em} $\lor~ (\exists (t',x) \in \readSetOf{T} : t \neq t')$} \labline{stm:read:4}
+      \\ \hspace{2.5em} $\lor~ (\exists (x,t') \in \readSetOf{T} : t \neq t')$} \labline{stm:read:4}
       \Return $\stmAbort{t}$  \labline{stm:read:5}
     \EndIf
     \If{$t > \clockOf{T} \land \neg~\stmExtend{T,t}$} \labline{stm:read:6}
@@ -64,7 +64,7 @@
     \vspace{0.5em}
 
     \StartFunction{$\stmExtend{T,t}$} 
-    \ForAll{$(t',x) \in \readSetOf{T}$} \labline{stm:extend:1}
+    \ForAll{$(x,t') \in \readSetOf{T}$} \labline{stm:extend:1}
       \State $(\msgAny,t'') \assign \locationOf{x}$ \labline{stm:extend:2}
       \If{$\isLocked{x} \lor t'' \neq t'$} \labline{stm:extend:3}
         \Return $\false$ \labline{stm:extend:4}
@@ -77,7 +77,7 @@
     \vspace{1em}
 
     \StartFunction{$\stmAbort{T}$}
-    \ForAll{$(\msgAny,x) \in \writeSetOf{T}$} \labline{stm:abort:1}
+    \ForAll{$(x,\msgAny) \in \writeSetOf{T}$} \labline{stm:abort:1}
       \State $\unlock{x}$ \labline{stm:abort:2}
     \EndFor
     \Return $\flagAbort$ \labline{stm:abort:3}
@@ -86,10 +86,10 @@
     \vspace{1em}
 
     \StartFunction{$\stmCommit{T}$}
-    \If{$\writeSetOf{T} \neq \emptySet$}
-      \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:1} 
+    \If{$\writeSetOf{T} \neq \emptySet$} \labline{stm:commit:0}
+    \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:1} 
       \State $\clockOf{p}.\cadv(\clockOf{T})$ \labline{stm:commit:2}
-      \ForAll{$(d,x) \in \writeSetOf{T}$} \labline{stm:commit:3}
+      \ForAll{$(x,d) \in \writeSetOf{T}$} \labline{stm:commit:3}
         \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:4}
         \State $\unlock{x}$ \labline{stm:commit:5}
       \EndFor

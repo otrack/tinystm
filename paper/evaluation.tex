@@ -44,7 +44,7 @@ As a consequence of DAP, each thread works on independent data, thus improving p
 \begin{figure}[!t]
   \centering
   \subfigure[Base scenario -- locality set to $0.8$]{
-    \includegraphics[scale = 1.0]{results/intset/bank.pdf}
+    \includegraphics[scale = 0.8]{results/intset/bank.pdf}
     \labfigure{bank:base}
   }
   \subfigure[Varying locality -- using $48$ threads]{
@@ -53,7 +53,7 @@ As a consequence of DAP, each thread works on independent data, thus improving p
   }
   \caption{
     \labfigure{bank}
-    Bank benchmark -- $2^{10}$ accounts
+    Bank benchmark with fixed locality (a) and increasing locality values (b).
   }
 \end{figure}
 
