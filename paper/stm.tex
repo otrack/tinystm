@@ -109,7 +109,7 @@ With more details, the execution of a transaction $T$ proceeds as follows.
   When $T$ requests to commit, \refalg{stm} certifies the read set by calling function $\stmExtend{}$ with the clock of $T$ (\refline{stm:try:1}).
   If this test succeeds, transaction $T$ commits (\reflines{stm:commit:0}{stm:commit:6}).
   In such a case, when $T$ is an update, \clockOf{T} ticks to reach its final value (\refline{stm:commit:1}).
-  By construction, this value is greater than the timestamps of all the versions read or written by $T$ (\reflinestwo{stm:read:5}{stm:write:4}).
+  By construction, this value is greater than the timestamps of all the versions read or written by $T$ (\reflinestwo{stm:read:6}{stm:write:4}).
   \refalg{stm} updates the clock of $p$ with the final value of \clockOf{T} (\refline{stm:commit:2}), then it updates the items written by $T$ with their novel versions (\refline{stm:commit:4}).
 \end{itemize}
 
