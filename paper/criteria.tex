@@ -85,6 +85,7 @@ If the read operation takes place after the write, the reader is bound to use th
 \end{definition}
 
 When a transaction $T_i$ is bound to another transaction $T_j$, to preserve the consistency of its snapshot, $T_i$ must read the updates and causal dependencies of $T_j$ that are intersecting with its read set.
+% causal dependency -> dependency ?
 This is for instance the case of transaction $T_4$ in history $h_2$, where this transaction is bound to $T_3$ on $y$.
 As a consequence, $T_4$ must return $x_1$ as the result of its read on $x$, or its snapshot will be inconsistent.
 
@@ -123,7 +124,7 @@ In addition, it prohibits transactions to view inconsistencies unless one of the
   Relation $<$ can be either a partial or a total order over the committed transactions in $h$.
   The serialization graph of history $h$ induced by $\ll_h$, written $\SSG(h,\ll_h)$, is defined as $(\committed{h},<)$.
 \end{definition}
-In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
+In the above definition, (1) is a real-time order between $T_i$ and $T_j$, (2) a read-write dependency, (3) a version ordering, and (4) an anti-dependency.
 
 \begin{definition}[Stricter serializability]
   A history $h$ is stricter serializable ($h \in \SPSER$) when
@@ -134,7 +135,7 @@ In the above definition, (1) is a real-time order between $T$ and $T'$, (2) a re
 \end{definition}
 
 Opacity ($\OPA$) and strict serializability ($\SSER$) coincide when aborted transactions observe strictly consistent snapshots.
-% details
+% define $\OPA$ and detail this.
 As a consequence of the above definition, a stricter serializable history during which all the aborted transactions exhibit fair bindings is opaque.
 
 \begin{proposition}
@@ -156,6 +157,7 @@ Then, we present our robustness criteria and prove that it applies to $\SPSER$.
 \labsection{criteria:app}
 
 The state of an object commonly includes \emph{references} to one or more objects in the shared memory.
+% define formally
 These references between objects form the \emph{object graph} of the application.
 
 When performing a computation, a process traverses a \emph{path} in the object graph.
@@ -205,21 +207,23 @@ By property $\mathcal{P}$, if such a path exists it is unique, because each tran
 
 \begin{lemma}
   \lablem{criteria:1}
-  If transaction $T_i$ reaches $x$ in $h$, then for every $y_j$ in $\pi_i \union \pi_i'$, the dependency $T_i \depends T_j$ holds. 
+  If transaction $T_i$ reaches $x$ in $h$, then for every $y_j$ in $\pi_i \union \pi_i'$, the dependency $T_i \depends T_j$ holds.
+  % define ``reach''
 \end{lemma}
 
 \begin{proof}  
 
+  % to rewrite in a simpler way.
   There are two cases to consider:
   \begin{itemize}
   \item ($y_j \in \pi_i$)
-    Property~$\mathcal{P}$ implies that either $y_j$ is the root, or $T_i$ reads the version $z_k$ right before $y_j$ in $\pi_i$.
-    Hence, by a short induction, transaction $T_i$ reads all the versions in $\pi_i$.
+    Property~$\mathcal{P}$ implies that either $x$ is the root, or $T_i$ reads the version $z_k$ right before $x$ in $\pi_i$ that holds the reference to it.
+    By a short induction, transaction $T_i$ reads all the versions in $\pi_i$.
   \item ($y_j \in \pi_i'$)
-    Assume that $T_i$ accesses $y_j$ and name $z_k$ the version right before $y_j$ in $\pi_i'$.
-    Version $z_k$ holds a reference to $y_j$.
-    If this reference does not exist prior to the execution of $T_i$, object $z$ was updated.
-    Otherwise, $T$ must reads $z_k$ prior to accessing $y_j$.
+    Name $z_k$ the version right before $x$ in $\pi_i'$ that holds the reference to $x$.
+    If this reference does not exist prior to the execution of $T_i$, object $z$ was updated by $T_i$.
+    Otherwise, $T_i$ must read $z_k$ prior to accessing $x$.
+    Again, by induction, $T_i$ reads or writes all the versions in $\pi_i'$.
   \end{itemize}
 
 \end{proof}
@@ -236,7 +240,7 @@ By property $\mathcal{P}$, if such a path exists it is unique, because each tran
 
   First, consider that either ($\pi_i = \pi_j$) or ($\pi_i = \pi_j'$) is true.
   Choose some $y_k$ read before $x_j$ in $\pi_i$.
-  By \reflem{criteria:1}, since $y_k \in (\pi_j \union \pi_j'$ is true, the dependency $T_j \depends T_k$ holds.
+  By \reflem{criteria:1}, since $y_k \in (\pi_j \union \pi_j')$ is true, the dependency $T_j \depends T_k$ holds.
   
   Otherwise, by our induction hypothesis, all the bindings of $T_i$ prior $x_j$ are fair.
   It follows that transaction $T_i$ observes a strictly consistent snapshot in $h$ up to $r_i(x_j)$.
