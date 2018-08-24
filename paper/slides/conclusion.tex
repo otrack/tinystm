@@ -1,0 +1,24 @@
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+  \begin{itemize}
+  \item invisible reads (IR) + disjoint access-parallelism (DAP)
+    \begin{itemize}
+    \item better STM performance
+    \item \underline{but} synchronization wall (due to global clock)
+    \end{itemize}
+  \item this paper
+    \begin{itemize}
+    \item introduce $\SPSER$ (between $\SSER$ and $\OPA$)
+    \item formulate its applicability (= robustness criterion)
+    \item propose a matching algorithm (both IR + DAP)
+    \item validate in practice (up to x65 faster than TinySTM)
+    \end{itemize}
+  \item perspectives
+    \begin{itemize}
+    \item broader study of algorithmic parameters
+    \item comparison w. lock-based implementations and hardware TM
+    \item extend $\SPSER$ to more applications
+    \end{itemize}
+  \end{itemize}
+\end{frame}

@@ -1,0 +1,61 @@
+\section{Monotonic Generic Multicast}
+
+\begin{frame}{\SYSlongm}
+
+  \SYS builds a partial order that grows monotonically
+
+  \bigskip
+
+  More formally,
+  \begin{itemize}
+  \item \SYS returns posets $(\del,\mapsto)$
+  \item $m \mapsto_i m'$ is the delivery order at $p_i$
+    \only<1>{
+      \begin{itemize}
+      \item $p_i$ delivers $m$ but not $m'$,
+      \item $m$ precedes $m'$ in some poset, or 
+      \item $p_i$ delivers $m$ and $m'$ in disttinct posets, and $m$ is delivered before $m'$.
+      \end{itemize}
+    }
+  \item $({\mapsto} = \bigcup_{i=1}^n {\mapsto_i})$ is the global delivery order
+  \item<2> Properties of \SYS
+    \only<2>{
+    \begin{description}
+    \item [Validity.] If a process delivers a message $m$, then some process has broadcast $m$ before.
+    \item [Integrity.] Every process delivers a message at most once.
+    \item [Conflict-Ordering.] For every process $p_i$ and any conflicting messages $m$ and $m'$, either $m \mapsto_i m'$ or $m' \mapsto_i m$ holds.
+    \item [Monotonicity.] Relation $\mapsto$ is a partial order.
+    \end{description}
+  }      
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{\sout{Monotonic} Generic Broadcast}
+
+  \SYS builds a partial order that grows monotonically
+
+  \bigskip
+
+  More formally,
+  \begin{itemize}
+  \item \SYS returns posets $(\del,\mapsto)$
+  \item $m \mapsto_i m'$ is the delivery order at $p_i$ 
+  \item $({\mapsto} = \bigcup_{i=1}^n {\mapsto_i})$ is the global delivery order
+  \item Properties of \SYS
+    \begin{description}
+    \item [Validity.] If a process delivers a message $m$, then some process has broadcast $m$ before.
+    \item [Integrity.] Every process delivers a message at most once.
+    \item [Conflict-Ordering.] For every process $p_i$ and any conflicting messages $m$ and $m'$, either $m \mapsto_i m'$ or $m' \mapsto_i m$ holds.
+    \item [\sout{Monotonicity.}] \sout{Relation $\mapsto$ is a partial order.}
+    \end{description}
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Back to the example}
+
+  \hspace{4em}%
+  \input{figures/illustration_PCD.tex}
+  
+\end{frame}

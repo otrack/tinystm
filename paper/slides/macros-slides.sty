@@ -1,0 +1,349 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Macros creating macros
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand*{\newmathit}[1]{%
+    \expandafter \@ifdefinable \csname #1\endcsname {%
+      \global \@namedef{#1}{\ensuremath{\mathit{#1}}}%
+    }%
+  }
+\newcommand*{\newmathit@one}[1]{%
+    \expandafter \@ifdefinable \csname #1\endcsname {%
+      \global \@namedef{#1}##1{\ensuremath{\mathit{#1} (##1)}}%
+    }%
+  }
+\newcommand*{\newmathit@two}[1]{%
+    \expandafter \@ifdefinable \csname #1\endcsname {%
+      \global \@namedef{#1}##1##2{\ensuremath{\mathit{#1} (##1,##2)}}%
+    }%
+  }
+\newcommand*{\newmathit@three}[1]{%
+    \expandafter \@ifdefinable \csname #1\endcsname {%
+      \global \@namedef{#1}##1##2##3{\ensuremath{\mathit{#1} (##1,##2,##3)}}%
+    }%
+  }
+\newcommand*{\newmathit@four}[1]{%
+    \expandafter \@ifdefinable \csname #1\endcsname {%
+      \global \@namedef{#1}##1##2##3##4{\ensuremath{\mathit{#1} (##1,##2,##3,##4)}}%
+    }%
+  }
+\newcommand*{\newmathsub@one}[1]{%
+    \expandafter \@ifdefinable \csname #1\endcsname {%
+      \global \@namedef{#1}##1{\ensuremath{\mathit{#1}_{##1}}}%
+    }%
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formatting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newenvironment{invitemize}
+{\begin{itemize}\renewcommand{\labelitemi}{}\renewcommand{\labelitemii}{}}
+{\end{itemize}}
+
+\newcounter{exempleCounter}
+\setcounter{exempleCounter}{0}
+\newenvironment{exemple}
+{
+  \begin{invitemize}
+  \addtocounter{exempleCounter}{1}
+  \item \text{\textsf{Example} \arabic{exempleCounter}~:~}
+}
+{\end{invitemize}}
+
+\newcounter{constructionCounter}
+\setcounter{constructionCounter}{0}
+\newenvironment{construction}
+{
+  \addtocounter{exempleCounter}{1}
+  \begin{itemize}
+    \item[(\textbf{Construction~\arabic{exempleCounter}})]
+}
+{\end{itemize}}
+
+\newenvironment{preuveInformelle}
+{
+  \textbf{Correctness.}
+}
+{$\square$}
+
+\newcommand{\labfigure}[1]{\label{fig:#1}}
+\newcommand{\reffigure}[1]{Figure~\ref{fig:#1}}
+
+\newcommand{\labtab}[1]{\label{tab:#1}}
+\newcommand{\reftab}[1]{Table~\ref{tab:#1}}
+
+\newcommand{\labsection}[1]{\label{sect:#1}}
+\newcommand{\refsection}[1]{Section~\ref{sect:#1}}
+\newcommand{\refsectiontwo}[2]{Sections~\ref{sect:#1}~and~\ref{sect:#2}}
+
+\newcommand{\labappendix}[1]{\label{appendix:#1}}
+\newcommand{\refappendix}[1]{Appendix~\ref{appendix:#1}}
+
+\newcommand{\labalg}[1]{\label{alg:#1}}
+\newcommand{\refalg}[1]{Algorithm~\ref{alg:#1}}
+\newcommand{\refalgtwo}[2]{Algorithms~\ref{alg:#1}~and~\ref{alg:#2}}
+
+\newcommand{\labline}[1]{\label{line:alg:#1}}
+\newcommand{\refline}[1]{line~\ref{line:alg:#1}}
+\newcommand{\reflines}[2]{lines~\ref{line:alg:#1}~to~\ref{line:alg:#2}}
+\newcommand{\reflinestwo}[2]{lines~\ref{line:alg:#1}~and~\ref{line:alg:#2}}
+\newcommand{\reflinesthree}[3]{lines~\ref{line:alg:#1},~\ref{line:alg:#2}~and~\ref{line:alg:#3}}
+
+\newcommand{\labdef}[1]{\label{def:#1}}
+\newcommand{\refdef}[1]{Definition~\ref{def:#1}}
+
+\newcommand{\labclaim}[1]{\label{claim:#1}}
+\newcommand{\refclaim}[1]{Claim~\ref{claim:#1}}
+\newcommand{\refclaims}[2]{Claims~\ref{claim:#1}~to~\ref{claim:#2}}
+
+\newcommand{\lablem}[1]{\label{lem:#1}}
+\newcommand{\reflem}[1]{Lemma~\ref{lem:#1}}
+
+\newcommand{\labprop}[1]{\label{prop:#1}}
+\newcommand{\refprop}[1]{Proposition~\ref{prop:#1}}
+\newcommand{\refprops}[2]{Proposition~\ref{claim:#1}~to~\ref{claim:#2}}
+
+\newcommand{\labtheo}[1]{\label{theo:#1}}
+\newcommand{\reftheo}[1]{Theorem~\ref{theo:#1}}
+
+\newcommand{\labcor}[1]{\label{cor:#1}}
+\newcommand{\refcor}[1]{Theorem~\ref{cor:#1}}
+
+\newcommand{\labequation}[1]{\label{eq:#1}}
+\newcommand{\refequation}[1]{(Equation~\ref{eq:#1})}
+
+\newcommand{\labinv}[1]{\label{inv:#1}}
+\newcommand{\refinv}[1]{Invariant~\ref{inv:#1}}
+\newcommand{\refinvs}[2]{Invariants~\ref{inv:#1}~to~\ref{inv:#2}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Maths
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Sequences
+\newcommand{\seqSet}{\ensuremath{\mathit{CSeq}}}
+\newcommand{\seqAppend}{\ensuremath{\circ}}
+\newcommand{\seqPrefix}{\ensuremath{\sqsubseteq}}
+\newcommand{\seqNull}{\ensuremath{\epsilon}}
+\newcommand{\seqEquiv}{\ensuremath{\thicksim}}
+\newcommand{\seqEquivPrime}{\ensuremath{\approx}}
+\newcommand{\seqBot}{\ensuremath{\epsilon}}
+\newcommand{\seqSetOf}[1]{\ensuremath{cseq(#1)}}
+
+% reasoning
+\newcounter{factCounter}
+\newenvironment{preuve}
+{\setcounter{factCounter}{0}\vspace{0.2em}\noindent\textit{Proof}\setlength{\parindent}{0em}}
+{\begin{flushright}$\square$\end{flushright}\vspace{0.2em}}
+
+\newenvironment{deduction}
+{
+  \begin{description}
+}
+{\end{description}}
+
+\newcommand{\soit}[1]{\item[\textsf{Let:}] #1}
+\newcommand{\soitCause}[2]{\item[\textsf{Let:}] #1\\\textsf{Proof:}~#2}
+\newcommand{\soitTelQue}[2]{\item[\textsf{Let}]~#1~\textbf{\textsf{defined by:}}\\#2}
+\newcommand{\parRecurrence}{\item[\textsf{By induction.}]}
+\newcommand{\parAbsurde}{\item[\textsf{By contradiction.}]}
+\newcommand{\cas}[1]{\item[\textsf{Case:}] #1}
+\newcommand{\casDefault}{\item[\textsf{Default:}]~}
+\newcommand{\suppose}[1]{\item[\textsf{Assume:}] #1}
+\newcommand{\faitCause}[2]{\addtocounter{factCounter}{1}\item[\textsf{Fact~\arabic{factCounter}:}] #1\\\textsf{Proof:} #2}
+\newcommand{\faitEvident}[1]{\addtocounter{factCounter}{1}\item[\textsf{Fact~\arabic{factCounter}:}]#1}
+\newcommand{\faitADeduire}[1]{\addtocounter{factCounter}{1}\item[\textsf{Fact~\arabic{factCounter}:}] #1}
+\newcommand{\aProuver}[1]{\item[\textsf{Prove:}] #1}
+\newcommand{\evidence}{\item[\cqfd]}
+\newcommand{\evidenceCause}[1]{\item[\cqfd]~\\\textsf{Proof:}~#1}
+\newcommand{\absurdite}{\item[\textsf{Absurd.}]}
+\newcommand{\absurditeCause}[1]{\item[\textsf{Absurd.}]~\\\textsf{Proof:}~#1}
+\newcommand{\nonModifie}[1]{\item[\textsf{Unchanged:}]~#1}
+
+% Relation theory
+\newcommand{\domainOf}[1]{\ensuremath{\mathit{domain}(#1)}}
+\newcommand{\codomainOf}[1]{\ensuremath{\mathit{codomain}(#1)}}
+
+% Various things
+\let\ensuremathorig=\ensuremath
+\newcommand{\st}{\ensuremath{\xspace|\xspace}}
+\renewcommand{\ensuremath}[1]{\ensuremathorig{#1}\xspace}
+\newcommand{\naturalSet}{\ensuremath{\mathbb{N}}}
+\newcommand{\cardinalOf}[1]{\ensuremath{\lvert #1 \rvert}}
+\newcommand{\sumOf}[3]{\ensuremath{\sum_{#1}^{#2} #3}}
+\newcommand{\partieEntiere}[1]{\ensuremath{\lfloor#1\rfloor}} % partie entière par défaut
+\newcommand{\partieEntieree}[1]{\ensuremath{\lceil#1\rceil}} % partie entière par excés 
+\newcommand{\modulo}[2]{\ensuremath{#1\left[#2\right]}}
+\newcommand{\xor}{\oplus}
+\newcommand{\bigxor}{\ensuremath{\bigoplus}}
+\newcommand{\union}{\cup}
+\newcommand{\inter}{\cap}
+\newcommand{\bigunion}{\ensuremath{\bigcup}}
+\newcommand{\biginter}{\ensuremath{\bigcap}}
+\newcommand{\bottom}{\ensuremath{\bot}}
+\newcommand{\equaldef}{\ensuremath{\stackrel{\triangle}{=}}}
+\newcommand{\equivdef}{\stackrel{\mathrm{def}}{\equiv}}
+\newcommand{\iftxt}{~{\mathrm{if}}~}
+\newcommand{\ifftxt}{~{\mathrm{iff}}~}
+\newcommand{\logarithmOf}[2]{\ensuremath{\mathit{log}_{#1}(#2)}}
+\let\longimplies=\implies
+\renewcommand{\implies}{\ensuremath{\rightarrow}}
+\renewcommand{\impliedby}{\ensuremath{\leftarrow}}
+\let\longiff=\iff
+\renewcommand{\iff}{\Leftrightarrow}
+\newcommand{\Henceforth}{\Box}
+\let\emptyset\varnothing
+\newcommand{\emptySet}{\ensuremath{\emptyset}}
+\newcommand{\true}{\ensuremath{\mathit{true}}}
+\newcommand{\false}{\ensuremath{\mathit{false}}}
+\newcommand{\notimplies}{\ensuremath{\not \implies}}
+\newcommand{\equals}{\ensuremath{=}}
+\newcommand{\pp}[1]{{\sf #1}}
+\newcommand{\quotientSet}[2]{\ensuremath{{#1}_{/#2}}}
+\newcommand{\lub}{\ensuremath{\sqcup}}
+\newcommand{\glb}{\ensuremath{\sqcap}}
+\newcommand{\glbOf}[1]{\ensuremath{\sqcap \xspace \left( #1 \right) }}
+\newcommand{\lubOf}[1]{\ensuremath{\sqcup \xspace \left( #1 \right) }}
+
+\newcommand{\maximum}{\ensuremath{\mathit{max}}}
+\newcommand{\maxOf}[1]{\ensuremath{\mathit{max}(#1)}}
+\newcommand{\maxPair}[2]{\ensuremath{\mathit{max}(#1,#2)}}
+\newcommand{\minOf}[1]{\ensuremath{\mathit{min}(#1)}}
+\newcommand{\minimum}{\ensuremath{\mathit{min}}}
+
+\newcommand{\minOfOver}[2]{\ensuremath{\mathit{min}_{#2}~#1}}
+\newcommand{\maxOfOver}[2]{\ensuremath{\mathit{max}_{#2}~#1}}
+\newcommand{\isBounded}[1]{\ensuremath{#1~\text{bounded}}}
+\newcommand{\limit}[3]{\ensuremath{\lim_{#2 \to #3}#1}}
+%\newcommand{\floor}[1]{\ensuremath{\left\lfloor #1 \right\rfloor}}
+\newcommand{\classOf}[1]{\ensuremath{[#1]}}
+\newcommand{\classOfFor}[2]{\ensuremath{[#1]_{#2}}}
+\newcommand{\equalsby}[1]{\ensuremath{\buildrel #1\over \equals}}
+\newcommand{\tclosure}[1]{\ensuremath{#1^{*}}}
+
+% Temporal logic
+\newcommand{\tlGlobally}{\ensuremath{\square}}
+\newcommand{\tlFuture}{\ensuremath{\lozenge}}
+\newcommand{\tlNext}{\ensuremath{\circ}}
+\newcommand{\nextOf}[1]{\ensuremath{{#1}{'}}}
+
+% Assignment
+\newcommand{\assign}{\ensuremath{\leftarrow}}
+\newcommand{\abs}[1]{\ensuremath{|#1|}}
+\newcommand{\nequals}{\ensuremath{\neq\xspace}}
+\newcommand{\braket}[1]{\ensuremath{\langle #1 \rangle}}
+
+% % Definition, Theorem, ... 
+\newtheorem*{theorem*}{Theorem}
+
+
+\newcounter{assumptionCounter}
+\setcounter{assumptionCounter}{0}
+\newenvironment{assumption}
+{\addtocounter{assumptionCounter}{1}\begin{displaymath}\text{\textbf{A\arabic{assumptionCounter}.~~}}}
+{\end{displaymath}}
+
+\newcommand{\cqfd}{\textsf{QED.}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Data consistency
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\objectSet}{\ensuremath{\mathit{Objects}}}
+\newcommand{\objectSetOf}[1]{\ensuremath{\mathit{obj}(#1)}}
+
+% Data item and object
+\newcommand{\stateSet}{\ensuremath{States}}
+\newcommand{\state}{\ensuremath{\mathit{st}}}
+\newcommand{\valSet}{\ensuremath{\mathit{Values}}}
+\newcommand{\val}{\ensuremath{\mathit{val}}}
+\newcommand{\stateInit}{\ensuremath{\mathit{s_0}}}
+\newcommand{\operationSet}{\ensuremath{\mathit{Op}}}
+\newcommand{\cmdSet}{\ensuremath{\mathit{Cmd}}}
+\newcommand{\op}{\ensuremath{\mathit{op}}}
+\newcommand{\conflict}[2]{\ensuremath{\mathit{Conflict}(#1,#2)}}
+\newcommand{\rwconflict}[2]{\ensuremath{\mathit{RWConflict}(#1,#2)}}
+\newcommand{\wwconflict}[2]{\ensuremath{\mathit{WWConflict}(#1,#2)}}
+
+% Relation between operations
+\newcommand{\NotAfterSymbol}{\mathrel{\rightarrow}}
+\newcommand{\NotAfter}{\ensuremath{\NotAfterSymbol}}
+\newcommand{\EnablesSymbol}{\mathrel{\lhd}}
+\newcommand{\MustHaveSymbol}{\mathrel{\rhd}}
+\newcommand{\Enables}{\ensuremath{\EnablesSymbol}}
+\newcommand{\MustHave}{\ensuremath{\MustHaveSymbol}}
+\newcommand{\commutingSymbol}{\mathrel{\asymp}}
+\newcommand{\commuting}{\ensuremath{\commutingSymbol}}
+\newcommand{\NonCommutingSymbol}{\not\mathrel{\asymp}}
+\newcommand{\NonCommuting}{\ensuremath{\NonCommutingSymbol}}
+
+% Consistency criterion
+\newcommand{\conscSet}{\ensuremath{Spec}}
+\newcommand{\conscEquiv}{\ensuremath{\stackrel{*}{\thicksim}}}
+
+% Command structures
+\newcommand{\cstructNull}{\ensuremath{\bot}}
+\newcommand{\cstructAppend}{\ensuremath{\bullet}}
+\newcommand{\cstructAppendPrime}{\ensuremath{\star}}
+\newcommand{\cstructAppendSecond}{\ensuremath{\square}}
+
+%\newcommand{\cstructConcat}{\ensuremath{*}}
+\newcommand{\cstructPrefix}{\ensuremath{\sqsubseteq}}
+\newcommand{\cstructStrictPrefix}{\ensuremath{\sqsubset}}
+\newcommand{\cstructWellFormedPrefix}{\ensuremath{\sqsubseteq^{+}}}
+\newcommand{\cstructSet}{\ensuremath{\mathit{CStruct}}}
+\newcommand{\cstructSetOf}[1]{\ensuremath{\mathit{Str(#1)}}}
+\newcommand{\compatible}[1]{\ensuremath{\{#1\}~\text{compatible}}}
+\newcommand{\kcompatible}[2]{\ensuremath{#1~\text{#2-compatible}}}
+\newcommand{\twocompatible}[1]{\kcompatible{#1}{2}}
+\newcommand{\canonical}[1]{\ensuremath{canonical(#1)}}
+\newcounter{cstructAssumptionCounter}
+\setcounter{cstructAssumptionCounter}{0}
+\newcommand{\cstructAssumption}[1]
+{
+  \addtocounter{cstructAssumptionCounter}{1}
+  \begin{tabular}{1cm}{15cm}
+    \textbf{CS\arabic{cstructAssumptionCounter}.}~~ #1
+  \end{tabular}
+}
+
+% Process
+\newcommand{\procSet}{\ensuremath{\mathrm{\Pi}}}
+\newcommand{\groupSet}{\ensuremath{\Gamma}}
+\newcommand{\groupOf}[1]{\ensuremath{\mathit{group}(#1)}}
+\newcommand{\run}{\ensuremath{\rho}}
+
+% Latency 
+\newcommand{\runs}[1]{\ensuremath{\mathit{runs(#1)}}}
+\newcommand{\niceruns}[1]{\ensuremath{\mathit{nice(#1)}}}
+\newcommand{\soruns}[1]{\ensuremath{\mathit{so(#1)}}}
+\newcommand{\length}[1]{\ensuremath{\mathit{len(#1)}}}
+\newcommand{\latency}[1]{\ensuremath{\mathit{lat(#1)}}}
+\newcommand{\ldegree}[1]{\ensuremath{\mathit{\Delta_{#1}}}}
+\newcommand{\ldegreeFor}[2]{\ensuremath{\mathit{\Delta^{#2}_{#1}}}}
+\newcommand{\ddegree}[1]{\ensuremath{\mathit{\Lambda_{#1}}}}
+\newcommand{\ddegreeFor}[2]{\ensuremath{\mathit{\Lambda^{#2}_{#1}}}}
+
+% Happens-before
+\newcommand{\hb}{\ensuremath{\prec}}
+\newcommand{\hbeq}{\ensuremath{\preceq}}
+\newcommand{\cc}{\ensuremath{\parallel}}
+
+% Histories
+\newcommand{\histSet}{\ensuremath{\mathcal{H}}}
+
+\newcommand{\completeOf}[1]{\ensuremath{\mathit{complete}(#1)}}
+\newcommand{\invocation}[2]{\ensuremath{\mathit{inv}_{#1}(#2)}}
+\newcommand{\response}[3]{\ensuremath{\mathit{res}_{#1}(#2,#3)}}
+\newcommand{\responseAny}[2]{\ensuremath{\mathit{res}(#1,#2)}}
+
+\newcommand{\linPrec}[1]{\ensuremath{\prec_{#1}}}
+\newcommand{\linEquiv}{\ensuremath{\sim}}
+
+\newcommand{\commit}[1]{\ensuremath{\mathit{commit}(#1)}}
+\newcommand{\serPrec}[1]{\ensuremath{\stackrel{\mathit{tr}}{<_{#1}}}}
+\newcommand{\serEquiv}{\ensuremath{\stackrel{\mathit{tr}}{\sim}}}
+

@@ -1,0 +1,136 @@
+\PassOptionsToPackage{usenames,dvipsnames,svgnames,table}{xcolor}
+
+% Beamer settings
+\mode<presentation> {
+  \usetheme[
+    diaposparpage=1, % ou 2 ou 3
+    fontsize=9.5pt,  % ou 10pt ou 9pt ou ...
+    nombredelogos=2, % ou 1
+    premierlogo=tsp, % ou imt
+    deuxiemelogo=upsay, % ou asr
+    decalageverslehauttitrepagedegarde=0cm,
+    taillemargegauchetexte=2.5em,
+    taillemargegaucheliste=2em, % ou 1em
+    tailledecalagedroiteliste=2em, % ou 1em
+    dateinfootline=false, % ou false
+    hierarchiesectionsentete=false % ou false    
+  ]{tsp}
+  \setbeamercovered{invisible}
+  \beamertemplatenavigationsymbolsempty  
+}
+
+% theme customization
+\setbeamerfont{footline}{size=\fontsize{6}{11}\selectfont}
+\setbeamerfont{page number in head/foot}{size=\fontsize{6}{11}\selectfont}
+\setbeamerfont{date in head/foot}{size=\fontsize{6}{11}\selectfont}
+\setbeamerfont{xfootnote}{size=\tiny}
+
+% the ``Thank you'' page
+\def\makethanks{%
+  \begin{frame}
+    \begin{center}
+      {\fontsize{30}{40}\color{Blue}{\selectfont Thank You!}}
+    \end{center}
+  \end{frame}
+}
+
+% commands for the title and message of the "Thank you" page
+\def\thankstitle#1{\def\@thankstitle{#1}}
+\def\thanksmessage#1{\def\@thanksmessage{#1}}
+\thanksmessage{}
+\thankstitle{Thank you!}
+
+\usepackage{relsize}
+
+%% % Font type for listings
+\newcommand\Small{\fontsize{7.5}{10.5}\selectfont}
+\newcommand*\LSTfont{\Small\ttfamily\SetTracking{encoding=*}{-60}\lsstyle}
+
+% Code listing
+\usepackage{listings}
+\usepackage{inconsolata}
+\lstset{
+  float,
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  xleftmargin=0em,
+  captionpos=t,
+  escapeinside={(*@}{@*)},
+  mathescape=false,
+  extendedchars=\false,
+  frame=tb,
+  columns=fullflexible,
+  linewidth=0.95\linewidth,
+  basicstyle=\small
+}
+
+% Python listing
+\definecolor{pyblue}{rgb}{0,0,0.5}
+\definecolor{pyred}{rgb}{0.6,0,0}
+\definecolor{pygreen}{rgb}{0,0.5,0}
+\lstdefinestyle{PythonStyle}{
+  language=python,
+  backgroundcolor=\color{yellow!15},
+  otherkeywords={self,for,if,else,return},
+  keywordstyle=\color{pyblue},
+  emph={MyClass,__init__},
+  emphstyle=\color{pyred},
+  stringstyle=\color{pygreen},
+  commentstyle=\color{Brown},    
+}
+
+% Bash listing
+\lstdefinestyle{BashStyle}{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!15},
+  frame=none,
+  literate = *{\ \ }{ }1 % reduce starting spaces
+}
+
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{multirow}
+\usepackage{xspace}
+\usepackage{hyperref} \hypersetup{colorlinks=true, breaklinks=true, urlcolor=black, linkcolor=black, citecolor=black}
+\usepackage{stmaryrd}
+\usepackage[super]{nth}
+\usepackage{subcaption}
+
+% Figures (tikz et al.)
+\usepackage{graphicx}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,positioning,automata,calc}
+\usetikzlibrary{shapes,arrows}
+\usepgflibrary{shapes.symbols} % LATEX and plain TEX and pure pgf 
+\usetikzlibrary{shapes.symbols} % LATEX and plain TEX when using Tik Z 
+
+\usepackage[subfolder,cleanup]{gnuplottex}
+
+\usepackage{ctable} % for \specialrule command
+
+\usepackage[vlined,linesnumbered,noresetcount,boxruled]{algorithm2e}
+\SetKwBlock{SubAlgoBlock}{}{end}
+\newcommand{\SubAlgo}[2]{#1 \SubAlgoBlock{#2}}
+\SetKw{KwWhen}{when}
+\SetKw{KwDo}{do}
+\newcommand{\When}[2]{\KwWhen #1 \KwDo \SubAlgoBlock{#2}}
+\newcommand{\lWhen}[2]{\KwWhen #1 \KwDo #2\;}
+\let\oldnl\nl\newcommand{\nonl}{\renewcommand{\nl}{\let\nl\oldnl}}
+
+\newcommand\commfont[1]{\textrm{#1}}
+\SetCommentSty{commfont}
+
+\makeatletter
+\newcommand{\removelatexerror}{\let\@latex@error\@gobble}
+\makeatother
+
+% Others
+\usepackage{subcaption}
+\newcommand{\highlight}[1]{%
+  \colorbox{blue!50}{$\displaystyle#1$}}
+\usepackage{ulem}
+\renewcommand{\emph}[1]{\textit{#1}}

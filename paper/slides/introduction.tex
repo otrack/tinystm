@@ -1,0 +1,69 @@
+\section{Introduction}
+
+\begin{frame}{Context}
+  \begin{itemize}
+  \item multicore architectures
+    \begin{itemize} 
+    \item massively-parallel
+    \item difficult to program
+    \end{itemize}
+  \item transactional memory
+    \begin{itemize}
+    \item reason sequentially
+    \item execute concurrently
+    \end{itemize}
+  \item \underline{but} performance problem
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{System model}
+  \input{slides/figures/not-opaque}
+  \bigskip
+  \begin{itemize}
+  \item transaction = sequence of reads/writes followed by a try-commit
+  \item history = interleaving of transactions
+  \item version order = arbitration between writes on an object (e.g., $y_0 \ll_{h_1} y_2$)
+  \item $\committed{h_1}=\{\tTwo\}$, $\aborted{h_1}=\{\tOne\}$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{System model}
+  \input{slides/figures/sample}
+  In the above history,\footnotemark
+  \begin{itemize}
+  \item $\tTwo$ precedes $\tThree$ in real-time ($\tTwo \hb \tThree$)
+  \item $\tTwo$ write-depends on $\tOne$ ($\tTwo \depends \tOne$) \\
+        $\tFour$ read-depends on $\tThree$ ($\tFour \depends \tThree$)
+  \item if $x_2 \ll x_1$ then $\tOne$ anti-depends on $\tFour$ 
+  \end{itemize}
+  
+  \footnotetext{    
+    If $T_i$ is not explicitely aborted in $h$, it commits (written $c_i \in h$).
+  }
+\end{frame}
+
+\begin{frame}{System model}
+  \begin{itemize}
+  \item $h \in \SSER = \committed{h}$ is linearizable
+  \item \textbf{Question.} $h_2 \in \SSER$ ?
+  \end{itemize}
+  \input{slides/figures/sample}    
+  \onslide<2->{
+    \begin{itemize}
+    \item $\committed{h_2} \equiv \color{red}{\tTwo}.\color{blue}{\tOne}.\color{OliveGreen}{\tThree}$
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}{System model}
+  \begin{itemize}
+  \item $h \in \OPA = \aborted{h} \union \committed{h}$ is linearizable
+  \item \textbf{Question.} $h_2 \in \OPA$ ?
+  \end{itemize}
+  \input{slides/figures/sample}    
+  \onslide<2->{
+    \begin{itemize}
+    \item $h_2 \notin \OPA$ (because $r_4(x_2) \land \tFour \depends \tOne \land x_2 \ll x_1$)
+    \end{itemize}
+  }
+\end{frame}
