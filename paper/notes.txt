@@ -68,7 +68,7 @@ AUTHORS: Pierre Sutra, Patrick Marlier, Valerio Schiavoni and François Trahay
 Overall evaluation: 1 (weak accept)
 
 ----------- Overall evaluation -----------
-The authors of this paper propose a new consistency criteria called stricter seriazibility (SSER+) to deal with transactional memory operations in many-core numa architecture.
+The authors of this paper propose a new consistency criterion called stricter seriazibility (SSER+) to deal with transactional memory operations in many-core numa architecture.
 As a researcher not expert in the specific domain of distributed memory protocols, I enjoyed reading the paper, as the concepts, models and proposed algorithm are clearly explained and discussed. There are some minor errors here and there, and a missing ref on page 4.
 The experimental evaluation focused my attention. The authors implement Alg. 1 inside TinySTM and compared it with some test suites provided by that software, using as a baseline the global clock sync mechanism provided by TinySTM. My first question is: is that mechanism the state-of-the-art, or just a baseline provided by the adopted software? Secondly, in Fig 1(a), why there is a small difference in performance for a single case, with threads between 32 and 40? Thirdly, why going form locality 0.8 to 1.0 in Fig. 1(b) produces a speedup of more than 2x? Other relative speedup are not *that* large, maybe a finer grain in such locality values would help the presentation of results. Also the linked-list and tree experiments are somewhat less interesting, since clearly if there are few data to play with (512 values in list) or a lot (10^5) in trees, the contention level varies.
 
@@ -118,7 +118,7 @@ AUTHORS: Pierre Sutra, Patrick Marlier, Valerio Schiavoni and François Trahay
 Overall evaluation: 1 (weak accept)
 
 ----------- Overall evaluation -----------
-This paper proposes an implementation of transactional memories based on a novel consistency criteria, called stricter serialisability (SSER+). SSER+ is based on the notion of fair binding: a read version is either accessed by the writer or one of its dependencies. It is claimed that SSER+ implies OPA (a standard consistency criterion). The paper presents an algorithm that generates execution histories that enjoy SSER+ and avoids using a global clock. The algorithm has been implemented and its performance compared against an implementation based on SSER over three case studies. The results shows that the new proposal outperforms SSER in two scenarios where contention is low, while performs worst in an scenario of high contention. 
+This paper proposes an implementation of transactional memories based on a novel consistency criterion, called stricter serialisability (SSER+). SSER+ is based on the notion of fair binding: a read version is either accessed by the writer or one of its dependencies. It is claimed that SSER+ implies OPA (a standard consistency criterion). The paper presents an algorithm that generates execution histories that enjoy SSER+ and avoids using a global clock. The algorithm has been implemented and its performance compared against an implementation based on SSER over three case studies. The results shows that the new proposal outperforms SSER in two scenarios where contention is low, while performs worst in an scenario of high contention. 
 
 I found the contribution in this paper interesting. Despite some presentation details, the material is well-presented and appears sound. 
 

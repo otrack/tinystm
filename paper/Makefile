@@ -17,7 +17,8 @@ TEXIN= \
 	introduction.tex \
 	stm.tex \
 	relatedwork.tex \
-	conclusion.tex
+	conclusion.tex \
+	appendix.tex
 
 # other file dependencies
 DEPS= Makefile \

@@ -304,8 +304,7 @@ number="4",
 pages="251--277",
 abstract="A universal construction is a general mechanism for obtaining a concurrent implementation of an object from its sequential code. We show that there is no universal construction that is both disjoint-access parallel (guaranteeing the processes operating on different parts of an implemented object do not interfere with one another) and wait-free (guaranteeing progress for each nonfaulty process when accessing an object). In contrast, we present a universal construction which results in disjoint-access parallel, wait-free implementations of any object provided there is a bound on the number of data items accessed by each operation supported by the object.",
 issn="1432-0452",
-doi="10.1007/s00446-015-0261-8",
-url="https://doi.org/10.1007/s00446-015-0261-8"
+doi="10.1007/s00446-015-0261-8"
 }
 
 @article{herlihy1990linearizability,
@@ -390,8 +389,7 @@ doi="10.1007/978-3-662-53426-7\_20"
 }
 
 @article{KuznetsovR15,
-  author    = {Petr Kuznetsov and
-               Srivatsan Ravi},
+  author    = {Petr Kuznetsov and Srivatsan Ravi},
   title     = {Why Transactional Memory Should Not Be Obstruction-Free},
   journal   = {CoRR},
   volume    = {abs/1502.02725},
@@ -399,7 +397,6 @@ doi="10.1007/978-3-662-53426-7\_20"
   archivePrefix = {arXiv},
   eprint    = {1502.02725},
   timestamp = {Wed, 07 Jun 2017 14:41:09 +0200},
-  biburl    = {http://dblp.org/rec/bib/journals/corr/KuznetsovR15},
   bibsource = {dblp computer science bibliography, http://dblp.org}
 }
 
@@ -536,3 +533,77 @@ doi = "10.1007/978-3-540-87779-0\_21"
   biburl    = {http://dblp.org/rec/bib/conf/podc/CeroneG16},
   bibsource = {dblp computer science bibliography, http://dblp.org}
 }
+
+@inProceedings{stampBenchmark, 
+author={Chi Cao Minh and JaeWoong Chung and C. Kozyrakis and K. Olukotun}, 
+booktitle={2008 IEEE International Symposium on Workload Characterization}, 
+title={STAMP: Stanford Transactional Applications for Multi-Processing}, 
+year={2008}, 
+volume={}, 
+number={}, 
+pages={35-46}, 
+keywords={multiprocessing systems;parallel programming;transaction processing;STAMP;Stanford transactional application;microbenchmark;multiprocessing;parallel programming;transactional execution;transactional memory;Application software;Concurrent computing;Hardware;Laboratories;Parallel programming;Programming profession;Proposals;Software systems;Stress;Yarn}, 
+doi={10.1109/IISWC.2008.4636089}, 
+ISSN={}, 
+month={Sept},}
+
+@phdthesis{Adya99,
+address = {Cambridge, MA, USA},
+annote = {Also as Technical Report MIT/LCS/TR-786},
+author = {Adya, Atul},
+file = {:data/msaeida/Documents/Mendeley/Adya - 1999 - Weak Consistency A Generalized Theory and Optimistic Implementations for Distributed Transactions.pdf:pdf},
+month = mar,
+school = {MIT},
+title = {{Weak Consistency: A Generalized Theory and Optimistic Implementations for Distributed Transactions}},
+type = {Ph.D.},
+year = {1999}
+}
+
+@book{bookTM,
+  author    = {Rachid Guerraoui and
+               Michal Kapalka},
+  title     = {Principles of Transactional Memory},
+  series    = {Synthesis Lectures on Distributed Computing Theory},
+  publisher = {Morgan {\&} Claypool Publishers},
+  year      = {2010},
+  doi       = {10.2200/S00253ED1V01Y201009DCT004},
+  timestamp = {Tue, 16 May 2017 14:24:19 +0200},
+  biburl    = {https://dblp.org/rec/bib/series/synthesis/2010Guerraoui},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{doherty,
+  author    = {Simon Doherty and
+               Lindsay Groves and
+               Victor Luchangco and
+               Mark Moir},
+  title     = {Towards formally specifying and verifying transactional memory},
+  journal   = {Formal Asp. Comput.},
+  volume    = {25},
+  number    = {5},
+  pages     = {769--799},
+  year      = {2013},
+  url       = {https://doi.org/10.1007/s00165-012-0225-8},
+  doi       = {10.1007/s00165-012-0225-8},
+  timestamp = {Wed, 17 May 2017 14:25:33 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/fac/DohertyGLM13},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{dynamicTM,
+ author = {Felber, Pascal and Fetzer, Christof and Riegel, Torvald},
+ title = {Dynamic Performance Tuning of Word-based Software Transactional Memory},
+ booktitle = {Proceedings of the 13th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+ series = {PPoPP '08},
+ year = {2008},
+ isbn = {978-1-59593-795-7},
+ location = {Salt Lake City, UT, USA},
+ pages = {237--246},
+ numpages = {10},
+ url = {http://doi.acm.org/10.1145/1345206.1345241},
+ doi = {10.1145/1345206.1345241},
+ acmid = {1345241},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {dynamic tuning, transactional memory},
+} 

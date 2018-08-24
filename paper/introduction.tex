@@ -6,50 +6,52 @@ The advent of chip level multiprocessing in commodity hardware has pushed applic
 However, the art of concurrent programming is known to be a difficult task~\cite{Lee:2006:PT:1137232.1137289}, and programmers always look for new paradigms to simplify it.
 Transactional Memory (TM) is widely considered as a promising step in this direction, in particular thanks to its simplicity and programmer's friendliness~\cite{Dragojevic:2011:WSM:1924421.1924440}.
 
-% the case for invisible non-blocking reads and DAP
+% the case for invisible reads and DAP
 The engine that orchestrates concurrent transactions run by the application, i.e., the concurrency manager, is one of the core aspects of a TM implementation.
 A large number of concurrency manager implementations exists, ranging from pessimistic lock-based implementations~\cite{harris2005revocable,afek2012pessimistic} to completely optimistic ones~\cite{hassan2014optimistic}, with~\cite{perelman2011smv} or without multi-version support~\cite{attiya2012single}.
 For application workloads that exhibit a high degree of parallelism, these designs tend to favor optimistic concurrency control.
-In particular, a widely accepted approach consists in executing tentatively invisible read operations and validating them on the course of the transaction execution to enforce consistency.
+In particular, a widely accepted approach consists in executing tentatively invisible read operations, validating them over the course of the transaction execution to enforce consistency.
 For performance reasons, another important property is disjoint-access parallelism (DAP)~\cite{ellen2012universal}.
-This property ensures that concurrent transactions operating on disjoint part of the application do not contend in the concurrency manager.
-Thus, it is key to ensures that the system scales with the numbers of cores.
+This property ensures that concurrent transactions accessing disjoint parts of the application state do not contend in the concurrency manager.
+Thus, it is key to ensures that the system scales with the numbers of cores under parallel workloads.
 
 % why OPA
 From a developer's point of view, the interleaving of transactions must satisfy some form of correctness.
-Strict serializability (\SSER)~\cite{herlihy1990linearizability} is a consistency criteria commonly encountered in database literature.
-This criteria ensures that committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
-However, \SSER does not specify the conditions for aborted transactions.
+Strict serializability (\SSER)~\cite{herlihy1990linearizability} is a consistency criterion commonly encountered in database literature.
+This criterion ensures that committed transactions behave as if they were executed sequentially, in an order compatible with real-time.
+However, \SSER does not specify the conditions for aborted and live transactions.
 To illustrate this point, let us consider history $h_1$ where transaction ${\color{blue}{T_1}}=r(x);r(y)$ and ${\color{red}{T_2}}=w(x);w(y)$ are executed respectively by processes $p$ and $q$.
 In this history, $T_1$ aborts after reading inconsistent values for $x$ and $y$.
 Yet, $h_1$ is compliant with \SSER.
 \input{figures/not-opaque}
 
-Opacity (\OPA) was introduced~\cite{guerraoui2008correctness} to avoid the eratic behavior of so-called \emph{doomed transactions}, \emph{i.e.}, transactions which eventually abort (such as $T_1$ in history $h_1$).%
+Opacity (\OPA) was introduced~\cite{guerraoui2008correctness} to avoid the erratic behavior of so-called \emph{doomed transactions}, \emph{i.e.}, transactions that eventually abort (such as $T_1$ in history $h_1$).%
 \footnote{
-  Allowing $T_1$ to return both $x_0$ and $y_2$ may have serious consequences in a non-managed environment.
+  Allowing $T_1$ to return both $x_0$ and $y_2$ may have serious consequences.
   % def. notion of managed env., that is an environment à la PL/SQL where object are sronngly typed and exception caught.
-  As pointed out in~\cite{guerraoui2008correctness}, transaction $T_1$ may compute a division by $0$, leading the program to crash.
+  For instance, transaction $T_1$ may compute a division by $0$, leading the program to crash, or enter an infinite loop \cite{guerraoui2008correctness}.
 }
-In addition to \SSER, \OPA requires that aborted transactions observe a prefix of the committed transactions.
-This is the usual consistency criteria for TM.
+In addition to \SSER, \OPA requires that aborted and live transactions observe a consistent view of the shared memory.
+This is the usual consistency criterion for TM.
 
 % the cost of achieving OPA
 Achieving \OPA is known to be expensive, even for weak progress properties on the transactions \cite{Ravi17}.
-In particular, ensuring that a transaction always sees a consistent snapshot when reads are invisible generally asks to re-validate the read set after each read operation, or to rely on a global clock.
+In particular, ensuring that a transaction always sees a consistent snapshot when reads are invisible generally asks to re-validate the read set after each read operation, or to rely on some global variable \cite{bookTM}.
 The former approach increases the time complexity of execution.
-The latter is expensive in multi-core/multi-processors architecture, due to the synchronization wall.
+The latter is expensive in multi-core architectures due to the synchronization wall.
 
 % our contributions
-In this paper, we address these shortcomings with a new consistency criteria, named \emph{stricter serializability} (\SPSER).
-This criteria extends strict serializability by avoiding specifically the inconsistency illustrated in history $h_1$.
-We describe in detail a corresponding TM algorithm that ensures invisible reads, and permits transactions to commit as long as they do not contend with conflicting transactions.
-We further validate our design by means of a full implementation of \SPSER and several experiments.
-Our results show that when the workloads are embarrassingly parallel, \SPSER offers close-to-optimum performance.
+In this paper, we address these shortcomings with a new consistency criterion, named \emph{stricter serializability} (\SPSER).
+This criterion extends strict serializability by avoiding specifically the inconsistency illustrated in history $h_1$.
+We describe in detail a corresponding TM algorithm that ensures invisible reads and permits transactions to commit as long as they do not contend with conflicting transactions.
+Further, we validate our design by means of a full implementation of \SPSER and several experiments.
+Our results show that, when the workload is embarrassingly parallel, \SPSER offers scalable performance.
 
 \textbf{Outline.}
 This paper is organized as follows.
-\refsection{criteria} introduces our system model assumptions and defines precisely \SPSER.
+\refsection{criterion} introduces our system model assumptions and defines precisely \SPSER.
 The corresponding transactional memory algorithm and a formal proof of correctness are presented in ~\refsection{stm}.
 We present the evaluation of our prototype against several benchmarks in \refsection{evaluation}.
 We survey related work in \refsection{relatedwork}, before concluding in \refsection{conclusion}.
+%
+An appendix follows that contains some technical details.

@@ -24,7 +24,7 @@ They provide guidelines to reduce unnecessary validations and shorten the commit
 Multi-versioning~\cite{Fernandes:2011, Diegues:2014} brings a major benefit: allowing read-only transactions to complete despite contention.
 This clearly boosts certain workloads but managing multiple versions has a non-negligible performance cost on the TM internals.
 Similarly, invisible reads ensure that read operations do not contend in most cases.
-However, such a technique limits progress or the consistency criteria satisfied by the TM \cite{Attiya:2009}.
+However, such a technique limits progress or the consistency criterion satisfied by the TM \cite{Attiya:2009}.
 In the case of \refalg{stm}, both read-only and updates transaction are certain to make progress only in the absence of contention.
 
 % DAP

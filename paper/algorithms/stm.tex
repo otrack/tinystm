@@ -7,22 +7,23 @@
   \begin{algorithmic}[1]
 
     \begin{variables}
-      \VarCustom{$\clockOf{T}, \readSetOf{T}, \writeSetOf{T}$} \Comment{local to $p$} \labline{stm:var:1}
+      \VarCustom{$\clockOf{T}, \readSetOf{T}, \writeSetOf{T}, \updateSetOf{T}$} \Comment{local to $p$} \labline{stm:var:1}
       \VarCustom{$\clockOf{p}$} \Comment{shared} \labline{stm:var:2}
     \end{variables}
 
     \vspace{1em}
     
     \StartFunction{$\stmBegin{T}$}
-    \State $\clockOf{T}.\cadv(\mathit{min}_{q} \clockOf{q})$ \labline{stm:start:1}
-    \State $\readSetOf{T} \assign \emptySet$ \labline{stm:start:2}
-    \State $\writeSetOf{T} \assign \emptySet$ \labline{stm:start:3}
+    \State $\clockOf{T}.\cadv(\mathit{min}_{q}(\clockOf{q}))$ \labline{stm:begin:1}
+    \State $\readSetOf{T} \assign \emptySet$ \labline{stm:begin:2}
+    \State $\writeSetOf{T} \assign \emptySet$ \labline{stm:begin:3}
+    \State $\updateSetOf{T} \assign \emptySet$ \labline{stm:begin:4}
     \EndFunction
 
     \vspace{1em}
 
     \StartFunction{$\stmRead{T,x}$}
-    \If{$(x,d) \in \writeSetOf{T}$}
+    \If{$(x,d) \in \updateSetOf{T}$}
       \Return $d$ \labline{stm:read:1}
     \EndIf
     \State $(d,t) \assign \locationOf{x}$ \labline{stm:read:2}
@@ -43,11 +44,9 @@
     \If{$\neg~\lock{x}$} \labline{stm:write:1}
       \Return $\stmAbort{T}$ \labline{stm:write:2}
     \EndIf
-    \State $(\msgAny,t) \assign \locationOf{x}$ \labline{stm:write:3}
-    \If{$t>\clockOf{T} \land \neg~\stmExtend{T,t}$} \labline{stm:write:4}
-      \Return $\stmAbort{t}$ \labline{stm:write:5}
-    \EndIf
-    \State $\writeSetOf{T}[x] \assign d$ \labline{stm:write:6}
+    \State $(\msgAny,t) \assign \locationOf{x}$ \labline{stm:write:3}    
+    \State $\writeSetOf{T}[x] \assign t$ \labline{stm:write:4}
+    \State $\updateSetOf{T}[x] \assign d$ \labline{stm:write:5}
     \EndFunction
 
     \vspace{1em}
@@ -86,15 +85,16 @@
     \vspace{1em}
 
     \StartFunction{$\stmCommit{T}$}
-    \If{$\writeSetOf{T} \neq \emptySet$} \labline{stm:commit:0}
-    \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:1} 
-      \State $\clockOf{p}.\cadv(\clockOf{T})$ \labline{stm:commit:2}
-      \ForAll{$(x,d) \in \writeSetOf{T}$} \labline{stm:commit:3}
-        \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:4}
-        \State $\unlock{x}$ \labline{stm:commit:5}
+    \If{$\writeSetOf{T} \neq \emptySet$} \labline{stm:commit:1}
+      \State $\clockOf{T}.\cadv(\mathit{max}_x(\writeSetOf{T}[x]))$ \labline{stm:commit:2}
+      \State $\clockOf{T}.\cadv(\clockOf{T}+1)$ \labline{stm:commit:3}
+      \State $\clockOf{p}.\cadv(\clockOf{T})$ \labline{stm:commit:4}
+      \ForAll{$(x,d) \in \updateSetOf{T}$} \labline{stm:commit:5}
+        \State $\locationOf{x} \assign (d,\clockOf{T})$ \labline{stm:commit:6}
+        \State $\unlock{x}$ \labline{stm:commit:7}
       \EndFor
     \EndIf
-    \Return $\flagCommit$ \labline{stm:commit:6}
+    \Return $\flagCommit$ \labline{stm:commit:8}
     \EndFunction
 
   \end{algorithmic}

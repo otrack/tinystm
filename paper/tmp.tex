@@ -107,131 +107,331 @@
 %% In the later case, the content of the lock is moved back into the metadata of the associated object.
 
 
-Let $T$ and $T'$ be two transactions in $h$ with $(T,T') \in G_h$.
-First of all, we observe that \emph{(F1)} if $T$ reads a version $x_i$ of some item $x$ written by $T'$, 
-transaction $T$ must have committed in $h$ before (\refline{stm:36}).
-Moreover, our timestamping system ensures that for any two causally-related versions $x_i$ and $y_j$,
-the timestamp of $y_j$ is greater than the timestamp of $x_i$.
-From this observation, we can establish that \emph{(F2)} for every transaction $T$, 
-at all time during $h$ the snapshot read by $T$ is consistent.
-In what follows, we prove that \emph{(F3)} if both $T$ and $T'$ commit then $T$ commits before $T'$ in $h$ , i.e., 
-denoting $p$ and $q$ the processes that execute respectively $T$ and $T'$ in $h$, 
-we have $\response{p}{\stmCommit{T}}{} <_h \invocation{q}{\stmCommit{T'}}{}$.
-The conjunction of facts F1, F2 and F3 implies that $G_h$ is both well-formed acyclic, 
-from which we deduce that history $h$ is opaque.
+%% Let $T$ and $T'$ be two transactions in $h$ with $(T,T') \in G_h$.
+%% First of all, we observe that \emph{(F1)} if $T$ reads a version $x_i$ of some item $x$ written by $T'$, 
+%% transaction $T$ must have committed in $h$ before (\refline{stm:36}).
+%% Moreover, our timestamping system ensures that for any two causally-related versions $x_i$ and $y_j$,
+%% the timestamp of $y_j$ is greater than the timestamp of $x_i$.
+%% From this observation, we can establish that \emph{(F2)} for every transaction $T$, 
+%% at all time during $h$ the snapshot read by $T$ is consistent.
+%% In what follows, we prove that \emph{(F3)} if both $T$ and $T'$ commit then $T$ commits before $T'$ in $h$ , i.e., 
+%% denoting $p$ and $q$ the processes that execute respectively $T$ and $T'$ in $h$, 
+%% we have $\response{p}{\stmCommit{T}}{} <_h \invocation{q}{\stmCommit{T'}}{}$.
+%% The conjunction of facts F1, F2 and F3 implies that $G_h$ is both well-formed acyclic, 
+%% from which we deduce that history $h$ is opaque.
 
-  %% According to the code of \stmRead{}, at the time $T'$ reads $x$, 
-  %% the item is unlocked and it contains version $x_i$ (\reflinestwo{stm:5}{stm:6}).
-  %% Hence at that time, transaction $T$ has committed.
+%%   %% According to the code of \stmRead{}, at the time $T'$ reads $x$, 
+%%   %% the item is unlocked and it contains version $x_i$ (\reflinestwo{stm:5}{stm:6}).
+%%   %% Hence at that time, transaction $T$ has committed.
   
-  %% Name $T_k$ the version read by $T_i$.
-  %% If $T_i=T_k$ then  
+%%   %% Name $T_k$ the version read by $T_i$.
+%%   %% If $T_i=T_k$ then  
 
-  %% This means that there exists an item $x$ and two versions $x_i$ and $x_j$ of $x$
-  %% such that $T$ reads version $x_i$, $T'$ writes version $x_j$, and $x_i$ precedes $x_j$ in the version order.
-  %% At the time transaction $T$ reads $x$, $T'$ has not executed its write yet and thus it should commit later on.
-  %% Then, for the sake of contradiction, assume $\invocation{q}{\terminate{T'}}{} <_h \response{p}{\terminate{T}}{}$.
-  %% This means that at the time $T$ terminates, either $x$ is locked by $T'$, or a version posterior or equal to $x_i$ is installed in $x$.
-  %% The pseudo-code at \reflines{stm:15}{stm:32} implies that in both cases $T$ aborts;
-  %% a contradiction.
-
-
-  %% The pair $(T,T')$ denotes a versioning relation, that is, 
-  %% both transactions write to $x$ in $h$, $T$ preceding $T'$.
-  %% In this case, at the time $T'$ writes to $x$, $x$ is unlocked (\refline{stm:20}), 
-  %% and $T$ must have committed previously.
-  %% Hence, our claim holds.
-  %% We notice here that in such a case, 
-  %% the timestamp associated to the version $x_i$ of $x$ is greater than the timestamp associated to $x_j$ (\refline{stm:38}).
+%%   %% This means that there exists an item $x$ and two versions $x_i$ and $x_j$ of $x$
+%%   %% such that $T$ reads version $x_i$, $T'$ writes version $x_j$, and $x_i$ precedes $x_j$ in the version order.
+%%   %% At the time transaction $T$ reads $x$, $T'$ has not executed its write yet and thus it should commit later on.
+%%   %% Then, for the sake of contradiction, assume $\invocation{q}{\terminate{T'}}{} <_h \response{p}{\terminate{T}}{}$.
+%%   %% This means that at the time $T$ terminates, either $x$ is locked by $T'$, or a version posterior or equal to $x_i$ is installed in $x$.
+%%   %% The pseudo-code at \reflines{stm:15}{stm:32} implies that in both cases $T$ aborts;
+%%   %% a contradiction.
 
 
+%%   %% The pair $(T,T')$ denotes a versioning relation, that is, 
+%%   %% both transactions write to $x$ in $h$, $T$ preceding $T'$.
+%%   %% In this case, at the time $T'$ writes to $x$, $x$ is unlocked (\refline{stm:20}), 
+%%   %% and $T$ must have committed previously.
+%%   %% Hence, our claim holds.
+%%   %% We notice here that in such a case, 
+%%   %% the timestamp associated to the version $x_i$ of $x$ is greater than the timestamp associated to $x_j$ (\refline{stm:38}).
 
-%% Let $\ll$ be any linearization of $h$.
-%% We denote by $G_h=(h,\ll,\emptySet)$ the opacity graph induced by $h$ and the order $\ll$.
 
-%% \begin{proposition}
-%%   \labprop{opa:graph}
-%%   The graph $G_h=(h,\ll,\emptySet)$ is well-formed and acyclic.
-%% \end{proposition}
 
-%% \begin{proof}
+%% %% Let $\ll$ be any linearization of $h$.
+%% %% We denote by $G_h=(h,\ll,\emptySet)$ the opacity graph induced by $h$ and the order $\ll$.
 
-%%   First of all, we show that $G_h$ is well-formed.
-%%   **FIXME
+%% %% \begin{proposition}
+%% %%   \labprop{opa:graph}
+%% %%   The graph $G_h=(h,\ll,\emptySet)$ is well-formed and acyclic.
+%% %% \end{proposition}
 
-%%   Next, we prove that if $(T_i,T_j) \in G_h$ then $T_i \ll T_j$ holds.
-%%   By definition of an opacity graph \cite{Guerraoui:2008}, 
-%%   an edge $(T_i,T_k)$ in $G_h$ exists in one of the following four cases.
-%%   \begin{inparaenum}[\em(i)]
-%%   \item %
-%%     Transaction $T_i$ is executed before $T_j$ in $h$, 
-%%     from which it follows immediately that $T_i < T_j$.
-%%   \item %
-%%     The edge $(T_i,T_j)$ captures a read-from dependency in $h$, that is, for some item $x$,
-%%     $T_j$ writes a version $x_j$ of $x$ while $T_j$ reads it.
-%%     Here again, by definition of $<$, we may conclude $T_i < T_j$.
-%%   \item %
-%%     In this third case, the edge $(T,T')$ captures an anti-dependency relation.
-%%     By definition, $T_i$ reads some register written by $T_j$ and relation $T_i \ll T_j$ should hold.
-%%   \item %
-%%     The last case captures that transaction $T_i$ is (pending or) committed 
-%%     and that there exists a transaction $T_m$ and a register $x$ 
-%%     such that $T_i \ll T_m$, $T_i$ writes to $x$, and $T_m$ reads $x$ from $T_j$.
-%%     In other words, transaction $T_m$ witnesses a version order between transaction $T_i$ and $T_j$.
-%%     %
-%%     Since transactions $T_i$ and $T_j$ both write to register $x$, either $T_i \ll T_j$ or the converse holds.
-%%     Assume that $T_j \ll T_i$ holds.
-%%     Applying \refprop{opa:clock} to relations $T_j \ll T_i$ and $T_i \ll T_m$, 
-%%     we deduce $\clockOf{T_j}_f \leq \clockOf{T_m}_f$.
-%%     A contradiction.
-%%   \end{inparaenum}
+%% %% \begin{proof}
 
-%%   From what precedes and the fact that $\ll$ is an order, we deduce that $G_h$ is acyclic.
+%% %%   First of all, we show that $G_h$ is well-formed.
+%% %%   **FIXME
 
+%% %%   Next, we prove that if $(T_i,T_j) \in G_h$ then $T_i \ll T_j$ holds.
+%% %%   By definition of an opacity graph \cite{Guerraoui:2008}, 
+%% %%   an edge $(T_i,T_k)$ in $G_h$ exists in one of the following four cases.
+%% %%   \begin{inparaenum}[\em(i)]
+%% %%   \item %
+%% %%     Transaction $T_i$ is executed before $T_j$ in $h$, 
+%% %%     from which it follows immediately that $T_i < T_j$.
+%% %%   \item %
+%% %%     The edge $(T_i,T_j)$ captures a read-from dependency in $h$, that is, for some item $x$,
+%% %%     $T_j$ writes a version $x_j$ of $x$ while $T_j$ reads it.
+%% %%     Here again, by definition of $<$, we may conclude $T_i < T_j$.
+%% %%   \item %
+%% %%     In this third case, the edge $(T,T')$ captures an anti-dependency relation.
+%% %%     By definition, $T_i$ reads some register written by $T_j$ and relation $T_i \ll T_j$ should hold.
+%% %%   \item %
+%% %%     The last case captures that transaction $T_i$ is (pending or) committed 
+%% %%     and that there exists a transaction $T_m$ and a register $x$ 
+%% %%     such that $T_i \ll T_m$, $T_i$ writes to $x$, and $T_m$ reads $x$ from $T_j$.
+%% %%     In other words, transaction $T_m$ witnesses a version order between transaction $T_i$ and $T_j$.
+%% %%     %
+%% %%     Since transactions $T_i$ and $T_j$ both write to register $x$, either $T_i \ll T_j$ or the converse holds.
+%% %%     Assume that $T_j \ll T_i$ holds.
+%% %%     Applying \refprop{opa:clock} to relations $T_j \ll T_i$ and $T_i \ll T_m$, 
+%% %%     we deduce $\clockOf{T_j}_f \leq \clockOf{T_m}_f$.
+%% %%     A contradiction.
+%% %%   \end{inparaenum}
+
+%% %%   From what precedes and the fact that $\ll$ is an order, we deduce that $G_h$ is acyclic.
+
+%% %% \end{proof}
+
+
+%%     From the code at \refline{stm:read:1}, we know that $t=\clockOf{T_i}_f$ holds.
+%%     Then, if $t > \clockOf{T_j}$ holds, transation $T_j$ is extended with timestamp $t$ at \refline{stm:read:5}.
+%%     Since transaction $T_j$ commits this call succeeds, leading to $\clockOf{T_j} = t$.
+%%     Hence at that point in time, $\writeSetOf{T_i}[x] = \readSetOf{T_j}[x]$.
+%%     Because $T_j$ cannot read another version of $x$ later on (\refline{stm:extend:3}), this invariant holds forever.
+
+
+%%     \begin{proof}
+%%   We consider one after the other the transactions that abort in $h$.
+%%   The order in which these transaction $T$ is considered is the order in which they return an abort event.
+%%   For each such transaction $T_{i \geq 0}$, let $h_{|<T_i}$ be the sub-history of $h$ that contains all the events that precede the abort event of $T_i$.
+%%   We claim that: $\forall i > 0 : h_{|<T_i} \in \OPA$.
+%%   (Case $i=0$)
+%%   History $h_{|<T_0}$ contains no aborted transaction and all but transaction $T_0$ commits in $h$.
+%%   Moreover, since the bindings of $T_0$ are all fair, this transaction see a consistent snpashot in $h_{|<T_0}$.
+%%   As a consequence, $h_{|<T_0} \in OPA$ holds.
+%%   (Case $i>0$)
+%%   All the transactions in $h_{|<T_{i-1}}$ either commit in $h$, or they observe a consistent snapshot before aborting.
+%%   Since the bindings of $T_i$ are all fair, this transaction see also a consistent snpashot in $h_{|<T_0}$.
+%%   Thus, $h_{|<T_i} \in OPA$ is true.  
 %% \end{proof}
 
 
-    From the code at \refline{stm:read:1}, we know that $t=\clockOf{T_i}_f$ holds.
-    Then, if $t > \clockOf{T_j}$ holds, transation $T_j$ is extended with timestamp $t$ at \refline{stm:read:5}.
-    Since transaction $T_j$ commits this call succeeds, leading to $\clockOf{T_j} = t$.
-    Hence at that point in time, $\writeSetOf{T_i}[x] = \readSetOf{T_j}[x]$.
-    Because $T_j$ cannot read another version of $x$ later on (\refline{stm:extend:3}), this invariant holds forever.
+%%     % Let $\lagnle x^1_{i_1}, \ldots, x^m_{i_m} \rangle$ be the sequence of versions accessed by $T_i$ in $h$, accordingly to $\hb_h$.
+%%       such that $\lagnle x^1_{i_1}, \ldots, x^k_{i_k} \rangle$ is not consistent.
+  
+%%   the first object and transaction for which 
+
+%%   for which this is true.
+%%   a transaction to which $T_i$ is bound for which $x^k_{i_k}$ is first 
+
+%%     Consider that this binding is the first in the sense of $\hb_h$.
+%%   %%  
+%%   Since $h \in \SPSER$ holds, then $\committed{h}$ is equivalent to some sequential history $\lambda$.
+%%   By definition of $x$, there exists a position $p$ in $\lambda$ after $T_j$ where we may put the execution of $T_i$ in $h$ up to $r_i(x_j)$.
+%%   This gives us history $\hat{\lambda}$.
+%%   In this history, transaction $T_j$ precedes transaction $T_i$.
+%%   As $h \in \SPSER$ and all the bindings prior to $r_i(x_j)$ are fair, excluding $r_i(x_j)$, transation $T_i$ observes a strictly consistent snapshot 
+%%   Now including $r_i(x_j)$ the snapshot of $T_i$ is not consistent.
+%%   This implies that for some object $y$ read prior to $x$, $T_i$ reads some version $y_k$ and $T_j$ write a version $y_i$.
+%%   %%
+%%   Transaction $T_i$ reads a path $p_i$ prior to accessing $x$.
+%%   As the binding of $T_i$ to $T_j$ over $x$ is unfair, transaction $T_j$ traverse a path $p_j$ for which one of the object read is not access by $T_i$, nor by any of its dependencies.
+%%   Let $z$ be such an object and name $T_z$ the first transaction that modifies path $p_j$.
 
 
-    \begin{proof}
-  We consider one after the other the transactions that abort in $h$.
-  The order in which these transaction $T$ is considered is the order in which they return an abort event.
-  For each such transaction $T_{i \geq 0}$, let $h_{|<T_i}$ be the sub-history of $h$ that contains all the events that precede the abort event of $T_i$.
-  We claim that: $\forall i > 0 : h_{|<T_i} \in \OPA$.
-  (Case $i=0$)
-  History $h_{|<T_0}$ contains no aborted transaction and all but transaction $T_0$ commits in $h$.
-  Moreover, since the bindings of $T_0$ are all fair, this transaction see a consistent snpashot in $h_{|<T_0}$.
-  As a consequence, $h_{|<T_0} \in OPA$ holds.
-  (Case $i>0$)
-  All the transactions in $h_{|<T_{i-1}}$ either commit in $h$, or they observe a consistent snapshot before aborting.
-  Since the bindings of $T_i$ are all fair, this transaction see also a consistent snpashot in $h_{|<T_0}$.
-  Thus, $h_{|<T_i} \in OPA$ is true.  
+
+%%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+  
+  
+%%   At first, consider that either ($\pi_i = \pi_j$) or ($\pi_i = \pi_j'$) holds.
+%%   Pick some $y_k$ read by $T_i$ before $x_j$ in $\pi_i$.
+%%   There are two sub-cases to distinguish:
+%%   \begin{itemize}
+%%   \item ($y_k \in \pi_j$)
+%%     Transaction $T_j$ must read some version $z_l \in \pi_j$ that references $x$.
+%%     Hence, by applying property $\mathcal{P}$ inductively, transaction $T_j$ reads $y_k$.
+%%   \item ($y_k \in \pi_j'$)
+%%     Transaction $T_j$ reads or writes $z_l \in \pi_j'$ right before accessing $x$.
+%%     If $z_l$ does not exist prior to the execution of $T_j$, $z$ was updated by $T_j$.
+%%     Again, by induction, $T_j \depends T_k$ holds.
+%%   \end{itemize}
+
+%%   Otherwise, there exists a transaction $T_k \in \lambda$ such that $\pi_i$ is the path to $x$ after transaction $T_k$ (i.e., $\pi_k'= \pi_i$).
+%%   % detail
+%%   Depending on the relative positions of $T_j$ and $T_k$ in $\lambda$, there are two cases to consider.
+%%   In both cases, some transaction $T_l$ between $T_j$ and $T_k$ (possibly $l=k$) modifies the path to $x$ in the object graph.
+%%   \begin{itemize}
+%%   \item ($T_j <_{\lambda} T_k$)
+%%     Without lack of generality, assume that $T_l$ is the first transaction to modify $\pi_j'$.
+%%     Transation $T_j$ precedes $T_l$ in $\lambda$, transaction $T_l$ must commit before $T_i$ in $h$ and $T_j$ is concurrent to $T_i$ in $h$.
+%%     As a consequence, $T_l$ and $T_j$ are concurrent.
+%%     Then, since $T_l$ modifies $\pi_j'$, it must update an object read by $T_j$.
+%%     % detail
+%%     It follows that $h$ exhibits an RC-anti-dependency between $T_j$ and $T_l$.
+%%     Contradiction.    
+%%   \item ($T_k <_{\lambda} T_j$)
+%%     Choose some $y_{k'}$ read before $x_j$ in $\pi_i$.
+%%     If $y$ is still in $\pi_j$, then $T_j$ reads at least that version of object $y$.
+%%     Otherwise, consider that $T_l$ is the first transaction that removes $y$ from the path to $x$ in the object graph.
+%%     To preserve property $\mathcal{P}$, $T_l$ updates some object $y'$ read by $T_{k'}$ that was referring to $y$.
+%%     Because $h \notin \RCAD$, transaction $T_{k'}$ cannot commit after $T_l$.
+%%     % detail
+%%     Hence, $T_j \depends T_{k'}$ holds.
+%%     % detail
+%%   \end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{proposition}
+  \labprop{criterion:2}
+  $(H_{\mathcal{T}} \inter \SPSER) \subset \OPA$.
+\end{proposition}
+
+To state this result, consider some history $h \in (H_{\mathcal{T}} \inter \SPSER)$.
+Let $\ll_h$ be a version order such that $\SSG(h,\ll_h)$ is acyclic and note $\lambda$ a sequential history equivalent to $\committed{h}$.
+
+\begin{lemma}
+  \lablem{criteria:1}
+  If $T_i \hb_{\lambda} T_j$ holds and $T_j$ reads $x$ in $\lambda$, then for every $y_k \in \hat{\pi}_{i,x}$, $T_j \depends T_k$ is true.
+\end{lemma}
+
+\begin{proof}
+
+  Since $T_j$ reads $x$, $\pi_{j,x} \subseteq \readSetOf{T_j}$.
+  Then, for some $y_k \in \hat{\pi}_{i,x}$, two cases are possible:
+  \begin{itemize}
+  \item ($\exists T_l \in \lambda. y_l  \in \pi_{j,x}$)
+    The claim trivially holds if $l = k$.
+    If now $l \neq k$, $T_i \hb_{\lambda} T_j$ implies that $T_k \hb_{\lambda} T_l$.
+    Hence, $y_k \ll_{h} y_l$ is true leading to $T_j \depends T_k$.
+  \item (Otherwise.)
+    Let $T_l \hb_{\lambda} T_j$ be the transaction that deletes $y$ from the object graph.
+    Without lack of generality assume this was still version $y_k$.
+    Because $\pi_{j,x}$ is defined and property $\mathcal{P}$ holds, $\hat{\pi}_{l,x}$ is defined.
+    By property $\mathcal{P}$, there exist $z_{k'}$ and $t_{\versionAny}$, such that
+    $\pi_{l,x} = \ldots z_{k'} \ldots y_{k} \ldots t_{\versionAny} \ldots$
+    and $\hat{\pi}_{l,x} = \ldots z_{l}t_{\versionAny} \ldots$, and transaction $T_l$ reads version $y_{k}$.
+    Now, if $z_l$ is in $\pi_{i,x}$, $T_j \depends T_k$ holds.
+    In the converse case, we repeat the above reasoning for $z_l$.
+  \end{itemize}     
+    
+\end{proof}
+
+\begin{lemma}
+  \lablem{criteria:2}
+  If $T_i \hb_{\lambda} T_j$ holds, there do not exist $T_k \in \lambda$ and $x_l \in \hat{\pi}_j$ such that $T_i \depends T_k$ and $x_l \ll_h x_k$.
+\end{lemma}
+
+\begin{proof}
+  (By contradiction.)
+  From $x_l \in \hat{\pi}_j$, we deduce that $T_l \hb_{\lambda} T_j$ holds and that there is no transaction $T_l \hb_{\lambda} T_{l'} \hb_{\lambda} T_j$ writing to $x$.
+  However, $x_l \ll_h x_k$, $T_i \depends T_k$ and $T_i \hb_{\lambda} T_j$, leads to $T_l \hb_{\lambda} T_{k} \hb_{\lambda} T_j$.
+\end{proof}
+
+Choose some transaction $T_i$ in $h$,
+Using the above two lemmata, we establish that $T_i$ observes a committed strictly consistent snapshot in $h$.
+
+First of all, as $h \in \SPSER$ holds, the snapshot of $T_i$ is necessarily committed.
+Then, by induction, consider each read operation $r_i(x_j) \in h$ in the order $T_i$ executes them.
+We prove that $T_i$ observes a strictly consistent snapshot up to $r_i(x_j)$.
+
+By contradiction, assume that $r_i(x_j)$ leads to a not strictly consistent snapshot.
+For some $y$, $T_k$ and $T_{k'}$, $(r_i(y_{k'}) \in h)$, $(T_k \hb_h T_i \lor T_i \depends T_k)$ and $(y_{k'} \ll_h y_k)$ hold.
+
+committed read = $c_j \hb r_i(x_j) \lor c_j \cc r_i(x_j)$.
+non-trivial read = $r_i(x_j) \land c_k \hb r_i(x_j) \implies x_j \ll x_k$.
+
+either for some version $y_k$ accesed by $T_i$ before $x_j$, $T_k \depends T_j$ hold.
+or for every $y_k$ accessed by $T_i$ before $x_j$, $T_j \depends T_k$ holds.
+
+\begin{itemize}
+\item[-] ($r_i(y_{k'}) = r_i(x_j)$)
+  Since $(x_j \ll_h x_k)$, we have $T_k \depnds T_j$, leading to $T_j \ll_{\lambda} T_k$.
+  %
+  Relation $T_i \depends T_k$ may be due to either $r_i(x_j)$, or some earlier read or written version $z_{k'}$.
+  In the former case, since $r_i(x_j)$ is in $h$, we have $T_j \depends T_k$, thus $T_k \ll_{\lambda} T_j$ holds.
+  %
+  In the later, 
+  
+\item[-] (Otherwise.)
+  If $T_k \hb_h T_i$ is true, the read is trivial.
+  This contradicts that $h \in \SPSER$ holds.
+  %
+  From now, assume that $T_i \depends T_k$ is true.
+  By our induction hypothesis, the snapshot of $T_i$ is consistent prior $r_i(x_j)$.
+  Since $r_i(y_{k'}) \neq r_i(x_j)$, relation $T_i \depends T_k$ follows from the read $r_i(x_j)$; hence $T_j \depends T_k$ is true.      
+  Moreover, there exists a transaction $T_l$ such that $\pi_{i,x} = \hat{\pi}_{l,x}$.
+  %
+  Depending on the relative positions of $T_j$ and $T_l$ in $\lambda$, there are two cases to consider.
+  
+  \begin{itemize}
+  \item[-] ($T_l <_{\lambda} T_j$)
+    In such a case, by \reflem{criteria:1}, for any version $z_{k''} \in \hat{\pi}_{l,x}$, we have $T_j \depends T_{k''}$.
+  \item[-] ($T_j <_{\lambda} T_l$)
+    We have $y_{k'} \in \hat{\pi}_{l,x}$, $y_{k'} \ll_h y_k$ and $T_j \depends T_k$.
+    Applying \reflem{criteria:2} , this case is not possible.
+  \end{itemize}
+  It follows that $r_i(x_j)$ is a fair binding in $h$.
+  % TODO prove that T_i, T_j are concurrent ...
+  Since $h \in \SPSER$, the snapshot of $T_i$ before $r_i(x_j)$ is strictly consistent.
+\end{itemize}
+
+%% Opacity necessitates that, for every read $r_i(x_j)$ in $h$, version $x_j$ is committed and for every $T_k$ such that $T_i \depends T_k$ or $T_k \hb_{h} T_i$, $x_k \ll_h x_j$ holds.
+%% This property is easy to achieve, for instance with a single-version TM that rely on locks to guard against contented operations.
+%% Consequently, we call reads that satisfy the above property \emph{non-trivial} for the version order $\ll_h$.
+%% We are now ready to define stricter serializability with the notions of non-trivial read and fair binding.
+
+
+\begin{lemma}
+  Let $\lambda$ be a sequential and legal history, with $n=\cardinalOf{\lambda}$.
+  For every $k$ in $\[1,n\]$, if it does not exist any $\depends$ relation between  $\lambda[i+1]$ and $\lambda[i+1]$, history $\lambda[1] \ldots \lambda[i+1]\lambda[i] \ldots \lambda[n]$ is a sequential, legal and equivalent to $\lambda$.
+\end{lemma}
+
+\begin{proof}
+
+  History $\lambda[1] \ldots \lambda[i+1]\lambda[i] \ldots \lambda[n]$ is clearly sequential and equivalent to $\lambda$.
+  It thus remains to show that it is legal.
+
+  Consider two operations $o_i(x_j)$ and $o_k(y_l)$.
+  Clearly $o_i(x_j)o_k(y_l)$ is equivalent to $o_i(x_j)o_k(y_l)$ in case $x \neq y$, or both operations are read.
+
+  History $\lambda$ is both sequential and legal.
+  Since neither $\lambda[i+1] \depends \lambda[i]$, nor $\lambda[i] \depends \lambda[i+1]$ holds.
+  \begin{itemize}
+    $\writeSetOf{\lambda[i]} \inter \readSetOf{\lambda[i+1]} \neq \emptySet$
+    $\writeSetOf{\lambda[i]} \inter \writeSetOf{\lambda[i+1]} \neq \emptySet$
+    
+  
+
+  and $ \depends \lambda[i+1]$ does not hold.
+  It follows that $\writeSetOf{\lambda[i]} \inter \readSetOf{\lambda[i]}$
+  
+  From the above observation, it suffices to show that 
 \end{proof}
 
 
-    % Let $\lagnle x^1_{i_1}, \ldots, x^m_{i_m} \rangle$ be the sequence of versions accessed by $T_i$ in $h$, accordingly to $\hb_h$.
-      such that $\lagnle x^1_{i_1}, \ldots, x^k_{i_k} \rangle$ is not consistent.
-  
-  the first object and transaction for which 
+  that is $T_j \depends T_i \equaldef T_j $
+If $T_i 
 
-  for which this is true.
-  a transaction to which $T_i$ is bound for which $x^k_{i_k}$ is first 
+\emph{depends on} some transaction $T_{j \neq i}$, written $T_i \depends_h T_j$, when $r_i(x_j)$ occurs in $h$, or $x_i \ll_{h} x_j$ is true, or such a relation holds transitively.
 
-    Consider that this binding is the first in the sense of $\hb_h$.
-  %%  
-  Since $h \in \SPSER$ holds, then $\committed{h}$ is equivalent to some sequential history $\lambda$.
-  By definition of $x$, there exists a position $p$ in $\lambda$ after $T_j$ where we may put the execution of $T_i$ in $h$ up to $r_i(x_j)$.
-  This gives us history $\hat{\lambda}$.
-  In this history, transaction $T_j$ precedes transaction $T_i$.
-  As $h \in \SPSER$ and all the bindings prior to $r_i(x_j)$ are fair, excluding $r_i(x_j)$, transation $T_i$ observes a strictly consistent snapshot 
-  Now including $r_i(x_j)$ the snapshot of $T_i$ is not consistent.
-  This implies that for some object $y$ read prior to $x$, $T_i$ reads some version $y_k$ and $T_j$ write a version $y_i$.
-  %%
-  Transaction $T_i$ reads a path $p_i$ prior to accessing $x$.
-  As the binding of $T_i$ to $T_j$ over $x$ is unfair, transaction $T_j$ traverse a path $p_j$ for which one of the object read is not access by $T_i$, nor by any of its dependencies.
-  Let $z$ be such an object and name $T_z$ the first transaction that modifies path $p_j$.
+%
+A read-dependency occurs between transaction $T_i$ and $T_j$ when reads version $x_j$, we say that $T_i$ \emph{reads from} transaction $T_j$ ($T_j \wr T_i$).
+%
+Transaction $T_i$ \emph{anti-depends} from $T_{j \neq i}$ on object $x$, when $x_k \ll_h x_j$ is true and $r_i(x_k)$ happens in $h$ ($T_i \rw T_j$).
+%
+Transaction $T_i$ \emph{anti-depends} from $T_{j \neq i}$ on object $x$, when $x_k \ll_h x_j$ is true and $r_i(x_k)$ happens in $h$ ($T_i \rw T_j$).
+%
+We note $\depends$ the transitive closure of $\
+
+
+%
+
+An anti-dependency between $T_i$ and $T_j$ on object $x$ is a \emph{reverse-commit anti-dependency} (for short, RC-anti-dependency) \cite{hans16} when $T_j$ invokes $\stmTryCommitFunction$ before $T_i$, and $T_i$ writes some object $y \neq x$.%
+%
+\footnote{
+  This slightly generalizes the notion introduced in \cite{hans16}.
+}
+This anti-dependency becomes an RC-anti-dependency if $T_4$ executes an additional step during which it writes some object $z \neq x$.

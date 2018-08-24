@@ -1,0 +1,118 @@
+\section{From strict serializability to opacity}
+\labappendix{from}
+
+\input{algorithms/from}
+
+\begin{lemma}
+  \lablem{from:0}
+  Consider some history $h$ such that $(\committed{h},<_{\committed{h}})$ is acyclic.
+  Every linearization $\lambda$ of $(h|\committed{h})$ according to $\closureOf{<_{\committed{h}}}$ is legal.  
+\end{lemma}
+
+\begin{proof}
+  Let $\lambda$ be the sequential history equivalent to $(h|\committed{h})$ in which transactions are ordered according to $\closureOf{<_{\committed{h}}}$.
+  %
+  Choose some transaction $T_i$ in $\lambda$.
+  For every read operation $r_i(x_j)$ in $h$, $T_j <_{\committed{h}} T_i$ holds.
+  Hence $w_j(x_j)$ precedes $r_i(x_j)$ in $\lambda$.
+  Then, by contradiction, consider some $T_k$ in $\committed{h}$ such that $T_j \hb_{\Lambda} T_k \hb_{\Lambda} T_i$ and $w_k(x_k)$ is in $h$.
+  Since both $T_j$ and $T_k$ write $x$ and $T_j \hb_{\lambda} T_k$ holds, necessarily $x_j \ll_h x_k$ is true.
+  Thus, $T_i <_{\lambda} T_k$ holds.
+  Contradiction.
+\end{proof}
+
+\begin{lemma}
+  \lablem{from:1}
+  Consider some legal history $h$.
+  Let $T_i$ and $T_j$ be two transactions in $h$ such that $h = h_1 T_i T_j h_2$, for some $h_1$ and $h_2$.
+  If $\readSetOf{T_i} \inter \writeSetOf{T_j} = \emptySet$, $\readSetOf{T_j} \inter \writeSetOf{T_i} = \emptySet$ and $\writeSetOf{T_j} \inter \writeSetOf{T_i} = \emptySet$ are all true, then history $h' = h_1 T_j T_i h_2$ is legal and equivalent to $h$.
+\end{lemma}
+
+\begin{proof}
+  Clearly $h'$ is equivalent to $h$.
+  Then, consider some read operation $r_l(x_k)$ in $h'$.
+  As $h$ is legal, $T_k$ is the last transaction writing to $x$ before $T_l$ in $h$.
+  We now prove that this is still the case in $h'$.  
+  If $r_l(x_k)$ occurs in $h_1$, the result is obvious.
+  Otherwise, if $T_l = T_i$, this property is also true since $\readSetOf{T_i} \inter \writeSetOf{T_j} = \emptySet$.
+  A symmetrical argument holds for the case $T_l = T_j$.
+  Last, in case $T_l$ occurs in $h_2$, $\writeSetOf{T_j} \inter \writeSetOf{T_i} = \emptySet$ implies the result.
+\end{proof}
+
+\begin{proposition}
+  \labprop{from:2}
+  Consider a history $h$ such that $\RSG(\committed{h},\ll_{\committed{h}})$ is acyclic for some version order $\ll_h$.
+  History $h$ is opaque ($h \in \OPA$) if the transactions aborted in $h$ observe strictly consistent snapshots for $\ll_h$.
+\end{proposition}
+
+\begin{proof}
+  
+  Since history $h$ is in $\SSER$, \reflem{from:0} tells us that we can linearize $(h|\committed{h})$ following relation $\closureOf{<_{\committed{h}}}$.
+  Let $\lambda$ be such a history.
+
+  \refalg{from} takes as input $\lambda$, copy it to variable $\Lambda$, then add appropriately to $\Lambda$ the transactions aborted in $h$ to form a legal history equivalent to $h$.
+  When adding an aborted transaction (\refline{from:2}), \refalg{from} permutes some of its dependencies in $\Lambda$ (\reflines{from:3}{from:5}) to maintain the legality of $\Lambda$ at each step of the rewriting.
+
+  Below, we prove that when \refalg{from} outputs history $\Lambda$, this history is both legal and equivalent to $h$.
+  To this end, let us first observe that the following invariants are true in \refalg{from}.  
+  \begin{itemize}
+
+  \item $\tlGlobally(<_{\committed{h}} \subseteq \hb_{\Lambda})$.
+    By induction.
+    From the pseudo-code at \refline{from:1}, this is initially true.
+    %
+    Consider two transactions $T_k$ and $T_l$ with $T_k <_{\committed{h}} T_l$.
+    Since $<_{\committed{h}} \subseteq <_h$, $T_k$ and $T_l$ are not permuted at \refline{from:5}.
+    Because an aborted transaction is added to $\Lambda$ at \refline{from:8}, the invariant still holds after executing this line.
+    Hence, the main loop (\reflines{from:2}{from:8}) maintains the invariant.
+
+  \item $\tlGlobally(\Lambda\text{ is legal})$.
+    By induction.
+    Initially, this is true (\refline{from:1}).
+    %
+    Consider transactions $T_k$ and $T_l$ as defined at \reflinestwo{from:3}{from:4}.
+    Since $\neg (T_k <_h T_l)$ and $\Lambda$ is sequential, $\writeSetOf{T_k} \inter \readSetOf{T_l} = \emptySet$, $\writeSetOf{T_k} \inter \readSetOf{T_l} = \emptySet$ and $\writeSetOf{T_k} \inter \writeSetOf{T_l} = \emptySet$ are all true.
+    From \reflem{from:1}, $\Lambda$ is legal after applying \refline{from:5}.
+    %
+    Then, choose some transaction $T_i$ in $\Lambda$.
+    If $T_i$ is committed in $h$, \refline{from:8} does not change the legality of $T_i$ as the transaction added to $\Lambda$ at that line is aborted.
+    Assume now that $T_i$ is aborted.
+    For some read $r_i(x_j)$, relation $T_j <_h T_i$ holds and $T_j$ is committed in $h$.
+    Hence, after \refline{from:8}, $T_j$ precedes $T_i$ in $\Lambda$.
+    Then, for the sake of contradiction, consider some $T_k$ such that $T_k \in \committed{h}$, $w_k(x_k) \in h$ and $T_j \hb_{\Lambda} T_k \hb_{\Lambda} T_i$.
+    From $T_j \hb_{\Lambda} T_k$ and $<_{\committed{h}} \subseteq \hb_{\Lambda}$, we deduce that $x_j \ll_h x_k$ is true, leading to $T_i <_h T_k$.
+    Then, since $T_k \hb_{\Lambda} T_i$ holds, $T_k \hb_h \Lambda[k] <_h T_i$ is true, with transaction $\Lambda[k]$ defined at \refline{from:6}.
+    Hence, from the pseudo-code at \reflinestwo{from:4}{from:5}, we deduce by a short induction that $T_k <_h T_i$ also holds.
+    This contradicts that the transitive closure of $<_h$ starting from $\{T_i\}$ is acyclic.    
+  \end{itemize}
+  Name $\Lambda'$ the output of \refalg{from}.
+  From what precedes $\Lambda'$ is legal.
+  In addition,
+  \begin{itemize}
+  \item $(\Lambda' \equiv h)$.
+    Initially, history $\Lambda$ is equivalent to $\committed{h}$.
+    Then, for every transaction $T_i$ aborted in $h$, after applying \refline{from:8} for $T_i$, $(\Lambda|T_i) = (h|T_i)$ holds.
+    As a consequence, after \refline{from:9}, $\Lambda$ is equivalent to $h$.
+  \item $(\hb_h \subseteq \hb_{\Lambda'})$.
+    Consider that $T_i \hb_h T_j$ holds.
+    %
+    Below, we prove that when $T_i$ and $T_j$ are first added to $\Lambda$, $T_i \hb_{\Lambda} T_j$ is true.    
+    Since $T_i <_h T_j$ holds, this order is maintained after each iteration at \refline{from:5}, leading to the result.
+    %
+    There are three cases to consider.
+    \begin{inparaenum}
+    \item[($T_i, T_j \in \committed{h}$.)]
+      This case follows immediately from invariant $\tlGlobally(<_{\committed{h}} \subseteq \hb_{\Lambda})$.
+    \item[($T_j$ is aborted.)]
+      Transaction $T_j$ is inserted after $T_i$ at \refline{from:9}.
+    \item[($T_i$ is aborted.)]
+      By contradiction, consider that after inserting $T_i$ at \refline{from:9}, $T_j \hb_{\Lambda} T_i$ is true.
+      We must have $T_j \hb_{\Lambda} \Lambda[k] <_h T_i$, with $\Lambda[k]$ defined at \refline{from:6}.
+      Hence, from the pseudo-code at \reflinestwo{from:4}{from:5}, $T_j <_h T_i$ holds and $T_i$ does not observe a strictly consistent snapshot in history $h$.
+    \end{inparaenum}
+  \end{itemize}
+
+  History $\Lambda$ is sequential, legal and preserves the real-time ordering in $h$.
+  It follows that $h$ is opaque.  
+\end{proof}
+

@@ -43,7 +43,13 @@
 \newcommand{\clockOf}[1]{\ensuremath{\mathit{clock}(#1)}}
 \newcommand{\clockCompatibleOf}[1]{\ensuremath{\mathit{compat}(#1)}}
 
-\newcommand{\depends}{\mathrel{\unrhd}}
+\newcommand{\wrdep}{\ensuremath{\stackrel{wr}{\longrightarrow}}}
+\newcommand{\wwdep}{\ensuremath{\stackrel{ww}{\longrightarrow}}}
+\newcommand{\adep}{\ensuremath{\stackrel{rw}{\longrightarrow}}}
+\newcommand{\depends}{\ensuremath{\mathrel{\rhd}}}
+\newcommand{\rdepends}{\ensuremath{\mathrel{\lhd}}}
+
+\newcommand{\closureOf}[1]{\ensuremath{{#1}^{+}}}
 
 \newcommand{\cread}{\ensuremath{\mathit{read}()}}
 \newcommand{\cadv}{\ensuremath{\mathit{adv}}}
@@ -55,3 +61,7 @@
 \let\inparaenumorig=\inparaenum
 \renewenvironment{inparaenum}{\begin{inparaenumorig}[\em(i)]}{\end{inparaenumorig}}
 
+% miscellaneous
+\renewcommand{\hat}{\widehat}
+
+\newcommand{\versionAny}{\ensuremath{?}}
